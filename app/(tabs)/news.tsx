@@ -1,11 +1,12 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { newsArticles } from "@/data/mockData";
+import { fetchNewsArticles } from "@/services/api";
 import { Article } from "@/types";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -13,14 +14,40 @@ import {
 } from "react-native";
 
 export default function NewsScreen() {
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onRefresh = React.useCallback(() => {
+  const loadArticles = async () => {
+    try {
+      setError(null);
+      const fetchedArticles = await fetchNewsArticles();
+      setArticles(fetchedArticles);
+    } catch (err) {
+      setError("Failed to load articles");
+      console.error("Error loading articles:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    // Simulate refresh delay
-    setTimeout(() => {
+    try {
+      const fetchedArticles = await fetchNewsArticles();
+      setArticles(fetchedArticles);
+      setError(null);
+    } catch (err) {
+      setError("Failed to refresh articles");
+      console.error("Error refreshing articles:", err);
+    } finally {
       setRefreshing(false);
-    }, 1000);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadArticles();
   }, []);
 
   const handleArticlePress = (article: Article) => {
@@ -52,10 +79,30 @@ export default function NewsScreen() {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <ThemedView style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" />
+        <ThemedText style={styles.loadingText}>Loading articles...</ThemedText>
+      </ThemedView>
+    );
+  }
+
+  if (error && articles.length === 0) {
+    return (
+      <ThemedView style={[styles.container, styles.centerContent]}>
+        <ThemedText style={styles.errorText}>{error}</ThemedText>
+        <TouchableOpacity style={styles.retryButton} onPress={loadArticles}>
+          <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
+        </TouchableOpacity>
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView style={styles.container}>
       <FlatList
-        data={newsArticles}
+        data={articles}
         renderItem={renderArticle}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
@@ -113,5 +160,28 @@ const styles = StyleSheet.create({
   timestamp: {
     fontSize: 12,
     opacity: 0.6,
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

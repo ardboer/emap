@@ -1,10 +1,12 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { featuredArticles, newsArticles } from "@/data/mockData";
+import { fetchArticleContent, fetchArticles } from "@/services/api";
+import { Article } from "@/types";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   ScrollView,
   StyleSheet,
@@ -16,16 +18,65 @@ const { width: screenWidth } = Dimensions.get("window");
 
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [article, setArticle] = useState<Article | null>(null);
+  const [content, setContent] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Find the article in both featured and news articles
-  const allArticles = [...featuredArticles, ...newsArticles];
-  const article = allArticles.find((a) => a.id === id);
+  useEffect(() => {
+    const loadArticle = async () => {
+      if (!id) {
+        setError("No article ID provided");
+        setLoading(false);
+        return;
+      }
 
-  if (!article) {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // First, fetch all articles to find the one with matching ID
+        const articles = await fetchArticles();
+        const foundArticle = articles.find((a) => a.id === id);
+
+        if (!foundArticle) {
+          setError("Article not found");
+          setLoading(false);
+          return;
+        }
+
+        setArticle(foundArticle);
+
+        // Then fetch the full content
+        const fullContent = await fetchArticleContent(id);
+        setContent(fullContent);
+      } catch (err) {
+        setError("Failed to load article");
+        console.error("Error loading article:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadArticle();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ThemedView style={styles.centerContent}>
+          <ActivityIndicator size="large" />
+          <ThemedText style={styles.loadingText}>Loading article...</ThemedText>
+        </ThemedView>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !article) {
     return (
       <SafeAreaView style={styles.container}>
         <ThemedView style={styles.errorContainer}>
-          <ThemedText type="title">Article not found</ThemedText>
+          <ThemedText type="title">{error || "Article not found"}</ThemedText>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
@@ -71,28 +122,11 @@ export default function ArticleScreen() {
 
           <ThemedView style={styles.divider} />
 
-          <ThemedText style={styles.content}>{article.content}</ThemedText>
-
-          {/* Add more content paragraphs for a more realistic article */}
-          <ThemedText style={styles.content}>
-            Duis aute irure dolor in reprehenderit in voluptate velit esse
-            cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-            cupidatat non proident, sunt in culpa qui officia deserunt mollit
-            anim id est laborum.
-          </ThemedText>
-
-          <ThemedText style={styles.content}>
-            Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-            accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-            quae ab illo inventore veritatis et quasi architecto beatae vitae
-            dicta sunt explicabo.
-          </ThemedText>
-
-          <ThemedText style={styles.content}>
-            Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut
-            fugit, sed quia consequuntur magni dolores eos qui ratione
-            voluptatem sequi nesciunt.
-          </ThemedText>
+          {content ? (
+            <ThemedText style={styles.content}>{content}</ThemedText>
+          ) : (
+            <ThemedText style={styles.content}>{article.content}</ThemedText>
+          )}
         </ThemedView>
       </ScrollView>
     </SafeAreaView>
@@ -182,5 +216,14 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 16,
     opacity: 0.8,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
   },
 });

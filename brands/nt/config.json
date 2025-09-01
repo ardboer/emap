@@ -1,0 +1,39 @@
+{
+  "shortcode": "nt",
+  "name": "Nursing Times",
+  "displayName": "Nursing Times",
+  "domain": "nursingtimes.net",
+  "apiConfig": {
+    "baseUrl": "https://www.nursingtimes.net",
+    "hash": "5506c4c9af9349c87a364b3b0b1988"
+  },
+  "theme": {
+    "colors": {
+      "light": {
+        "primary": "#0a7ea4",
+        "background": "#fff",
+        "text": "#11181C",
+        "icon": "#687076",
+        "tabIconDefault": "#687076",
+        "tabIconSelected": "#0a7ea4"
+      },
+      "dark": {
+        "primary": "#fff",
+        "background": "#151718",
+        "text": "#ECEDEE",
+        "icon": "#9BA1A6",
+        "tabIconDefault": "#9BA1A6",
+        "tabIconSelected": "#fff"
+      }
+    },
+    "fonts": {
+      "primary": "System",
+      "secondary": "System"
+    }
+  },
+  "branding": {
+    "logo": "./assets/logo.png",
+    "icon": "./assets/icon.png",
+    "splash": "./assets/splash.png"
+  }
+}

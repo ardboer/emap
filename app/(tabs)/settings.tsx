@@ -17,7 +17,7 @@ export default function SettingsScreen() {
   }: {
     title: string;
     subtitle?: string;
-    icon: string;
+    icon: any;
     onPress?: () => void;
     rightElement?: React.ReactNode;
   }) => (
@@ -111,6 +111,20 @@ export default function SettingsScreen() {
             icon="lock.fill"
             onPress={() => {}}
           />
+        </ThemedView>
+
+        <ThemedView style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Development
+          </ThemedText>
+          {/* Brand Switcher - Only show in development */}
+          {__DEV__ && (
+            <ThemedView>
+              {React.createElement(
+                require("@/components/BrandSwitcher").BrandSwitcher
+              )}
+            </ThemedView>
+          )}
         </ThemedView>
 
         <ThemedView style={styles.section}>

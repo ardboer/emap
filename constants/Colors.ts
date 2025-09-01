@@ -1,26 +1,56 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Brand-aware colors that are loaded from the active brand configuration.
+ * Colors are defined in the light and dark mode and loaded dynamically.
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+import { brandManager } from "@/config/BrandManager";
+
+// Get colors from active brand configuration
+function getBrandColors() {
+  try {
+    const themeConfig = brandManager.getThemeConfig();
+    return themeConfig.colors;
+  } catch (error) {
+    console.warn("Failed to load brand colors, using fallback:", error);
+    // Fallback colors if brand loading fails
+    return {
+      light: {
+        primary: "#0a7ea4",
+        background: "#fff",
+        text: "#11181C",
+        icon: "#687076",
+        tabIconDefault: "#687076",
+        tabIconSelected: "#0a7ea4",
+      },
+      dark: {
+        primary: "#fff",
+        background: "#151718",
+        text: "#ECEDEE",
+        icon: "#9BA1A6",
+        tabIconDefault: "#9BA1A6",
+        tabIconSelected: "#fff",
+      },
+    };
+  }
+}
+
+const brandColors = getBrandColors();
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: brandColors.light.text,
+    background: brandColors.light.background,
+    tint: brandColors.light.primary,
+    icon: brandColors.light.icon,
+    tabIconDefault: brandColors.light.tabIconDefault,
+    tabIconSelected: brandColors.light.tabIconSelected,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: brandColors.dark.text,
+    background: brandColors.dark.background,
+    tint: brandColors.dark.primary,
+    icon: brandColors.dark.icon,
+    tabIconDefault: brandColors.dark.tabIconDefault,
+    tabIconSelected: brandColors.dark.tabIconSelected,
   },
 };

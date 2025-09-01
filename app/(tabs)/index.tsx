@@ -1,13 +1,14 @@
 import { CarouselProgressIndicator } from "@/components/CarouselProgressIndicator";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { featuredArticles } from "@/data/mockData";
+import { fetchFeaturedArticles } from "@/services/api";
 import { Article } from "@/types";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   NativeScrollEvent,
@@ -25,14 +26,31 @@ export default function HighlightedScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   const handleArticlePress = (article: Article) => {
     router.push(`/article/${article.id}`);
   };
 
+  const loadArticles = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const fetchedArticles = await fetchFeaturedArticles();
+      setArticles(fetchedArticles);
+    } catch (err) {
+      setError("Failed to load articles");
+      console.error("Error loading articles:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const goToNextSlide = () => {
-    const nextIndex = (currentIndex + 1) % featuredArticles.length;
+    const nextIndex = (currentIndex + 1) % articles.length;
     setCurrentIndex(nextIndex);
     flatListRef.current?.scrollToIndex({
       index: nextIndex,
@@ -81,6 +99,11 @@ export default function HighlightedScreen() {
     }
   };
 
+  // Load articles on component mount
+  useEffect(() => {
+    loadArticles();
+  }, []);
+
   // Handle focus/blur events to pause/resume when screen is not active
   useEffect(() => {
     return () => {
@@ -121,10 +144,32 @@ export default function HighlightedScreen() {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <ThemedView style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" />
+        <ThemedText style={styles.loadingText}>Loading articles...</ThemedText>
+      </ThemedView>
+    );
+  }
+
+  if (error || articles.length === 0) {
+    return (
+      <ThemedView style={[styles.container, styles.centerContent]}>
+        <ThemedText style={styles.errorText}>
+          {error || "No articles available"}
+        </ThemedText>
+        <TouchableOpacity style={styles.retryButton} onPress={loadArticles}>
+          <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
+        </TouchableOpacity>
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView style={styles.container}>
       <CarouselProgressIndicator
-        totalItems={featuredArticles.length}
+        totalItems={articles.length}
         currentIndex={currentIndex}
         duration={SLIDE_DURATION}
         isPlaying={isPlaying}
@@ -132,7 +177,7 @@ export default function HighlightedScreen() {
       />
       <FlatList
         ref={flatListRef}
-        data={featuredArticles}
+        data={articles}
         renderItem={renderCarouselItem}
         keyExtractor={(item) => item.id}
         horizontal
@@ -216,5 +261,28 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 14,
     opacity: 0.7,
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
