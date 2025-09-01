@@ -1,75 +1,220 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { CarouselProgressIndicator } from "@/components/CarouselProgressIndicator";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { featuredArticles } from "@/data/mockData";
+import { Article } from "@/types";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Dimensions,
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
-export default function HomeScreen() {
+// Configurable slide duration (in milliseconds)
+const SLIDE_DURATION = 7000; // 7 seconds
+
+export default function HighlightedScreen() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
+
+  const handleArticlePress = (article: Article) => {
+    router.push(`/article/${article.id}`);
+  };
+
+  const goToNextSlide = () => {
+    const nextIndex = (currentIndex + 1) % featuredArticles.length;
+    setCurrentIndex(nextIndex);
+    flatListRef.current?.scrollToIndex({
+      index: nextIndex,
+      animated: true,
+    });
+  };
+
+  const handleProgressComplete = () => {
+    if (!isUserInteracting) {
+      goToNextSlide();
+    }
+  };
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / screenWidth);
+
+    if (index !== currentIndex) {
+      setCurrentIndex(index);
+    }
+  };
+
+  const handleScrollBeginDrag = () => {
+    setIsUserInteracting(true);
+    setIsPlaying(false);
+  };
+
+  const handleScrollEndDrag = () => {
+    setIsUserInteracting(false);
+    // Resume playing after a short delay
+    setTimeout(() => {
+      setIsPlaying(true);
+    }, 500);
+  };
+
+  const handleMomentumScrollEnd = (
+    event: NativeSyntheticEvent<NativeScrollEvent>
+  ) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / screenWidth);
+    setCurrentIndex(index);
+
+    // Ensure we resume playing after manual scroll
+    if (!isUserInteracting) {
+      setIsPlaying(true);
+    }
+  };
+
+  // Handle focus/blur events to pause/resume when screen is not active
+  useEffect(() => {
+    return () => {
+      setIsPlaying(false);
+    };
+  }, []);
+
+  const renderCarouselItem = ({ item }: { item: Article }) => (
+    <TouchableOpacity
+      style={styles.carouselItem}
+      onPress={() => handleArticlePress(item)}
+    >
+      <Image
+        source={{ uri: item.imageUrl }}
+        style={styles.backgroundImage}
+        contentFit="cover"
+      />
+      <LinearGradient
+        colors={["transparent", "rgba(0,0.4,0.6,0.8)"]}
+        style={styles.overlay}
+      >
+        <ThemedView transparant style={styles.contentContainer}>
+          <ThemedText type="title" style={styles.title}>
+            {item.title}
+          </ThemedText>
+          {item.subtitle && (
+            <ThemedText type="subtitle" style={styles.subtitle}>
+              {item.subtitle}
+            </ThemedText>
+          )}
+          <ThemedText style={styles.leadText}>{item.leadText}</ThemedText>
+          <ThemedView transparant style={styles.metaContainer}>
+            <ThemedText style={styles.category}>{item.category}</ThemedText>
+            <ThemedText style={styles.timestamp}>{item.timestamp}</ThemedText>
+          </ThemedView>
+        </ThemedView>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <ThemedView style={styles.container}>
+      <CarouselProgressIndicator
+        totalItems={featuredArticles.length}
+        currentIndex={currentIndex}
+        duration={SLIDE_DURATION}
+        isPlaying={isPlaying}
+        onProgressComplete={handleProgressComplete}
+      />
+      <FlatList
+        ref={flatListRef}
+        data={featuredArticles}
+        renderItem={renderCarouselItem}
+        keyExtractor={(item) => item.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={screenWidth}
+        decelerationRate="fast"
+        onScroll={handleScroll}
+        onScrollBeginDrag={handleScrollBeginDrag}
+        onScrollEndDrag={handleScrollEndDrag}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        scrollEventThrottle={16}
+        getItemLayout={(data, index) => ({
+          length: screenWidth,
+          offset: screenWidth * index,
+          index,
+        })}
+      />
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  carouselItem: {
+    width: screenWidth,
+    height: screenHeight - 60, // Account for tab bar
+    position: "relative",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
+  backgroundImage: {
+    position: "absolute",
+    top: 0,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    right: 0,
+    backgroundColor: "green",
+  },
+  overlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  contentContainer: {
+    padding: 24,
+    paddingBottom: 40,
+  },
+  title: {
+    color: "white",
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  subtitle: {
+    color: "white",
+    fontSize: 20,
+    marginBottom: 12,
+    opacity: 0.9,
+  },
+  leadText: {
+    color: "white",
+    fontSize: 16,
+    lineHeight: 22,
+    marginBottom: 16,
+    opacity: 0.9,
+  },
+  metaContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  category: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
+    opacity: 0.8,
+  },
+  timestamp: {
+    color: "white",
+    fontSize: 14,
+    opacity: 0.7,
   },
 });
