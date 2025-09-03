@@ -2,9 +2,11 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAudio } from "@/contexts/AudioContext";
 import { podcastCategories } from "@/data/mockData";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { PodcastEpisode } from "@/types";
 import { Image } from "expo-image";
-import React from "react";
+import { router } from "expo-router";
+import React, { useEffect } from "react";
 import {
   FlatList,
   ScrollView,
@@ -14,6 +16,17 @@ import {
 
 export default function PodcastsScreen() {
   const { playEpisode } = useAudio();
+  const { features } = useBrandConfig();
+
+  useEffect(() => {
+    if (!features?.enablePodcasts) {
+      router.replace("/(tabs)/news");
+    }
+  }, [features]);
+
+  if (!features?.enablePodcasts) {
+    return null;
+  }
 
   const handlePodcastPress = (episode: PodcastEpisode) => {
     playEpisode(episode);

@@ -1,9 +1,22 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import React from "react";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { router } from "expo-router";
+import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
 
 export default function PaperScreen() {
+  const { features } = useBrandConfig();
+
+  useEffect(() => {
+    if (!features?.enablePaper) {
+      router.replace("/(tabs)/news");
+    }
+  }, [features]);
+
+  if (!features?.enablePaper) {
+    return null;
+  }
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.content}>

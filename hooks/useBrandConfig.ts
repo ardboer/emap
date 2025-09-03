@@ -60,6 +60,7 @@ export function useBrandConfig() {
     fonts: brandConfig?.theme.fonts,
     branding: brandConfig?.branding,
     apiConfig: brandConfig?.apiConfig,
+    features: brandConfig?.features,
     brandName: brandConfig?.displayName,
     shortcode: brandConfig?.shortcode,
   };

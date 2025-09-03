@@ -8,10 +8,12 @@ import { PodcastPlayer } from "@/components/PodcastPlayer";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { features } = useBrandConfig();
 
   return (
     <>
@@ -55,6 +57,7 @@ export default function TabLayout() {
           options={{
             title: "Paper",
             headerTitle: "Paper",
+            href: features?.enablePaper ? "/(tabs)/paper" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="doc.text.fill" color={color} />
             ),
@@ -65,6 +68,7 @@ export default function TabLayout() {
           options={{
             title: "Podcasts",
             headerTitle: "Podcasts",
+            href: features?.enablePodcasts ? "/(tabs)/podcasts" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="mic.fill" color={color} />
             ),
@@ -81,8 +85,12 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-      <MiniPlayer />
-      <PodcastPlayer />
+      {features?.enablePodcasts && (
+        <>
+          <MiniPlayer />
+          <PodcastPlayer />
+        </>
+      )}
     </>
   );
 }

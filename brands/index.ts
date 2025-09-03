@@ -37,6 +37,10 @@ export interface BrandConfig {
     icon: string;
     splash: string;
   };
+  features: {
+    enablePodcasts: boolean;
+    enablePaper: boolean;
+  };
 }
 
 // Available brands registry
