@@ -16,6 +16,7 @@ export interface PodcastEpisode {
   coverUrl: string;
   duration: string;
   publishDate: string;
+  audioUrl: string;
 }
 
 export interface PodcastCategory {

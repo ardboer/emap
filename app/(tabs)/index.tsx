@@ -1,6 +1,7 @@
 import { CarouselProgressIndicator } from "@/components/CarouselProgressIndicator";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useAudio } from "@/contexts/AudioContext";
 import { fetchFeaturedArticles } from "@/services/api";
 import { Article } from "@/types";
 import { Image } from "expo-image";
@@ -30,6 +31,7 @@ export default function HighlightedScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
+  const { state: audioState } = useAudio();
 
   const handleArticlePress = (article: Article) => {
     router.push(`/article/${article.id}`);
@@ -125,7 +127,13 @@ export default function HighlightedScreen() {
         colors={["transparent", "rgba(0,0.4,0.6,0.8)"]}
         style={styles.overlay}
       >
-        <ThemedView transparant style={styles.contentContainer}>
+        <ThemedView
+          transparant
+          style={[
+            styles.contentContainer,
+            audioState.showMiniPlayer && styles.contentContainerWithMiniPlayer,
+          ]}
+        >
           <ThemedText type="title" style={styles.title}>
             {item.title}
           </ThemedText>
@@ -225,7 +233,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 24,
-    paddingBottom: 40,
+    paddingBottom: 60,
+  },
+  contentContainerWithMiniPlayer: {
+    paddingBottom: 120, // 40 (original) + 50 (miniplayer height + margin)
   },
   title: {
     color: "white",

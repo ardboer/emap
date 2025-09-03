@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useAudio } from "@/contexts/AudioContext";
 import { podcastCategories } from "@/data/mockData";
 import { PodcastEpisode } from "@/types";
 import { Image } from "expo-image";
@@ -12,8 +13,17 @@ import {
 } from "react-native";
 
 export default function PodcastsScreen() {
+  const { playEpisode } = useAudio();
+
+  const handlePodcastPress = (episode: PodcastEpisode) => {
+    playEpisode(episode);
+  };
+
   const renderPodcastCard = ({ item }: { item: PodcastEpisode }) => (
-    <TouchableOpacity style={styles.podcastCard}>
+    <TouchableOpacity
+      style={styles.podcastCard}
+      onPress={() => handlePodcastPress(item)}
+    >
       <Image source={{ uri: item.coverUrl }} style={styles.podcastCover} />
       <ThemedView style={styles.podcastInfo}>
         <ThemedText style={styles.podcastTitle} numberOfLines={2}>
@@ -47,9 +57,6 @@ export default function PodcastsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <ThemedText type="title" style={styles.screenTitle}>
-          Podcasts
-        </ThemedText>
         {podcastCategories.map(renderCategory)}
       </ScrollView>
     </ThemedView>

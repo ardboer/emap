@@ -188,6 +188,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=p1",
         duration: "25 min",
         publishDate: "Today",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "p2",
@@ -196,6 +197,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=p2",
         duration: "45 min",
         publishDate: "Yesterday",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "p3",
@@ -204,6 +206,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=p3",
         duration: "35 min",
         publishDate: "2 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "p4",
@@ -212,6 +215,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=p4",
         duration: "30 min",
         publishDate: "3 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "p5",
@@ -221,6 +225,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=p5",
         duration: "40 min",
         publishDate: "4 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
     ],
   },
@@ -235,6 +240,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=b1",
         duration: "20 min",
         publishDate: "Today",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "b2",
@@ -243,6 +249,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=b2",
         duration: "50 min",
         publishDate: "Yesterday",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "b3",
@@ -251,6 +258,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=b3",
         duration: "35 min",
         publishDate: "2 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "b4",
@@ -259,6 +267,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=b4",
         duration: "28 min",
         publishDate: "3 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "b5",
@@ -267,6 +276,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=b5",
         duration: "42 min",
         publishDate: "4 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
     ],
   },
@@ -282,6 +292,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=t1",
         duration: "38 min",
         publishDate: "Today",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "t2",
@@ -290,6 +301,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=t2",
         duration: "32 min",
         publishDate: "Yesterday",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "t3",
@@ -298,6 +310,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=t3",
         duration: "45 min",
         publishDate: "2 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "t4",
@@ -306,6 +319,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=t4",
         duration: "29 min",
         publishDate: "3 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "t5",
@@ -315,6 +329,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=t5",
         duration: "36 min",
         publishDate: "4 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
     ],
   },
@@ -329,6 +344,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=l1",
         duration: "25 min",
         publishDate: "Today",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "l2",
@@ -338,6 +354,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=l2",
         duration: "40 min",
         publishDate: "Yesterday",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "l3",
@@ -346,6 +363,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=l3",
         duration: "35 min",
         publishDate: "2 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "l4",
@@ -354,6 +372,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=l4",
         duration: "33 min",
         publishDate: "3 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
       {
         id: "l5",
@@ -362,6 +381,7 @@ export const podcastCategories: PodcastCategory[] = [
         coverUrl: "https://picsum.photos/200/200?random=l5",
         duration: "27 min",
         publishDate: "4 days ago",
+        audioUrl: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
       },
     ],
   },

@@ -45,10 +45,6 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <ThemedText type="title" style={styles.screenTitle}>
-          Settings
-        </ThemedText>
-
         <ThemedView style={styles.section}>
           <ThemedText type="subtitle" style={styles.sectionTitle}>
             Preferences
@@ -177,7 +173,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: "rgba(0,0,0,0.05)",
+    // backgroundColor: "rgba(0,0,0,0.05)",
     borderRadius: 12,
     marginBottom: 8,
   },
