@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/BrandLogo";
 import { CarouselProgressIndicator } from "@/components/CarouselProgressIndicator";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -117,6 +118,8 @@ export default function HighlightedScreen() {
     <TouchableOpacity
       style={styles.carouselItem}
       onPress={() => handleArticlePress(item)}
+      activeOpacity={1}
+      underlayColor="transparent"
     >
       <Image
         source={{ uri: item.imageUrl }}
@@ -183,6 +186,7 @@ export default function HighlightedScreen() {
         isPlaying={isPlaying}
         onProgressComplete={handleProgressComplete}
       />
+      <BrandLogo style={styles.brandLogo} width={100} height={35} />
       <FlatList
         ref={flatListRef}
         data={articles}
@@ -212,9 +216,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  brandLogo: {
+    position: "absolute",
+    top: 80,
+    left: 12,
+    zIndex: 10,
+    // backgroundColor: "rgba(0, 0, 0, 0.3)",
+    borderRadius: 8,
+    padding: 8,
+  },
   carouselItem: {
     width: screenWidth,
-    height: screenHeight - 60, // Account for tab bar
+    height: screenHeight, // Account for tab bar
     position: "relative",
   },
   backgroundImage: {
@@ -233,10 +246,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 24,
-    paddingBottom: 60,
+    paddingBottom: 120,
   },
   contentContainerWithMiniPlayer: {
-    paddingBottom: 120, // 40 (original) + 50 (miniplayer height + margin)
+    paddingBottom: 180, // 40 (original) + 50 (miniplayer height + margin)
   },
   title: {
     color: "white",

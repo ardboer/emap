@@ -15,7 +15,9 @@
         "text": "#11181C",
         "icon": "#687076",
         "tabIconDefault": "#687076",
-        "tabIconSelected": "#0a7ea4"
+        "tabIconSelected": "#0a7ea4",
+        "tabBarBackground": "#fff",
+        "progressIndicator": "#0a7ea4"
       },
       "dark": {
         "primary": "#fff",
@@ -23,7 +25,9 @@
         "text": "#ECEDEE",
         "icon": "#9BA1A6",
         "tabIconDefault": "#9BA1A6",
-        "tabIconSelected": "#fff"
+        "tabIconSelected": "#fff",
+        "tabBarBackground": "#151718",
+        "progressIndicator": "#fff"
       }
     },
     "fonts": {
@@ -32,7 +36,7 @@
     }
   },
   "branding": {
-    "logo": "./assets/logo.png",
+    "logo": "./logo.svg",
     "icon": "./assets/icon.png",
     "splash": "./assets/splash.png"
   },

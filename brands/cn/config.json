@@ -10,20 +10,24 @@
   "theme": {
     "colors": {
       "light": {
-        "primary": "#0a7ea4",
+        "primary": "#FFDD00",
         "background": "#fff",
         "text": "#11181C",
         "icon": "#687076",
         "tabIconDefault": "#687076",
-        "tabIconSelected": "#0a7ea4"
+        "tabIconSelected": "#FFDD00",
+        "tabBarBackground": "#fff",
+        "progressIndicator": "#FFDD00"
       },
       "dark": {
-        "primary": "#fff",
+        "primary": "#FFDD00",
         "background": "#151718",
         "text": "#ECEDEE",
         "icon": "#9BA1A6",
         "tabIconDefault": "#9BA1A6",
-        "tabIconSelected": "#fff"
+        "tabIconSelected": "#FFDD00",
+        "tabBarBackground": "#151718",
+        "progressIndicator": "#FFDD00"
       }
     },
     "fonts": {
@@ -32,7 +36,7 @@
     }
   },
   "branding": {
-    "logo": "./assets/logo.png",
+    "logo": "./logo.svg",
     "icon": "./assets/icon.png",
     "splash": "./assets/splash.png"
   },

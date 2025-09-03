@@ -6,31 +6,48 @@ import { HapticTab } from "@/components/HapticTab";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { PodcastPlayer } from "@/components/PodcastPlayer";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { features } = useBrandConfig();
+  const { features, brandConfig } = useBrandConfig();
+
+  // Get brand-specific colors
+  const themeColors = brandConfig?.theme.colors[colorScheme ?? "light"];
+  const tabBarActiveTintColor =
+    themeColors?.tabIconSelected || Colors[colorScheme ?? "light"].tint;
+  const tabBarInactiveTintColor =
+    themeColors?.tabIconDefault ||
+    Colors[colorScheme ?? "light"].tabIconDefault;
+  const tabBarBackgroundColor =
+    themeColors?.tabBarBackground || Colors[colorScheme ?? "light"].background;
 
   return (
     <>
       <Tabs
-        screenOptions={{
-          tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        screenOptions={({ route }) => ({
+          tabBarActiveTintColor,
+          tabBarInactiveTintColor,
           headerShown: true, // Enable headers by default
           tabBarButton: HapticTab,
-          tabBarBackground: TabBarBackground,
           tabBarStyle: Platform.select({
             ios: {
-              // Use a transparent background on iOS to show the blur effect
               position: "absolute",
+              backgroundColor:
+                route.name === "index" ? "transparent" : tabBarBackgroundColor,
+              borderTopWidth: route.name === "index" ? 0 : undefined,
+              shadowOpacity: route.name === "index" ? 0 : undefined,
             },
-            default: {},
+            default: {
+              backgroundColor:
+                route.name === "index" ? "transparent" : tabBarBackgroundColor,
+              borderTopWidth: route.name === "index" ? 0 : undefined,
+              elevation: route.name === "index" ? 0 : undefined,
+            },
           }),
-        }}
+        })}
       >
         <Tabs.Screen
           name="index"

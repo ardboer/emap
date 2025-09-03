@@ -131,7 +131,7 @@ export async function fetchArticles(): Promise<Article[]> {
   try {
     const { baseUrl } = getApiConfig();
     const response = await fetch(
-      `${baseUrl}${POSTS_ENDPOINT}?per_page=20&_embed`
+      `${baseUrl}${POSTS_ENDPOINT}?per_page=8&_embed&&_fields=id,title,excerpt,featured_media,categories`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch articles");

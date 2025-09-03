@@ -1,3 +1,4 @@
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
@@ -27,6 +28,7 @@ const ProgressBar: React.FC<{
   duration: number;
   isPlaying: boolean;
   onProgressComplete?: () => void;
+  progressColor: string;
 }> = ({
   index,
   currentIndex,
@@ -34,6 +36,7 @@ const ProgressBar: React.FC<{
   duration,
   isPlaying,
   onProgressComplete,
+  progressColor,
 }) => {
   const progress = useSharedValue(0);
 
@@ -84,7 +87,13 @@ const ProgressBar: React.FC<{
 
   return (
     <View style={[styles.progressBarContainer, { width: width - 4 }]}>
-      <Animated.View style={[styles.progressBarFill, progressStyle]} />
+      <Animated.View
+        style={[
+          styles.progressBarFill,
+          progressStyle,
+          { backgroundColor: progressColor },
+        ]}
+      />
     </View>
   );
 };
@@ -99,7 +108,13 @@ export const CarouselProgressIndicator: React.FC<
   onProgressComplete,
   style,
 }) => {
+  const { brandConfig } = useBrandConfig();
   const indicatorWidth = (screenWidth - 48) / totalItems; // 24px padding on each side
+
+  // Get the progress indicator color from brand config, fallback to white
+  const progressColor =
+    brandConfig?.theme.colors.light.progressIndicator ||
+    "rgba(255, 255, 255, 1)";
 
   return (
     <View style={[styles.container, style]}>
@@ -116,6 +131,7 @@ export const CarouselProgressIndicator: React.FC<
               width={indicatorWidth}
               duration={duration}
               isPlaying={isPlaying}
+              progressColor={progressColor}
               onProgressComplete={
                 index === currentIndex ? onProgressComplete : undefined
               }
@@ -155,7 +171,6 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: 4,
-    backgroundColor: "rgba(255, 255, 255, 1)",
     borderRadius: 2,
     position: "absolute",
     top: 0,
