@@ -15,7 +15,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        headerShown: false,
+        headerShown: true, // Enable headers by default
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
@@ -31,6 +31,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Highlighted",
+          headerShown: false, // No header for highlighted tab (full-screen carousel)
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="star.fill" color={color} />
           ),
@@ -40,6 +41,7 @@ export default function TabLayout() {
         name="news"
         options={{
           title: "News",
+          headerTitle: "News",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="newspaper.fill" color={color} />
           ),
@@ -49,6 +51,7 @@ export default function TabLayout() {
         name="paper"
         options={{
           title: "Paper",
+          headerTitle: "Paper",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="doc.text.fill" color={color} />
           ),
@@ -58,6 +61,7 @@ export default function TabLayout() {
         name="podcasts"
         options={{
           title: "Podcasts",
+          headerTitle: "Podcasts",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="mic.fill" color={color} />
           ),
@@ -67,6 +71,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: "Settings",
+          headerTitle: "Settings",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="gearshape.fill" color={color} />
           ),
