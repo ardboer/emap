@@ -5,19 +5,20 @@
   "domain": "nursingtimes.net",
   "apiConfig": {
     "baseUrl": "https://www.nursingtimes.net",
-    "hash": "5506c4c9af9349c87a364b3b0b1988"
+    "hash": "5506c4c9af9349c87a364b3b0b1988",
+    "menuId": 162196
   },
   "theme": {
     "colors": {
       "light": {
-        "primary": "#0a7ea4",
+        "primary": "#00AECA",
         "background": "#fff",
         "text": "#11181C",
         "icon": "#687076",
         "tabIconDefault": "#687076",
-        "tabIconSelected": "#0a7ea4",
+        "tabIconSelected": "#00AECA",
         "tabBarBackground": "#fff",
-        "progressIndicator": "#0a7ea4"
+        "progressIndicator": "#00AECA"
       },
       "dark": {
         "primary": "#fff",

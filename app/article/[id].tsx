@@ -1,6 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { fetchArticleContent, fetchArticles } from "@/services/api";
 import { Article } from "@/types";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -70,21 +69,13 @@ export default function ArticleScreen() {
         setLoading(true);
         setError(null);
 
-        // First, fetch all articles to find the one with matching ID
-        const articles = await fetchArticles();
-        const foundArticle = articles.find((a) => a.id === id);
+        // Fetch the complete article with content in one API call
+        const fetchSingleArticle = (await import("@/services/api"))
+          .fetchSingleArticle;
+        const fullArticle = await fetchSingleArticle(id);
 
-        if (!foundArticle) {
-          setError("Article not found");
-          setLoading(false);
-          return;
-        }
-
-        setArticle(foundArticle);
-
-        // Then fetch the full content
-        const fullContent = await fetchArticleContent(id);
-        setContent(fullContent);
+        setArticle(fullArticle);
+        setContent(fullArticle.content);
       } catch (err) {
         setError("Failed to load article");
         console.error("Error loading article:", err);

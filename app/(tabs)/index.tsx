@@ -31,6 +31,7 @@ export default function HighlightedScreen() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const { state: audioState } = useAudio();
 
@@ -119,7 +120,6 @@ export default function HighlightedScreen() {
       style={styles.carouselItem}
       onPress={() => handleArticlePress(item)}
       activeOpacity={1}
-      underlayColor="transparent"
     >
       <Image
         source={{ uri: item.imageUrl }}
@@ -140,12 +140,12 @@ export default function HighlightedScreen() {
           <ThemedText type="title" style={styles.title}>
             {item.title}
           </ThemedText>
-          {item.subtitle && (
+          {/* {item.subtitle && (
             <ThemedText type="subtitle" style={styles.subtitle}>
               {item.subtitle}
             </ThemedText>
           )}
-          <ThemedText style={styles.leadText}>{item.leadText}</ThemedText>
+          <ThemedText style={styles.leadText}>{item.leadText}</ThemedText> */}
           <ThemedView transparant style={styles.metaContainer}>
             <ThemedText style={styles.category}>{item.category}</ThemedText>
             <ThemedText style={styles.timestamp}>{item.timestamp}</ThemedText>
@@ -187,6 +187,19 @@ export default function HighlightedScreen() {
         onProgressComplete={handleProgressComplete}
       />
       <BrandLogo style={styles.brandLogo} width={100} height={35} />
+
+      {/* User Settings Button */}
+      <TouchableOpacity
+        style={styles.userButton}
+        onPress={() => setSettingsDrawerVisible(true)}
+      >
+        {React.createElement(require("@/components/ui/IconSymbol").IconSymbol, {
+          name: "person.fill",
+          size: 24,
+          color: "white",
+        })}
+      </TouchableOpacity>
+
       <FlatList
         ref={flatListRef}
         data={articles}
@@ -208,6 +221,15 @@ export default function HighlightedScreen() {
           index,
         })}
       />
+
+      {/* Settings Drawer */}
+      {React.createElement(
+        require("@/components/SettingsDrawer").SettingsDrawer,
+        {
+          visible: settingsDrawerVisible,
+          onClose: () => setSettingsDrawerVisible(false),
+        }
+      )}
     </ThemedView>
   );
 }
@@ -215,6 +237,7 @@ export default function HighlightedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#000",
   },
   brandLogo: {
     position: "absolute",
@@ -308,5 +331,21 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  userButton: {
+    position: "absolute",
+    top: 80,
+    right: 16,
+    zIndex: 10,
+    // backgroundColor: "rgba(0, 0, 0, 0.3)",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  userIcon: {
+    fontSize: 20,
+    color: "white",
   },
 });

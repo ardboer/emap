@@ -1,6 +1,8 @@
+import SwipeableTabView from "@/components/SwipeableTabView";
+import TabBar from "@/components/TabBar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { fetchNewsArticles } from "@/services/api";
+import { fetchMenuItems, fetchNewsArticles } from "@/services/api";
 import { Article } from "@/types";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -15,18 +17,24 @@ import {
 
 export default function NewsScreen() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadArticles = async () => {
+  const loadData = async () => {
     try {
       setError(null);
-      const fetchedArticles = await fetchNewsArticles();
+      const [fetchedArticles, fetchedMenuItems] = await Promise.all([
+        fetchNewsArticles(),
+        fetchMenuItems(),
+      ]);
       setArticles(fetchedArticles);
+      setMenuItems(fetchedMenuItems);
     } catch (err) {
-      setError("Failed to load articles");
-      console.error("Error loading articles:", err);
+      setError("Failed to load data");
+      console.error("Error loading data:", err);
     } finally {
       setLoading(false);
     }
@@ -35,23 +43,31 @@ export default function NewsScreen() {
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
-      const fetchedArticles = await fetchNewsArticles();
+      const [fetchedArticles, fetchedMenuItems] = await Promise.all([
+        fetchNewsArticles(),
+        fetchMenuItems(),
+      ]);
       setArticles(fetchedArticles);
+      setMenuItems(fetchedMenuItems);
       setError(null);
     } catch (err) {
-      setError("Failed to refresh articles");
-      console.error("Error refreshing articles:", err);
+      setError("Failed to refresh data");
+      console.error("Error refreshing data:", err);
     } finally {
       setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    loadArticles();
+    loadData();
   }, []);
 
   const handleArticlePress = (article: Article) => {
     router.push(`/article/${article.id}`);
+  };
+
+  const handleTabChange = (index: number) => {
+    setActiveTabIndex(index);
   };
 
   const renderArticle = ({ item }: { item: Article }) => (
@@ -79,11 +95,24 @@ export default function NewsScreen() {
     </TouchableOpacity>
   );
 
+  const renderTabContent = () => (
+    <FlatList
+      data={articles}
+      renderItem={renderArticle}
+      keyExtractor={(item) => item.id}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+      contentContainerStyle={styles.listContainer}
+    />
+  );
+
   if (loading) {
     return (
       <ThemedView style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" />
-        <ThemedText style={styles.loadingText}>Loading articles...</ThemedText>
+        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
       </ThemedView>
     );
   }
@@ -92,24 +121,40 @@ export default function NewsScreen() {
     return (
       <ThemedView style={[styles.container, styles.centerContent]}>
         <ThemedText style={styles.errorText}>{error}</ThemedText>
-        <TouchableOpacity style={styles.retryButton} onPress={loadArticles}>
+        <TouchableOpacity style={styles.retryButton} onPress={loadData}>
           <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
         </TouchableOpacity>
       </ThemedView>
     );
   }
 
+  // Create tabs from menu items
+  const tabs = menuItems.map((item) => ({
+    id: item.ID.toString(),
+    title: item.title,
+    content: renderTabContent(),
+  }));
+
+  // If no menu items, show default tab
+  if (tabs.length === 0) {
+    tabs.push({
+      id: "default",
+      title: "News",
+      content: renderTabContent(),
+    });
+  }
+
   return (
     <ThemedView style={styles.container}>
-      <FlatList
-        data={articles}
-        renderItem={renderArticle}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={styles.listContainer}
+      <TabBar
+        tabs={tabs}
+        activeTabIndex={activeTabIndex}
+        onTabPress={handleTabChange}
+      />
+      <SwipeableTabView
+        tabs={tabs}
+        activeTabIndex={activeTabIndex}
+        onTabChange={handleTabChange}
       />
     </ThemedView>
   );

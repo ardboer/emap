@@ -1,7 +1,8 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform } from "react-native";
+import { Platform, TouchableOpacity } from "react-native";
 
+import { BrandLogo } from "@/components/BrandLogo";
 import { HapticTab } from "@/components/HapticTab";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { PodcastPlayer } from "@/components/PodcastPlayer";
@@ -9,6 +10,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -63,7 +65,19 @@ export default function TabLayout() {
           name="news"
           options={{
             title: "News",
-            headerTitle: "News",
+            headerTitle: "",
+            headerShadowVisible: false,
+            headerStyle: {
+              borderBottomWidth: 0,
+            },
+            headerLeft: () => (
+              <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
+            ),
+            headerRight: () => (
+              <TouchableOpacity style={{ marginRight: 16, padding: 8 }}>
+                <Ionicons name="search" size={24} color="#666" />
+              </TouchableOpacity>
+            ),
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="newspaper.fill" color={color} />
             ),
@@ -88,16 +102,6 @@ export default function TabLayout() {
             href: features?.enablePodcasts ? "/(tabs)/podcasts" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="mic.fill" color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="settings"
-          options={{
-            title: "Settings",
-            headerTitle: "Settings",
-            tabBarIcon: ({ color }) => (
-              <IconSymbol size={28} name="gearshape.fill" color={color} />
             ),
           }}
         />

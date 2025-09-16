@@ -24,3 +24,21 @@ export interface PodcastCategory {
   name: string;
   episodes: PodcastEpisode[];
 }
+
+export interface MenuItem {
+  ID: number;
+  title: string;
+  url: string;
+  object_id: string;
+  object: string;
+  type: string;
+  type_label: string;
+  menu_order: number;
+  parent: string;
+  target: string;
+}
+
+export interface MenuResponse {
+  menu_id: number;
+  menu_items: MenuItem[];
+}
