@@ -1,10 +1,10 @@
-import ArticleTeaser from "@/components/ArticleTeaser";
 import SwipeableTabView from "@/components/SwipeableTabView";
 import TabBar from "@/components/TabBar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { fetchMenuItems, fetchNewsArticles } from "@/services/api";
 import { Article } from "@/types";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-export default function NewsScreen() {
+export default function ClinicalScreen() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
@@ -71,7 +71,28 @@ export default function NewsScreen() {
   };
 
   const renderArticle = ({ item }: { item: Article }) => (
-    <ArticleTeaser article={item} onPress={handleArticlePress} />
+    <TouchableOpacity
+      style={styles.articleContainer}
+      onPress={() => handleArticlePress(item)}
+    >
+      <Image
+        source={{ uri: item.imageUrl }}
+        style={styles.thumbnail}
+        contentFit="cover"
+      />
+      <ThemedView style={styles.contentContainer}>
+        <ThemedText type="defaultSemiBold" style={styles.title}>
+          {item.title}
+        </ThemedText>
+        <ThemedText style={styles.leadText} numberOfLines={2}>
+          {item.leadText}
+        </ThemedText>
+        <ThemedView style={styles.metaContainer}>
+          <ThemedText style={styles.category}>{item.category}</ThemedText>
+          <ThemedText style={styles.timestamp}>{item.timestamp}</ThemedText>
+        </ThemedView>
+      </ThemedView>
+    </TouchableOpacity>
   );
 
   const renderTabContent = () => (
@@ -118,7 +139,7 @@ export default function NewsScreen() {
   if (tabs.length === 0) {
     tabs.push({
       id: "default",
-      title: "News",
+      title: "Clinical",
       content: renderTabContent(),
     });
   }
@@ -145,6 +166,45 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 16,
+  },
+  articleContainer: {
+    flexDirection: "row",
+    marginBottom: 16,
+    backgroundColor: "rgba(0,0,0,0.05)",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  thumbnail: {
+    width: 120,
+    alignSelf: "stretch",
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 12,
+    justifyContent: "space-between",
+  },
+  title: {
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  leadText: {
+    fontSize: 14,
+    opacity: 0.8,
+    marginBottom: 8,
+  },
+  metaContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  category: {
+    fontSize: 12,
+    fontWeight: "600",
+    opacity: 0.7,
+  },
+  timestamp: {
+    fontSize: 12,
+    opacity: 0.6,
   },
   centerContent: {
     justifyContent: "center",

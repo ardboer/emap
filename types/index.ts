@@ -42,3 +42,52 @@ export interface MenuResponse {
   menu_id: number;
   menu_items: MenuItem[];
 }
+
+export interface Event {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  imageUrl: string;
+  timestamp: string;
+  link: string;
+}
+
+export interface WordPressEvent {
+  id: number;
+  date: string;
+  title: {
+    rendered: string;
+  };
+  excerpt: {
+    rendered: string;
+  };
+  content: {
+    rendered: string;
+  };
+  featured_media: number;
+  link: string;
+}
+
+export interface SearchResult {
+  id: number;
+  title: string;
+  url: string;
+  type: string;
+  subtype: string;
+  _links: {
+    self: {
+      embeddable: boolean;
+      href: string;
+      targetHints: {
+        allow: string[];
+      };
+    }[];
+    about: {
+      href: string;
+    }[];
+    collection: {
+      href: string;
+    }[];
+  };
+}

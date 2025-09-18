@@ -1,0 +1,101 @@
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { fetchRelatedArticles } from "@/services/api";
+import { Article } from "@/types";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet } from "react-native";
+import ArticleTeaser from "./ArticleTeaser";
+
+interface RelatedArticlesProps {
+  currentArticleId: string;
+}
+
+export default function RelatedArticles({
+  currentArticleId,
+}: RelatedArticlesProps) {
+  const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadRelatedArticles = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const articles = await fetchRelatedArticles(currentArticleId, 5);
+        setRelatedArticles(articles);
+      } catch (err) {
+        setError("Failed to load related articles");
+        console.error("Error loading related articles:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRelatedArticles();
+  }, [currentArticleId]);
+
+  if (loading) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          Related Articles
+        </ThemedText>
+        <ThemedView style={styles.loadingContainer}>
+          <ActivityIndicator size="small" />
+          <ThemedText style={styles.loadingText}>
+            Loading related articles...
+          </ThemedText>
+        </ThemedView>
+      </ThemedView>
+    );
+  }
+
+  if (error || relatedArticles.length === 0) {
+    return null; // Don't show the section if there's an error or no articles
+  }
+
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedView style={styles.divider} />
+      <ThemedText type="subtitle" style={styles.sectionTitle}>
+        Related Articles
+      </ThemedText>
+      <ThemedView style={styles.articlesContainer}>
+        {relatedArticles.map((article) => (
+          <ArticleTeaser key={article.id} article={article} />
+        ))}
+      </ThemedView>
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    marginTop: 32,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  articlesContainer: {
+    gap: 0, // ArticleTeaser already has marginBottom
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+  loadingText: {
+    marginLeft: 12,
+    fontSize: 14,
+    opacity: 0.7,
+  },
+});

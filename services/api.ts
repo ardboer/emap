@@ -11,6 +11,8 @@ const STRUCTURED_CONTENT_ENDPOINT = "/wp-json/mbm-structured-html/v1/posts";
 const HIGHLIGHTS_ENDPOINT = "/wp-json/mbm-apps/v1/highlights";
 const INDIVIDUAL_POST_ENDPOINT = "/wp-json/mbm-apps/v1/posts";
 const MENU_ENDPOINT = "/wp-json/mbm-apps/v1/menu";
+const EVENTS_ENDPOINT = "/wp-json/wp/v2/mec-events";
+const SEARCH_ENDPOINT = "/wp-json/wp/v2/search";
 
 export interface HighlightsApiItem {
   post_id: number;
@@ -557,7 +559,303 @@ export async function fetchMenuItems(): Promise<any[]> {
   }
 }
 
+// Helper function to validate if an event object has required properties
+function isValidEvent(event: any): boolean {
+  return (
+    event &&
+    typeof event === "object" &&
+    event.id &&
+    event.title &&
+    event.title.rendered &&
+    event.date
+  );
+}
+
+// Transform WordPress event to Event interface
+async function transformWordPressEventToEvent(event: any): Promise<any> {
+  // Ensure we have valid event data
+  if (!isValidEvent(event)) {
+    throw new Error("Invalid event data");
+  }
+
+  const imageUrl = event.featured_media
+    ? await fetchMediaUrl(event.featured_media)
+    : "https://picsum.photos/800/600?random=1";
+
+  return {
+    id: event.id.toString(),
+    title: decodeHtmlEntities(stripHtml(event.title.rendered)),
+    excerpt:
+      event.excerpt && event.excerpt.rendered
+        ? stripHtml(event.excerpt.rendered)
+        : "",
+    content:
+      event.content && event.content.rendered
+        ? stripHtml(event.content.rendered)
+        : "",
+    imageUrl,
+    timestamp: formatDate(event.date),
+    link: event.link || "",
+  };
+}
+
+// Fetch events from WordPress events API
+export async function fetchEvents(): Promise<any[]> {
+  const { cacheService } = await import("./cache");
+  const cacheKey = "events";
+  const { hash } = getApiConfig();
+
+  // Try to get from cache first
+  const cached = await cacheService.get<any[]>(cacheKey, { hash });
+  if (cached) {
+    console.log("Returning cached events");
+    return cached;
+  }
+
+  try {
+    const { baseUrl } = getApiConfig();
+    const response = await fetch(
+      `${baseUrl}${EVENTS_ENDPOINT}?hash=${hash}&_fields=id,title,excerpt,content,featured_media,date,link`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch events");
+    }
+
+    const wordpressEvents: any[] = await response.json();
+
+    // Filter out empty objects and invalid events
+    const validEvents = wordpressEvents.filter(isValidEvent);
+
+    console.log(
+      `Filtered ${wordpressEvents.length - validEvents.length} invalid events`
+    );
+
+    const events = await Promise.all(
+      validEvents.map(async (event) => {
+        try {
+          return await transformWordPressEventToEvent(event);
+        } catch (error) {
+          console.warn(`Failed to transform event ${event.id}:`, error);
+          return null;
+        }
+      })
+    );
+
+    // Filter out any null results from failed transformations
+    const successfulEvents = events.filter((event) => event !== null);
+
+    // Cache the result
+    await cacheService.set(cacheKey, successfulEvents, { hash });
+
+    return successfulEvents;
+  } catch (error) {
+    console.error("Error fetching events:", error);
+
+    // Try to return stale cached data if available
+    const staleCache = await cacheService.get<any[]>(cacheKey);
+    if (staleCache) {
+      console.log("Returning stale cached events due to API error");
+      return staleCache;
+    }
+
+    throw error;
+  }
+}
+
+// Fetch a single event by ID
+export async function fetchSingleEvent(eventId: string): Promise<any> {
+  const { cacheService } = await import("./cache");
+  const cacheKey = "single_event";
+  const { hash } = getApiConfig();
+
+  // Try to get from cache first
+  const cached = await cacheService.get<any>(cacheKey, { eventId, hash });
+  if (cached) {
+    console.log(`Returning cached single event for ${eventId}`);
+    return cached;
+  }
+
+  try {
+    const { baseUrl } = getApiConfig();
+    const response = await fetch(
+      `${baseUrl}${EVENTS_ENDPOINT}/${eventId}?hash=${hash}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch event");
+    }
+
+    const eventData: any = await response.json();
+    console.log("Single event response:", eventData);
+
+    // Validate event data
+    if (!isValidEvent(eventData)) {
+      throw new Error("Invalid event data received");
+    }
+
+    // Extract image URL from featured_media if available
+    let imageUrl = "https://picsum.photos/800/600?random=1";
+    if (eventData.featured_media) {
+      try {
+        imageUrl = await fetchMediaUrl(eventData.featured_media);
+      } catch (error) {
+        console.warn("Failed to fetch featured media, using fallback");
+      }
+    }
+
+    // Transform to Event interface
+    const event: any = {
+      id: eventData.id.toString(),
+      title: decodeHtmlEntities(stripHtml(eventData.title.rendered)),
+      excerpt:
+        eventData.excerpt && eventData.excerpt.rendered
+          ? stripHtml(eventData.excerpt.rendered)
+          : "",
+      content:
+        eventData.content && eventData.content.rendered
+          ? stripHtml(eventData.content.rendered)
+          : "",
+      imageUrl,
+      timestamp: formatDate(eventData.date),
+      link: eventData.link || "",
+    };
+
+    // Cache the result
+    await cacheService.set(cacheKey, event, { eventId, hash });
+
+    return event;
+  } catch (error) {
+    console.error("Error fetching single event:", error);
+
+    // Try to return stale cached data if available
+    const staleCache = await cacheService.get<any>(cacheKey, { eventId });
+    if (staleCache) {
+      console.log(
+        `Returning stale cached single event for ${eventId} due to API error`
+      );
+      return staleCache;
+    }
+
+    throw error;
+  }
+}
+
+// Fetch related articles (excluding current article)
+export async function fetchRelatedArticles(
+  excludeId: string,
+  limit: number = 5
+): Promise<Article[]> {
+  const { cacheService } = await import("./cache");
+  const cacheKey = "related_articles";
+  const { hash } = getApiConfig();
+
+  // Try to get from cache first
+  const cached = await cacheService.get<Article[]>(cacheKey, {
+    excludeId,
+    limit,
+    hash,
+  });
+  if (cached) {
+    console.log(`Returning cached related articles for ${excludeId}`);
+    return cached;
+  }
+
+  try {
+    const { baseUrl } = getApiConfig();
+    const response = await fetch(
+      `${baseUrl}${HIGHLIGHTS_ENDPOINT}?hash=${hash}&per_page=${limit + 5}` // Fetch extra to account for filtering
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch related articles");
+    }
+
+    const highlightsItems: HighlightsApiItem[] = await response.json();
+
+    // Filter out the current article and transform to Article interface
+    const relatedArticles = highlightsItems
+      .filter((item) => item.post_id.toString() !== excludeId)
+      .slice(0, limit)
+      .map(transformHighlightsItemToArticle);
+
+    // Cache the result
+    await cacheService.set(cacheKey, relatedArticles, {
+      excludeId,
+      limit,
+      hash,
+    });
+
+    return relatedArticles;
+  } catch (error) {
+    console.error("Error fetching related articles:", error);
+
+    // Try to return stale cached data if available
+    const staleCache = await cacheService.get<Article[]>(cacheKey, {
+      excludeId,
+      limit,
+    });
+    if (staleCache) {
+      console.log(
+        `Returning stale cached related articles for ${excludeId} due to API error`
+      );
+      return staleCache;
+    }
+
+    throw error;
+  }
+}
+
 // Get all news articles
 export async function fetchNewsArticles(): Promise<Article[]> {
   return await fetchArticles();
+}
+
+// Fetch search results from WordPress search API
+export async function fetchSearchResults(query: string): Promise<any[]> {
+  const { cacheService } = await import("./cache");
+  const cacheKey = "search_results";
+  const { hash } = getApiConfig();
+
+  // Try to get from cache first
+  const cached = await cacheService.get<any[]>(cacheKey, { query, hash });
+  if (cached) {
+    console.log(`Returning cached search results for "${query}"`);
+    return cached;
+  }
+
+  try {
+    const { baseUrl } = getApiConfig();
+    const encodedQuery = encodeURIComponent(query);
+    const response = await fetch(
+      `${baseUrl}${SEARCH_ENDPOINT}?search=${encodedQuery}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch search results");
+    }
+
+    const searchResults: any[] = await response.json();
+    console.log("Search results response:", searchResults);
+
+    // Transform search results to include decoded titles
+    const transformedResults = searchResults.map((result) => ({
+      ...result,
+      title: decodeHtmlEntities(stripHtml(result.title)),
+    }));
+
+    // Cache the result
+    await cacheService.set(cacheKey, transformedResults, { query, hash });
+
+    return transformedResults;
+  } catch (error) {
+    console.error("Error fetching search results:", error);
+
+    // Try to return stale cached data if available
+    const staleCache = await cacheService.get<any[]>(cacheKey, { query });
+    if (staleCache) {
+      console.log(
+        `Returning stale cached search results for "${query}" due to API error`
+      );
+      return staleCache;
+    }
+
+    throw error;
+  }
 }

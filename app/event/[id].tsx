@@ -1,7 +1,6 @@
-import RelatedArticles from "@/components/RelatedArticles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Article } from "@/types";
+import { fetchSingleEvent } from "@/services/api";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -23,10 +22,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const HEADER_HEIGHT = screenHeight * 0.4;
 
-export default function ArticleScreen() {
+export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [article, setArticle] = useState<Article | null>(null);
-  const [content, setContent] = useState<string>("");
+  const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,9 +57,9 @@ export default function ArticleScreen() {
   });
 
   useEffect(() => {
-    const loadArticle = async () => {
+    const loadEvent = async () => {
       if (!id) {
-        setError("No article ID provided");
+        setError("No event ID provided");
         setLoading(false);
         return;
       }
@@ -69,23 +67,17 @@ export default function ArticleScreen() {
       try {
         setLoading(true);
         setError(null);
-
-        // Fetch the complete article with content in one API call
-        const fetchSingleArticle = (await import("@/services/api"))
-          .fetchSingleArticle;
-        const fullArticle = await fetchSingleArticle(id);
-
-        setArticle(fullArticle);
-        setContent(fullArticle.content);
+        const eventData = await fetchSingleEvent(id);
+        setEvent(eventData);
       } catch (err) {
-        setError("Failed to load article");
-        console.error("Error loading article:", err);
+        setError("Failed to load event");
+        console.error("Error loading event:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadArticle();
+    loadEvent();
   }, [id]);
 
   if (loading) {
@@ -93,17 +85,17 @@ export default function ArticleScreen() {
       <SafeAreaView style={styles.container}>
         <ThemedView style={styles.centerContent}>
           <ActivityIndicator size="large" />
-          <ThemedText style={styles.loadingText}>Loading article...</ThemedText>
+          <ThemedText style={styles.loadingText}>Loading event...</ThemedText>
         </ThemedView>
       </SafeAreaView>
     );
   }
 
-  if (error || !article) {
+  if (error || !event) {
     return (
       <SafeAreaView style={styles.container}>
         <ThemedView style={styles.errorContainer}>
-          <ThemedText type="title">{error || "Article not found"}</ThemedText>
+          <ThemedText type="title">{error || "Event not found"}</ThemedText>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
@@ -119,7 +111,7 @@ export default function ArticleScreen() {
     <View style={styles.container}>
       {/* Fixed Header Image */}
       <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
-        <Image source={{ uri: article.imageUrl }} style={styles.headerImage} />
+        <Image source={{ uri: event.imageUrl }} style={styles.headerImage} />
       </Animated.View>
 
       {/* Back Button */}
@@ -142,37 +134,23 @@ export default function ArticleScreen() {
         {/* Spacer to push content below header */}
         <View style={styles.headerSpacer} />
 
-        {/* Article Content */}
+        {/* Event Content */}
         <ThemedView style={styles.contentContainer}>
           <ThemedView style={styles.metaContainer}>
-            <ThemedText style={styles.category}>{article.category}</ThemedText>
-            <ThemedText style={styles.timestamp}>
-              {article.timestamp}
-            </ThemedText>
+            <ThemedText style={styles.timestamp}>{event.timestamp}</ThemedText>
           </ThemedView>
 
           <ThemedText type="title" style={styles.title}>
-            {article.title}
+            {event.title}
           </ThemedText>
 
-          {article.subtitle && (
-            <ThemedText type="subtitle" style={styles.subtitle}>
-              {article.subtitle}
-            </ThemedText>
+          {event.excerpt && (
+            <ThemedText style={styles.excerpt}>{event.excerpt}</ThemedText>
           )}
-
-          <ThemedText style={styles.leadText}>{article.leadText}</ThemedText>
 
           <ThemedView style={styles.divider} />
 
-          {content ? (
-            <ThemedText style={styles.content}>{content}</ThemedText>
-          ) : (
-            <ThemedText style={styles.content}>{article.content}</ThemedText>
-          )}
-
-          {/* Related Articles Section */}
-          <RelatedArticles currentArticleId={article.id} />
+          <ThemedText style={styles.content}>{event.content}</ThemedText>
         </ThemedView>
       </Animated.ScrollView>
     </View>
@@ -249,15 +227,9 @@ const styles = StyleSheet.create({
   },
   metaContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
     marginBottom: 16,
-  },
-  category: {
-    fontSize: 14,
-    fontWeight: "600",
-    opacity: 0.7,
-    textTransform: "uppercase",
   },
   timestamp: {
     fontSize: 14,
@@ -269,13 +241,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     lineHeight: 30,
   },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 16,
-    opacity: 0.8,
-    lineHeight: 24,
-  },
-  leadText: {
+  excerpt: {
     fontSize: 16,
     fontWeight: "500",
     marginBottom: 20,

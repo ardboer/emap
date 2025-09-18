@@ -42,7 +42,10 @@
     "splash": "./assets/splash.png"
   },
   "features": {
-    "enablePodcasts": true,
-    "enablePaper": true
+    "enablePodcasts": false,
+    "enablePaper": false,
+    "enableClinical": true,
+    "enableEvents": true,
+    "enableAsk": true
   }
 }

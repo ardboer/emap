@@ -43,6 +43,9 @@
   },
   "features": {
     "enablePodcasts": false,
-    "enablePaper": false
+    "enablePaper": false,
+    "enableClinical": false,
+    "enableEvents": true,
+    "enableAsk": true
   }
 }

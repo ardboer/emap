@@ -44,6 +44,9 @@ export interface BrandConfig {
   features: {
     enablePodcasts: boolean;
     enablePaper: boolean;
+    enableClinical: boolean;
+    enableEvents: boolean;
+    enableAsk: boolean;
   };
 }
 

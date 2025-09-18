@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import React from "react";
 import { Platform, TouchableOpacity } from "react-native";
 
@@ -25,6 +25,11 @@ export default function TabLayout() {
     Colors[colorScheme ?? "light"].tabIconDefault;
   const tabBarBackgroundColor =
     themeColors?.tabBarBackground || Colors[colorScheme ?? "light"].background;
+
+  // Handle search icon press
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
 
   return (
     <>
@@ -74,12 +79,105 @@ export default function TabLayout() {
               <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
             ),
             headerRight: () => (
-              <TouchableOpacity style={{ marginRight: 16, padding: 8 }}>
+              <TouchableOpacity
+                style={{ marginRight: 16, padding: 8 }}
+                onPress={handleSearchPress}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="search" size={24} color="#666" />
               </TouchableOpacity>
             ),
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="newspaper.fill" color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="clinical"
+          options={{
+            title: "Clinical",
+            headerTitle: "",
+            headerShadowVisible: false,
+            headerStyle: {
+              borderBottomWidth: 0,
+            },
+            headerLeft: () => (
+              <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
+            ),
+            headerRight: () => (
+              <TouchableOpacity
+                style={{ marginRight: 16, padding: 8 }}
+                onPress={handleSearchPress}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="search" size={24} color="#666" />
+              </TouchableOpacity>
+            ),
+            href: features?.enableClinical ? "/(tabs)/clinical" : null,
+            tabBarIcon: ({ color }) => (
+              <IconSymbol
+                size={28}
+                name="heart.text.square.fill"
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="events"
+          options={{
+            title: "Events",
+            headerTitle: "",
+            headerShadowVisible: false,
+            headerStyle: {
+              borderBottomWidth: 0,
+            },
+            headerLeft: () => (
+              <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
+            ),
+            headerRight: () => (
+              <TouchableOpacity
+                style={{ marginRight: 16, padding: 8 }}
+                onPress={handleSearchPress}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="search" size={24} color="#666" />
+              </TouchableOpacity>
+            ),
+            href: features?.enableEvents ? "/(tabs)/events" : null,
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={28} name="calendar" color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="ask"
+          options={{
+            title: "Ask",
+            headerTitle: "",
+            headerShadowVisible: false,
+            headerStyle: {
+              borderBottomWidth: 0,
+            },
+            headerLeft: () => (
+              <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
+            ),
+            headerRight: () => (
+              <TouchableOpacity
+                style={{ marginRight: 16, padding: 8 }}
+                onPress={handleSearchPress}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="search" size={24} color="#666" />
+              </TouchableOpacity>
+            ),
+            href: features?.enableAsk ? "/(tabs)/ask" : null,
+            tabBarIcon: ({ color }) => (
+              <IconSymbol
+                size={28}
+                name="questionmark.circle.fill"
+                color={color}
+              />
             ),
           }}
         />
