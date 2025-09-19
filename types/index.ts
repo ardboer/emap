@@ -3,10 +3,29 @@ export interface Article {
   title: string;
   subtitle?: string;
   leadText: string;
-  content: string;
+  content: string | StructuredContentNode[];
   imageUrl: string;
   timestamp: string;
   category: string;
+}
+
+export interface StructuredContentNode {
+  typename: string;
+  type: string;
+  text?: string;
+  children?: StructuredContentNode[];
+  href?: string;
+  class?: string;
+  target?: string;
+  rel?: string;
+  code?: string; // For custom embeds
+  relation?: {
+    alt?: string;
+    caption?: string;
+    href: string;
+    photographer?: string;
+    typename: string;
+  };
 }
 
 export interface PodcastEpisode {

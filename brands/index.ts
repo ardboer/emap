@@ -48,6 +48,7 @@ export interface BrandConfig {
     enableEvents: boolean;
     enableAsk: boolean;
   };
+  testArticleId?: string;
 }
 
 // Available brands registry

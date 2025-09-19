@@ -50,13 +50,14 @@ const styles = StyleSheet.create({
   articleContainer: {
     flexDirection: "row",
     marginBottom: 16,
-    backgroundColor: "rgba(0,0,0,0.05)",
-    borderRadius: 12,
+    // backgroundColor: "rgba(0,0,0,0.05)",
     overflow: "hidden",
   },
   thumbnail: {
     width: 120,
-    alignSelf: "stretch",
+    height: 120,
+    marginTop: 16,
+    borderRadius: 4,
   },
   contentContainer: {
     flex: 1,

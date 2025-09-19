@@ -1,5 +1,5 @@
 import { brandManager } from "@/config/BrandManager";
-import { Article } from "@/types";
+import { Article, StructuredContentNode } from "@/types";
 
 // Get API configuration from active brand
 function getApiConfig() {
@@ -38,17 +38,6 @@ export interface PostApiResponse {
   };
   featured_media: number;
   link: string;
-}
-
-export interface StructuredContentNode {
-  typename: string;
-  type: string;
-  text?: string;
-  children?: StructuredContentNode[];
-  href?: string;
-  class?: string;
-  target?: string;
-  rel?: string;
 }
 
 // Legacy interfaces - keeping for backward compatibility if needed
@@ -407,8 +396,9 @@ export async function fetchFeaturedArticles(): Promise<Article[]> {
     );
 
     // Transform and return first 5
+    console.log("itemsWithHighlightImages", itemsWithHighlightImages.length);
     const featuredArticles = itemsWithHighlightImages
-      .slice(0, 5)
+      // .slice(0, 5)
       .map(transformHighlightsItemToArticle);
 
     // Cache the result
@@ -467,14 +457,14 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
     // Extract category from URL
     const category = extractCategoryFromUrl(postData.link);
 
-    // Parse the structured content
-    let content = "";
+    // Return structured content instead of parsed text
+    let content: string | StructuredContentNode[] = "";
     if (
       postData.content &&
       postData.content.rendered &&
       Array.isArray(postData.content.rendered)
     ) {
-      content = parseStructuredContent(postData.content.rendered);
+      content = postData.content.rendered;
     }
 
     // Transform to Article interface

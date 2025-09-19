@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "emap",
+    "owner": "emap-publishing",
     "slug": "emap",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,6 +18,9 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
+    },
+    "updates": {
+      "url": "https://u.expo.dev/17cbc49f-0d9b-4eb4-a9ff-4b3981b607bb"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +41,15 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "17cbc49f-0d9b-4eb4-a9ff-4b3981b607bb"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

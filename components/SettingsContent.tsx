@@ -1,10 +1,16 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { router } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Switch, TouchableOpacity } from "react-native";
 
-export function SettingsContent() {
+interface SettingsContentProps {
+  onClose?: () => void;
+}
+
+export function SettingsContent({ onClose }: SettingsContentProps) {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
   const [cacheStats, setCacheStats] = React.useState<{
@@ -12,6 +18,9 @@ export function SettingsContent() {
     totalSize: number;
     formattedSize: string;
   } | null>(null);
+
+  // Get brand configuration for test article
+  const { brandConfig } = useBrandConfig();
 
   // Load cache stats on component mount
   React.useEffect(() => {
@@ -69,6 +78,13 @@ export function SettingsContent() {
         },
       ]
     );
+  };
+
+  const handleTestArticle = () => {
+    if (brandConfig?.testArticleId) {
+      router.push(`/article/${brandConfig.testArticleId}`);
+      onClose?.(); // Close the drawer after navigation
+    }
   };
 
   const SettingsItem = ({
@@ -196,6 +212,15 @@ export function SettingsContent() {
           <ThemedView>
             {React.createElement(
               require("@/components/BrandSwitcher").BrandSwitcher
+            )}
+            {/* Test Article Button */}
+            {brandConfig?.testArticleId && (
+              <SettingsItem
+                title="Test Article"
+                subtitle={`Open test article for ${brandConfig.displayName} (ID: ${brandConfig.testArticleId})`}
+                icon="doc.text"
+                onPress={handleTestArticle}
+              />
             )}
           </ThemedView>
         )}

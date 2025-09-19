@@ -110,7 +110,7 @@ export function SettingsDrawer({ visible, onClose }: SettingsDrawerProps) {
 
         {/* Settings Content */}
         <ThemedView style={styles.content}>
-          <SettingsContent />
+          <SettingsContent onClose={onClose} />
         </ThemedView>
       </Animated.View>
     </Modal>

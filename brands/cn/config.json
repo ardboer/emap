@@ -47,5 +47,6 @@
     "enableClinical": false,
     "enableEvents": true,
     "enableAsk": true
-  }
+  },
+  "testArticleId": "528406"
 }

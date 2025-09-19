@@ -1,7 +1,8 @@
 import RelatedArticles from "@/components/RelatedArticles";
+import { RichContentRenderer } from "@/components/RichContentRenderer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Article } from "@/types";
+import { Article, StructuredContentNode } from "@/types";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -26,7 +27,6 @@ const HEADER_HEIGHT = screenHeight * 0.4;
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [article, setArticle] = useState<Article | null>(null);
-  const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,7 +76,6 @@ export default function ArticleScreen() {
         const fullArticle = await fetchSingleArticle(id);
 
         setArticle(fullArticle);
-        setContent(fullArticle.content);
       } catch (err) {
         setError("Failed to load article");
         console.error("Error loading article:", err);
@@ -87,6 +86,36 @@ export default function ArticleScreen() {
 
     loadArticle();
   }, [id]);
+
+  // Helper function to render content based on type
+  const renderContent = () => {
+    if (!article?.content) return null;
+
+    // Debug logging
+    console.log("Article content type:", typeof article.content);
+    console.log("Is array:", Array.isArray(article.content));
+    if (Array.isArray(article.content)) {
+      console.log("Content length:", article.content.length);
+      console.log("First few items:", article.content.slice(0, 3));
+    }
+
+    // If content is structured (array), use RichContentRenderer
+    if (Array.isArray(article.content)) {
+      return (
+        <RichContentRenderer
+          content={article.content as StructuredContentNode[]}
+          style={styles.richContent}
+        />
+      );
+    }
+
+    // If content is string, use ThemedText
+    return (
+      <ThemedText style={styles.content}>
+        {article.content as string}
+      </ThemedText>
+    );
+  };
 
   if (loading) {
     return (
@@ -165,11 +194,8 @@ export default function ArticleScreen() {
 
           <ThemedView style={styles.divider} />
 
-          {content ? (
-            <ThemedText style={styles.content}>{content}</ThemedText>
-          ) : (
-            <ThemedText style={styles.content}>{article.content}</ThemedText>
-          )}
+          {/* Render content based on type */}
+          {renderContent()}
 
           {/* Related Articles Section */}
           <RelatedArticles currentArticleId={article.id} />
@@ -220,8 +246,8 @@ const styles = StyleSheet.create({
     height: HEADER_HEIGHT,
   },
   contentContainer: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
     padding: 20,
     marginTop: -20,
     minHeight: screenHeight - HEADER_HEIGHT + 40,
@@ -292,6 +318,9 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 16,
     opacity: 0.8,
+  },
+  richContent: {
+    marginBottom: 16,
   },
   centerContent: {
     flex: 1,

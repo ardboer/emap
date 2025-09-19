@@ -198,8 +198,8 @@ const styles = StyleSheet.create({
     height: HEADER_HEIGHT,
   },
   contentContainer: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
     padding: 20,
     marginTop: -20,
     minHeight: screenHeight - HEADER_HEIGHT + 40,

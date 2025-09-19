@@ -1,6 +1,8 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { router } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Switch, TouchableOpacity } from "react-native";
 
@@ -12,6 +14,16 @@ export default function SettingsScreen() {
     totalSize: number;
     formattedSize: string;
   } | null>(null);
+
+  // Get brand configuration for test article
+  const { brandConfig } = useBrandConfig();
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log("Settings - brandConfig:", brandConfig);
+    console.log("Settings - testArticleId:", brandConfig?.testArticleId);
+    console.log("Settings - __DEV__:", __DEV__);
+  }, [brandConfig]);
 
   // Load cache stats on component mount
   React.useEffect(() => {
@@ -69,6 +81,12 @@ export default function SettingsScreen() {
         },
       ]
     );
+  };
+
+  const handleTestArticle = () => {
+    if (brandConfig?.testArticleId) {
+      router.push(`/article/${brandConfig.testArticleId}`);
+    }
   };
 
   const SettingsItem = ({
@@ -198,6 +216,15 @@ export default function SettingsScreen() {
               {React.createElement(
                 require("@/components/BrandSwitcher").BrandSwitcher
               )}
+              {/* Test Article Button */}
+              <SettingsItem
+                title="Test Article"
+                subtitle={`Open test article for ${
+                  brandConfig?.displayName || "Unknown"
+                } (ID: ${brandConfig?.testArticleId || "Not found"})`}
+                icon="doc.text"
+                onPress={handleTestArticle}
+              />
             </ThemedView>
           )}
         </ThemedView>

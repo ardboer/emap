@@ -1,10 +1,10 @@
+import ArticleTeaser from "@/components/ArticleTeaser";
 import SwipeableTabView from "@/components/SwipeableTabView";
 import TabBar from "@/components/TabBar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { fetchMenuItems, fetchNewsArticles } from "@/services/api";
 import { Article } from "@/types";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -71,28 +71,7 @@ export default function ClinicalScreen() {
   };
 
   const renderArticle = ({ item }: { item: Article }) => (
-    <TouchableOpacity
-      style={styles.articleContainer}
-      onPress={() => handleArticlePress(item)}
-    >
-      <Image
-        source={{ uri: item.imageUrl }}
-        style={styles.thumbnail}
-        contentFit="cover"
-      />
-      <ThemedView style={styles.contentContainer}>
-        <ThemedText type="defaultSemiBold" style={styles.title}>
-          {item.title}
-        </ThemedText>
-        <ThemedText style={styles.leadText} numberOfLines={2}>
-          {item.leadText}
-        </ThemedText>
-        <ThemedView style={styles.metaContainer}>
-          <ThemedText style={styles.category}>{item.category}</ThemedText>
-          <ThemedText style={styles.timestamp}>{item.timestamp}</ThemedText>
-        </ThemedView>
-      </ThemedView>
-    </TouchableOpacity>
+    <ArticleTeaser article={item} onPress={() => handleArticlePress(item)} />
   );
 
   const renderTabContent = () => (

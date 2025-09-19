@@ -1,7 +1,7 @@
+import ArticleTeaser from "@/components/ArticleTeaser";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { fetchEvents } from "@/services/api";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -54,27 +54,7 @@ export default function EventsScreen() {
   };
 
   const renderEvent = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.eventContainer}
-      onPress={() => handleEventPress(item)}
-    >
-      <Image
-        source={{ uri: item.imageUrl }}
-        style={styles.thumbnail}
-        contentFit="cover"
-      />
-      <ThemedView style={styles.contentContainer}>
-        <ThemedText type="defaultSemiBold" style={styles.title}>
-          {item.title}
-        </ThemedText>
-        <ThemedText style={styles.excerpt} numberOfLines={2}>
-          {item.excerpt}
-        </ThemedText>
-        <ThemedView style={styles.metaContainer}>
-          <ThemedText style={styles.timestamp}>{item.timestamp}</ThemedText>
-        </ThemedView>
-      </ThemedView>
-    </TouchableOpacity>
+    <ArticleTeaser article={item} onPress={() => handleEventPress(item)} />
   );
 
   if (loading) {
