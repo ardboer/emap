@@ -40,6 +40,76 @@ const calculateImageDimensions = (
   };
 };
 
+// Helper function to calculate gallery item dimensions
+const calculateGalleryItemDimensions = (screenWidth: number) => {
+  const containerPadding = 16; // Reduced total horizontal padding
+  const itemSpacing = 6; // Further reduced space between items
+
+  // Determine number of columns based on screen width - ensure minimum 2 columns
+  let columns = 2; // Always start with at least 2 columns
+  if (screenWidth > 768) {
+    columns = 4;
+  } else if (screenWidth > 600) {
+    columns = 3;
+  }
+
+  const availableWidth = screenWidth - containerPadding;
+  const totalSpacing = (columns - 1) * itemSpacing;
+  const itemWidth = (availableWidth - totalSpacing) / columns;
+
+  // Ensure minimum width for 2 columns even on very small screens
+  const minItemWidth = (screenWidth - 32) / 2; // Force 2 columns minimum
+  const finalItemWidth = Math.max(
+    Math.floor(itemWidth),
+    Math.floor(minItemWidth)
+  );
+
+  // Reduce width by 32 pixels as requested
+  const adjustedWidth = Math.max(finalItemWidth - 32, 80); // Minimum 80px width
+
+  return {
+    width: adjustedWidth,
+    height: adjustedWidth, // Square items
+    columns,
+    spacing: itemSpacing,
+  };
+};
+
+// Helper function to extract gallery image from nested structure
+const extractGalleryImage = (
+  node: StructuredContentNode
+): {
+  imageUri?: string;
+  linkUri?: string;
+  alt?: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+} | null => {
+  // Look for dt > a > img structure
+  if (node.type === "dt" && node.children) {
+    const linkNode = node.children.find(
+      (child) => child.typename === "HTMLLink"
+    );
+    if (linkNode && linkNode.children) {
+      const imgNode = linkNode.children.find(
+        (child) => child.typename === "HTMLRelation" && child.type === "img"
+      );
+      if (imgNode && imgNode.relation?.href) {
+        return {
+          imageUri: imgNode.relation.href,
+          linkUri: linkNode.href,
+          alt: imgNode.relation.alt,
+          caption: imgNode.relation.caption,
+          width: imgNode.relation.width,
+          height: imgNode.relation.height,
+        };
+      }
+    }
+  }
+  return null;
+};
+
 interface RichContentRendererProps {
   content: StructuredContentNode[];
   style?: any;
@@ -389,9 +459,63 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         }
 
         if (node.class?.includes("gallery")) {
+          // Enhanced gallery rendering
+          const galleryItems =
+            node.children?.filter(
+              (child) =>
+                child.type === "dl" && child.class?.includes("gallery-item")
+            ) || [];
+
+          const itemDimensions = calculateGalleryItemDimensions(screenWidth);
+
           return (
-            <View key={index} style={styles.gallery}>
-              {children}
+            <View style={styles.enhancedGallery}>
+              {galleryItems.map((item, itemIndex) => {
+                // Extract image data from the nested structure
+                const dtNode = item.children?.find(
+                  (child) => child.type === "dt"
+                );
+                const imageData = dtNode ? extractGalleryImage(dtNode) : null;
+
+                if (!imageData?.imageUri) return null;
+
+                return (
+                  <TouchableOpacity
+                    key={itemIndex}
+                    style={[
+                      styles.enhancedGalleryItem,
+                      {
+                        width: itemDimensions.width,
+                        height: itemDimensions.height,
+                        marginRight:
+                          (itemIndex + 1) % itemDimensions.columns === 0
+                            ? 0
+                            : itemDimensions.spacing,
+                        marginBottom: itemDimensions.spacing,
+                      },
+                    ]}
+                    onPress={() => {
+                      if (imageData.linkUri) {
+                        handleLinkPress(imageData.linkUri);
+                      } else {
+                        onImagePress(imageData.imageUri, imageData.caption);
+                      }
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={{ uri: imageData.imageUri }}
+                      style={styles.enhancedGalleryImage}
+                      contentFit="cover"
+                    />
+                    {imageData.caption && (
+                      <ThemedText style={styles.enhancedGalleryCaption}>
+                        {imageData.caption}
+                      </ThemedText>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           );
         }
@@ -400,11 +524,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
 
       case "dl":
         if (node.class?.includes("gallery-item")) {
-          return (
-            <View key={index} style={styles.galleryItem}>
-              {children}
-            </View>
-          );
+          // Skip individual gallery items as they're handled by the gallery div
+          return null;
         }
         return <>{children}</>;
 
@@ -762,6 +883,29 @@ const styles = StyleSheet.create({
   galleryItem: {
     width: "48%",
     marginBottom: 16,
+  },
+  enhancedGallery: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    flexWrap: "wrap",
+    marginVertical: 16,
+    paddingHorizontal: 4,
+  },
+  enhancedGalleryItem: {
+    borderRadius: 8,
+  },
+  enhancedGalleryImage: {
+    width: "100%",
+    height: "80%",
+    borderRadius: 8,
+  },
+  enhancedGalleryCaption: {
+    fontSize: 12,
+    fontStyle: "italic",
+    padding: 8,
+    textAlign: "center",
+    opacity: 0.7,
+    height: "20%",
   },
   videoContainer: {
     marginVertical: 16,
