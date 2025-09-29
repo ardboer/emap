@@ -25,6 +25,8 @@ export interface StructuredContentNode {
     href: string;
     photographer?: string;
     typename: string;
+    width?: number;
+    height?: number;
   };
 }
 

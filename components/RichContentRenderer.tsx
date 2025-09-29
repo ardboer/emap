@@ -16,6 +16,30 @@ import { ThemedView } from "./ThemedView";
 
 const { width: screenWidth } = Dimensions.get("window");
 
+// Helper function to calculate proper image dimensions
+const calculateImageDimensions = (
+  originalWidth?: number,
+  originalHeight?: number,
+  maxWidth: number = screenWidth - 32
+) => {
+  // Fallback dimensions if not provided
+  if (!originalWidth || !originalHeight) {
+    return { width: maxWidth, height: 200 };
+  }
+
+  // If image fits within max width, use original dimensions
+  if (originalWidth <= maxWidth) {
+    return { width: originalWidth, height: originalHeight };
+  }
+
+  // Scale down proportionally if image is too wide
+  const aspectRatio = originalHeight / originalWidth;
+  return {
+    width: maxWidth,
+    height: Math.round(maxWidth * aspectRatio),
+  };
+};
+
 interface RichContentRendererProps {
   content: StructuredContentNode[];
   style?: any;
@@ -26,6 +50,43 @@ interface RichContentNodeProps {
   index: number;
   onImagePress: (imageUri: string, caption?: string) => void;
 }
+
+interface RichContentTableCellProps {
+  node: StructuredContentNode;
+  isHeader: boolean;
+  onImagePress: (imageUri: string, caption?: string) => void;
+}
+
+const RichContentTableCell: React.FC<RichContentTableCellProps> = ({
+  node,
+  isHeader,
+  onImagePress,
+}) => {
+  // Extract text content from nested structure
+  const extractTextContent = (node: StructuredContentNode): string => {
+    if (node.typename === "HTMLTextNode") {
+      return node.text || "";
+    }
+
+    if (node.children) {
+      return node.children.map(extractTextContent).join("");
+    }
+
+    return "";
+  };
+
+  const textContent = extractTextContent(node);
+
+  return (
+    <ThemedView style={[styles.tableCell, isHeader && styles.tableHeaderCell]}>
+      <ThemedText
+        style={[styles.tableCellText, isHeader && styles.tableHeaderText]}
+      >
+        {textContent}
+      </ThemedText>
+    </ThemedView>
+  );
+};
 
 const RichContentNode: React.FC<RichContentNodeProps> = ({
   node,
@@ -98,6 +159,12 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
               node.class?.includes("alignnone");
             const isFullWidth = node.class?.includes("size-full");
 
+            // Calculate proper image dimensions using API data
+            const imageDimensions = calculateImageDimensions(
+              imageNode.relation.width,
+              imageNode.relation.height
+            );
+
             return (
               <View
                 key={index}
@@ -120,8 +187,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                   <Image
                     source={{ uri: imageNode.relation.href }}
                     style={{
-                      height: 200,
-                      width: screenWidth - 32,
+                      width: imageDimensions.width,
+                      height: imageDimensions.height,
                     }}
                     onError={(e) => console.log("error loading image", e)}
                     contentFit="contain"
@@ -211,9 +278,16 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         return <>{children}</>;
 
       case "table":
+        const { ScrollView } = require("react-native");
         return (
           <ThemedView key={index} style={styles.tableContainer}>
-            <View style={styles.table}>{children}</View>
+            <ScrollView
+              horizontal={true}
+              showsHorizontalScrollIndicator={true}
+              style={styles.tableScrollView}
+            >
+              <View style={styles.table}>{children}</View>
+            </ScrollView>
           </ThemedView>
         );
 
@@ -221,18 +295,27 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         return <>{children}</>;
 
       case "tr":
+        // Check if this is the first row (header row)
+        const isHeaderRow = index === 0;
         return (
-          <View key={index} style={styles.tableRow}>
-            {children}
+          <View
+            key={index}
+            style={[styles.tableRow, isHeaderRow && styles.tableHeaderRow]}
+          >
+            {node.children?.map((cell, cellIndex) => (
+              <RichContentTableCell
+                key={cellIndex}
+                node={cell}
+                isHeader={isHeaderRow}
+                onImagePress={onImagePress}
+              />
+            ))}
           </View>
         );
 
       case "td":
-        return (
-          <ThemedView key={index} style={styles.tableCell}>
-            <ThemedText style={styles.tableCellText}>{children}</ThemedText>
-          </ThemedView>
-        );
+        // This case is now handled by RichContentTableCell component
+        return null;
 
       case "div":
         // Handle special div classes
@@ -303,33 +386,9 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
     );
     if (youtubeMatch) {
       const videoId = youtubeMatch[1];
-      return (
-        <View key={index} style={styles.videoContainer}>
-          <WebView
-            source={{
-              html: `
-                <html>
-                  <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>
-                      body { margin: 0; padding: 0; }
-                      iframe { width: 100%; height: 100%; border: none; }
-                    </style>
-                  </head>
-                  <body>
-                    ${node.code}
-                  </body>
-                </html>
-              `,
-            }}
-            style={styles.webView}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-            allowsInlineMediaPlayback={true}
-            mediaPlaybackRequiresUserAction={false}
-          />
-        </View>
-      );
+      // Import YouTubePlayerComponent dynamically to avoid import issues
+      const { YouTubePlayerComponent } = require("./YouTubePlayer");
+      return <YouTubePlayerComponent key={index} videoId={videoId} />;
     }
 
     // For other embeds, use WebView
@@ -365,6 +424,12 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
     node.type === "img" &&
     node.relation?.href
   ) {
+    // Calculate proper image dimensions using API data
+    const imageDimensions = calculateImageDimensions(
+      node.relation.width,
+      node.relation.height
+    );
+
     return (
       <View key={index} style={styles.imageContainer}>
         <TouchableOpacity
@@ -375,7 +440,11 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         >
           <Image
             source={{ uri: node.relation.href }}
-            style={styles.image}
+            style={{
+              width: imageDimensions.width,
+              height: imageDimensions.height,
+              borderRadius: 8,
+            }}
             contentFit="cover"
           />
         </TouchableOpacity>
@@ -560,25 +629,60 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     borderRadius: 8,
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tableScrollView: {
+    flex: 1,
   },
   table: {
     borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    borderColor: "rgba(0, 0, 0, 0.15)",
+    borderRadius: 8,
+    overflow: "hidden",
+    minWidth: screenWidth - 32,
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0, 0, 0, 0.1)",
+    minHeight: 48,
+  },
+  tableHeaderRow: {
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    borderBottomWidth: 2,
+    borderBottomColor: "rgba(0, 0, 0, 0.2)",
   },
   tableCell: {
     flex: 1,
-    padding: 12,
+    padding: 16,
     borderRightWidth: 1,
     borderRightColor: "rgba(0, 0, 0, 0.1)",
+    justifyContent: "center",
+    minHeight: 48,
+    width: 150,
+  },
+  tableHeaderCell: {
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    borderRightWidth: 1,
+    borderRightColor: "rgba(0, 0, 0, 0.15)",
   },
   tableCellText: {
     fontSize: 14,
     lineHeight: 20,
+    color: "rgba(0, 0, 0, 0.8)",
+  },
+  tableHeaderText: {
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 20,
+    color: "rgba(0, 0, 0, 0.9)",
   },
   factBox: {
     backgroundColor: "rgba(255, 193, 7, 0.1)",
