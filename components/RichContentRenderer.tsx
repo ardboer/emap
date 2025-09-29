@@ -57,25 +57,40 @@ interface RichContentTableCellProps {
   onImagePress: (imageUri: string, caption?: string) => void;
 }
 
+// Helper function to extract plain text from nested content nodes
+const extractTextContent = (nodes: StructuredContentNode[]): string => {
+  return nodes
+    .map((node) => {
+      if (node.typename === "HTMLTextNode") {
+        return node.text || "";
+      }
+      if (node.children) {
+        return extractTextContent(node.children);
+      }
+      return "";
+    })
+    .join("");
+};
+
+// Helper function to extract text content from a single node (for table cells)
+const extractSingleNodeTextContent = (node: StructuredContentNode): string => {
+  if (node.typename === "HTMLTextNode") {
+    return node.text || "";
+  }
+
+  if (node.children) {
+    return node.children.map(extractSingleNodeTextContent).join("");
+  }
+
+  return "";
+};
+
 const RichContentTableCell: React.FC<RichContentTableCellProps> = ({
   node,
   isHeader,
   onImagePress,
 }) => {
-  // Extract text content from nested structure
-  const extractTextContent = (node: StructuredContentNode): string => {
-    if (node.typename === "HTMLTextNode") {
-      return node.text || "";
-    }
-
-    if (node.children) {
-      return node.children.map(extractTextContent).join("");
-    }
-
-    return "";
-  };
-
-  const textContent = extractTextContent(node);
+  const textContent = extractSingleNodeTextContent(node);
 
   return (
     <ThemedView style={[styles.tableCell, isHeader && styles.tableHeaderCell]}>
@@ -86,6 +101,22 @@ const RichContentTableCell: React.FC<RichContentTableCellProps> = ({
       </ThemedText>
     </ThemedView>
   );
+};
+
+// Helper function to check if header contains only text (no complex formatting)
+const isSimpleTextHeader = (nodes: StructuredContentNode[]): boolean => {
+  return nodes.every((node) => {
+    if (node.typename === "HTMLTextNode") {
+      return true;
+    }
+    if (node.typename === "HTMLElement" && node.children) {
+      // Allow simple formatting like strong, em, span
+      if (["strong", "em", "span"].includes(node.type || "")) {
+        return isSimpleTextHeader(node.children);
+      }
+    }
+    return false;
+  });
 };
 
 const RichContentNode: React.FC<RichContentNodeProps> = ({
@@ -115,6 +146,16 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
 
     switch (node.type) {
       case "h1":
+        // For simple text headers, extract text to avoid nested ThemedText issues
+        if (node.children && isSimpleTextHeader(node.children)) {
+          const textContent = extractTextContent(node.children);
+          return (
+            <ThemedText key={index} type="title" style={styles.h1}>
+              {textContent}
+            </ThemedText>
+          );
+        }
+        // For complex headers with formatting, render children but with header context
         return (
           <ThemedText key={index} type="title" style={styles.h1}>
             {children}
@@ -122,6 +163,16 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         );
 
       case "h2":
+        // For simple text headers, extract text to avoid nested ThemedText issues
+        if (node.children && isSimpleTextHeader(node.children)) {
+          const textContent = extractTextContent(node.children);
+          return (
+            <ThemedText key={index} type="subtitle" style={styles.h2}>
+              {textContent}
+            </ThemedText>
+          );
+        }
+        // For complex headers with formatting, render children but with header context
         return (
           <ThemedText key={index} type="subtitle" style={styles.h2}>
             {children}
@@ -129,6 +180,16 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         );
 
       case "h3":
+        // For simple text headers, extract text to avoid nested ThemedText issues
+        if (node.children && isSimpleTextHeader(node.children)) {
+          const textContent = extractTextContent(node.children);
+          return (
+            <ThemedText key={index} style={styles.h3}>
+              {textContent}
+            </ThemedText>
+          );
+        }
+        // For complex headers with formatting, render children but with header context
         return (
           <ThemedText key={index} style={styles.h3}>
             {children}
