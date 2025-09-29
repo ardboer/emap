@@ -3,6 +3,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { fetchEvents } from "@/services/api";
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -49,8 +50,24 @@ export default function EventsScreen() {
     loadData();
   }, []);
 
-  const handleEventPress = (event: any) => {
-    router.push(`/event/${event.id}`);
+  const handleEventPress = async (event: any) => {
+    // Check if event has a valid link property
+    if (event.link && event.link.trim() !== "") {
+      try {
+        // Open the link in an in-app browser
+        await WebBrowser.openBrowserAsync(event.link, {
+          presentationStyle: WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
+          controlsColor: "#007AFF",
+        });
+      } catch (error) {
+        console.error("Error opening browser:", error);
+        // Fallback to event detail page if browser fails
+        router.push(`/event/${event.id}`);
+      }
+    } else {
+      // No link available, navigate to event detail page
+      router.push(`/event/${event.id}`);
+    }
   };
 
   const renderEvent = ({ item }: { item: any }) => (

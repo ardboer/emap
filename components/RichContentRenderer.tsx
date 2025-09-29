@@ -363,6 +363,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         );
 
       case "blockquote":
+        // For blockquotes, extract text to avoid nested ThemedText issues with styling
+        if (node.children) {
+          const textContent = extractTextContent(node.children);
+          return (
+            <ThemedView key={index} style={styles.blockquote}>
+              <ThemedText style={styles.blockquoteText}>
+                {textContent}
+              </ThemedText>
+            </ThemedView>
+          );
+        }
         return (
           <ThemedView key={index} style={styles.blockquote}>
             <ThemedText style={styles.blockquoteText}>{children}</ThemedText>
@@ -744,9 +755,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   blockquoteText: {
-    fontSize: 16,
+    fontSize: 20,
     fontStyle: "italic",
-    lineHeight: 24,
+    lineHeight: 28,
   },
   list: {
     marginVertical: 8,

@@ -1,7 +1,7 @@
 import { brandManager } from "@/config/BrandManager";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const CACHE_PREFIX = "wp_cache_";
+const CACHE_PREFIX = "wp_cache2_";
 const CACHE_VERSION = "1.0";
 
 export interface CacheEntry<T> {
