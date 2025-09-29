@@ -11,6 +11,7 @@ const STRUCTURED_CONTENT_ENDPOINT = "/wp-json/mbm-structured-html/v1/posts";
 const HIGHLIGHTS_ENDPOINT = "/wp-json/mbm-apps/v1/highlights";
 const INDIVIDUAL_POST_ENDPOINT = "/wp-json/mbm-apps/v1/posts";
 const MENU_ENDPOINT = "/wp-json/mbm-apps/v1/menu";
+const CATEGORY_ENDPOINT = "/wp-json/mbm-apps/v1/categories";
 const EVENTS_ENDPOINT = "/wp-json/wp/v2/mec-events";
 const SEARCH_ENDPOINT = "/wp-json/wp/v2/search";
 
@@ -64,7 +65,7 @@ export interface MediaResponse {
   alt_text: string;
 }
 
-export interface CategoryResponse {
+export interface LegacyCategoryResponse {
   id: number;
   name: string;
 }
@@ -137,7 +138,7 @@ async function fetchCategoryName(categoryId: number): Promise<string> {
     if (!response.ok) {
       throw new Error("Failed to fetch category");
     }
-    const category: CategoryResponse = await response.json();
+    const category: LegacyCategoryResponse = await response.json();
     return category.name;
   } catch (error) {
     console.error("Error fetching category:", error);
@@ -796,6 +797,91 @@ export async function fetchRelatedArticles(
 // Get all news articles
 export async function fetchNewsArticles(): Promise<Article[]> {
   return await fetchArticles();
+}
+
+// Transform category post to Article interface
+function transformCategoryPostToArticle(post: any): Article {
+  const imageUrl = post.post_image || "https://picsum.photos/800/600?random=1";
+  const category = extractCategoryFromUrl(post.post_url);
+
+  return {
+    id: post.post_id.toString(),
+    title: decodeHtmlEntities(stripHtml(post.post_title)),
+    leadText: "", // Category posts don't have excerpts in the provided structure
+    content: "", // Will be replaced with full content when viewing article
+    imageUrl,
+    timestamp: formatDate(post.post_publish_date),
+    category,
+  };
+}
+
+// Fetch category content from category API
+export async function fetchCategoryContent(
+  categoryId: string
+): Promise<Article[]> {
+  const { cacheService } = await import("./cache");
+  const cacheKey = "category_content";
+  const { hash } = getApiConfig();
+
+  // Try to get from cache first
+  const cached = await cacheService.get<Article[]>(cacheKey, {
+    categoryId,
+    hash,
+  });
+  if (cached) {
+    console.log(`Returning cached category content for ${categoryId}`);
+    return cached;
+  }
+
+  try {
+    const { baseUrl } = getApiConfig();
+    console.log(
+      "fetch category content from ",
+      `${baseUrl}${CATEGORY_ENDPOINT}/${categoryId}/?hash=${hash}`
+    );
+    const response = await fetch(
+      `${baseUrl}${CATEGORY_ENDPOINT}/${categoryId}/?hash=${hash}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch category content");
+    }
+
+    const categoryData: any = await response.json();
+    console.log("Category response:", categoryData);
+
+    // Extract all posts from all blocks
+    const allPosts: any[] = [];
+    if (categoryData.blocks && Array.isArray(categoryData.blocks)) {
+      categoryData.blocks.forEach((block: any) => {
+        if (block.posts && Array.isArray(block.posts)) {
+          allPosts.push(...block.posts);
+        }
+      });
+    }
+
+    // Transform posts to Article interface
+    const articles = allPosts.map(transformCategoryPostToArticle);
+
+    // Cache the result
+    await cacheService.set(cacheKey, articles, { categoryId, hash });
+
+    return articles;
+  } catch (error) {
+    console.error("Error fetching category content:", error);
+
+    // Try to return stale cached data if available
+    const staleCache = await cacheService.get<Article[]>(cacheKey, {
+      categoryId,
+    });
+    if (staleCache) {
+      console.log(
+        `Returning stale cached category content for ${categoryId} due to API error`
+      );
+      return staleCache;
+    }
+
+    throw error;
+  }
 }
 
 // Fetch search results from WordPress search API

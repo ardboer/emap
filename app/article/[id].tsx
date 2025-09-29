@@ -4,7 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Article, StructuredContentNode } from "@/types";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -25,7 +25,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const HEADER_HEIGHT = screenHeight * 0.4;
 
 export default function ArticleScreen() {
-  const id = 345162; // { id } = useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams<{ id: string }>(); // const id = 345162; //
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

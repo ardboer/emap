@@ -1,12 +1,15 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
-import SwipeableTabView from "@/components/SwipeableTabView";
 import TabBar from "@/components/TabBar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { fetchMenuItems, fetchNewsArticles } from "@/services/api";
+import {
+  fetchCategoryContent,
+  fetchMenuItems,
+  fetchNewsArticles,
+} from "@/services/api";
 import { Article } from "@/types";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -16,22 +19,32 @@ import {
 } from "react-native";
 
 export default function NewsScreen() {
-  const [articles, setArticles] = useState<Article[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async () => {
+  // Store articles per tab
+  const [tabArticles, setTabArticles] = useState<{ [key: string]: Article[] }>(
+    {}
+  );
+  const [tabLoadingStates, setTabLoadingStates] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [tabRefreshingStates, setTabRefreshingStates] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  const loadInitialData = async () => {
     try {
       setError(null);
-      const [fetchedArticles, fetchedMenuItems] = await Promise.all([
-        fetchNewsArticles(),
-        fetchMenuItems(),
-      ]);
-      setArticles(fetchedArticles);
+      const fetchedMenuItems = await fetchMenuItems();
       setMenuItems(fetchedMenuItems);
+
+      // Load content for the first tab (Home or first menu item)
+      if (fetchedMenuItems.length > 0) {
+        await loadTabContent(0, fetchedMenuItems);
+      }
     } catch (err) {
       setError("Failed to load data");
       console.error("Error loading data:", err);
@@ -40,52 +53,128 @@ export default function NewsScreen() {
     }
   };
 
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
+  const loadTabContent = async (tabIndex: number, menuItemsToUse?: any[]) => {
+    const items = menuItemsToUse || menuItems;
+    if (items.length === 0) return;
+
+    const menuItem = items[tabIndex];
+    const tabKey = menuItem.object_id.toString();
+
+    // Set loading state for this tab
+    setTabLoadingStates((prev) => ({ ...prev, [tabKey]: true }));
+
     try {
-      const [fetchedArticles, fetchedMenuItems] = await Promise.all([
-        fetchNewsArticles(),
-        fetchMenuItems(),
-      ]);
-      setArticles(fetchedArticles);
-      setMenuItems(fetchedMenuItems);
-      setError(null);
+      let articles: Article[];
+
+      // Check if this is the "Home" tab
+      if (menuItem.title === "Home") {
+        articles = await fetchNewsArticles();
+      } else {
+        // Use the menu item's object_id to fetch category content
+        articles = await fetchCategoryContent(menuItem.object_id.toString());
+      }
+
+      setTabArticles((prev) => ({ ...prev, [tabKey]: articles }));
     } catch (err) {
-      setError("Failed to refresh data");
-      console.error("Error refreshing data:", err);
+      console.error(`Error loading content for tab ${menuItem.title}:`, err);
+      setTabArticles((prev) => ({ ...prev, [tabKey]: [] }));
     } finally {
-      setRefreshing(false);
+      setTabLoadingStates((prev) => ({ ...prev, [tabKey]: false }));
     }
-  }, []);
+  };
+
+  const onRefreshTab = async (tabIndex: number) => {
+    if (menuItems.length === 0) return;
+
+    const menuItem = menuItems[tabIndex];
+    const tabKey = menuItem.object_id.toString();
+
+    setTabRefreshingStates((prev) => ({ ...prev, [tabKey]: true }));
+
+    try {
+      let articles: Article[];
+
+      if (menuItem.title === "Home") {
+        articles = await fetchNewsArticles();
+      } else {
+        articles = await fetchCategoryContent(menuItem.object_id.toString());
+      }
+
+      setTabArticles((prev) => ({ ...prev, [tabKey]: articles }));
+    } catch (err) {
+      console.error(`Error refreshing content for tab ${menuItem.title}:`, err);
+    } finally {
+      setTabRefreshingStates((prev) => ({ ...prev, [tabKey]: false }));
+    }
+  };
 
   useEffect(() => {
-    loadData();
+    loadInitialData();
   }, []);
 
   const handleArticlePress = (article: Article) => {
     router.push(`/article/${article.id}`);
   };
 
-  const handleTabChange = (index: number) => {
+  const handleTabChange = async (index: number) => {
     setActiveTabIndex(index);
+
+    // Load content for this tab if not already loaded
+    const menuItem = menuItems[index];
+    const tabKey = menuItem.object_id.toString();
+
+    if (!tabArticles[tabKey] && !tabLoadingStates[tabKey]) {
+      await loadTabContent(index);
+    }
   };
 
   const renderArticle = ({ item }: { item: Article }) => (
     <ArticleTeaser article={item} onPress={handleArticlePress} />
   );
 
-  const renderTabContent = () => (
-    <FlatList
-      data={articles}
-      renderItem={renderArticle}
-      keyExtractor={(item) => item.id}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      contentContainerStyle={styles.listContainer}
-    />
-  );
+  const renderTabContent = (tabIndex: number) => {
+    if (menuItems.length === 0) return null;
+
+    const menuItem = menuItems[tabIndex];
+    const tabKey = menuItem.object_id.toString();
+    const articles = tabArticles[tabKey] || [];
+    const isLoading = tabLoadingStates[tabKey] || false;
+    const isRefreshing = tabRefreshingStates[tabKey] || false;
+
+    if (isLoading && articles.length === 0) {
+      return (
+        <ThemedView style={[styles.container, styles.centerContent]}>
+          <ActivityIndicator size="large" />
+          <ThemedText style={styles.loadingText}>
+            Loading {menuItem.title}...
+          </ThemedText>
+        </ThemedView>
+      );
+    }
+
+    return (
+      <FlatList
+        data={articles}
+        renderItem={renderArticle}
+        keyExtractor={(item, index) => item.id + index.toString()}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => onRefreshTab(tabIndex)}
+          />
+        }
+        contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={
+          <ThemedView style={styles.centerContent}>
+            <ThemedText style={styles.emptyText}>
+              No articles available
+            </ThemedText>
+          </ThemedView>
+        }
+      />
+    );
+  };
 
   if (loading) {
     return (
@@ -96,22 +185,22 @@ export default function NewsScreen() {
     );
   }
 
-  if (error && articles.length === 0) {
+  if (error && menuItems.length === 0) {
     return (
       <ThemedView style={[styles.container, styles.centerContent]}>
         <ThemedText style={styles.errorText}>{error}</ThemedText>
-        <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+        <TouchableOpacity style={styles.retryButton} onPress={loadInitialData}>
           <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
         </TouchableOpacity>
       </ThemedView>
     );
   }
 
-  // Create tabs from menu items
+  // Create tabs from menu items (only titles, content will be rendered dynamically)
   const tabs = menuItems.map((item) => ({
-    id: item.ID.toString(),
+    id: item.object_id.toString(),
     title: item.title,
-    content: renderTabContent(),
+    content: null, // We'll render content dynamically
   }));
 
   // If no menu items, show default tab
@@ -119,7 +208,7 @@ export default function NewsScreen() {
     tabs.push({
       id: "default",
       title: "News",
-      content: renderTabContent(),
+      content: null,
     });
   }
 
@@ -130,11 +219,16 @@ export default function NewsScreen() {
         activeTabIndex={activeTabIndex}
         onTabPress={handleTabChange}
       />
-      <SwipeableTabView
-        tabs={tabs}
-        activeTabIndex={activeTabIndex}
-        onTabChange={handleTabChange}
-      />
+      {/* Render only the active tab's content */}
+      {menuItems.length > 0 ? (
+        renderTabContent(activeTabIndex)
+      ) : (
+        <ThemedView style={styles.centerContent}>
+          <ThemedText style={styles.emptyText}>
+            No menu items available
+          </ThemedText>
+        </ThemedView>
+      )}
     </ThemedView>
   );
 }
@@ -149,6 +243,8 @@ const styles = StyleSheet.create({
   centerContent: {
     justifyContent: "center",
     alignItems: "center",
+    flex: 1,
+    padding: 20,
   },
   loadingText: {
     marginTop: 16,
@@ -158,6 +254,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     marginBottom: 16,
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: "center",
+    opacity: 0.6,
   },
   retryButton: {
     backgroundColor: "rgba(0, 0, 0, 0.1)",

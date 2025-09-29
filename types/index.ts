@@ -112,3 +112,37 @@ export interface SearchResult {
     }[];
   };
 }
+
+export interface CategoryPost {
+  post_id: number;
+  post_title: string;
+  post_url: string;
+  post_image: string;
+  post_image_width: number;
+  post_image_height: number;
+  post_publish_date: string;
+}
+
+export interface CategoryBlock {
+  block_layout: string;
+  block_title: string;
+  block_description: string;
+  block_bottom_more_news_link: string;
+  block_bottom_more_news_link_url: string;
+  posts: CategoryPost[];
+}
+
+export interface CategoryResponse {
+  id: number;
+  count: number;
+  description: string;
+  link: string;
+  name: string;
+  slug: string;
+  taxonomy: string;
+  parent: number;
+  meta: any[];
+  yoast_head: string;
+  yoast_head_json: any;
+  blocks: CategoryBlock[];
+}
