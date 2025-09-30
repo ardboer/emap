@@ -1,0 +1,35 @@
+# App Store Connect / Apple Developer Portal configuration
+# CLI authentication - Fastlane will prompt for credentials when needed
+apple_id(ENV["APPLE_ID"] || "your-apple-id@example.com")
+team_id(ENV["APPLE_TEAM_ID"] || "YOUR_TEAM_ID")
+
+# Use CLI authentication instead of API keys
+# Fastlane will prompt for Apple ID password and 2FA when needed
+
+# Construction News iOS App
+for_platform :ios do
+  if ENV["BRAND"] == "cn"
+    app_identifier("metropolis.co.uk.constructionnews")
+  elsif ENV["BRAND"] == "nt"
+    app_identifier("metropolis.net.nursingtimes")
+  else
+    # Default to Construction News if no brand specified
+    app_identifier("metropolis.co.uk.constructionnews")
+  end
+end
+
+# Google Play Console configuration
+# Replace with your actual Google Play Console JSON key path
+json_key_file(ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || "./fastlane/google-play-key.json")
+
+# Android package names
+for_platform :android do
+  if ENV["BRAND"] == "cn"
+    package_name("metropolis.co.uk.constructionnews")
+  elsif ENV["BRAND"] == "nt"
+    package_name("metropolis.net.nursingtimes")
+  else
+    # Default to Construction News if no brand specified
+    package_name("metropolis.co.uk.constructionnews")
+  end
+end

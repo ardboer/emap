@@ -1,0 +1,160 @@
+# The Deliverfile allows you to store various App Store Connect metadata
+# For more information about the available options, run `fastlane deliver --help`
+
+# App Store Connect username
+username(ENV["APPLE_ID"])
+
+# App identifier - will be set dynamically based on brand
+# app_identifier is set in Appfile based on BRAND environment variable
+
+# Version information
+# app_version will be automatically detected from the binary
+
+# Metadata that applies to both apps
+copyright("#{Date.now.year} Metropolis International Group Limited")
+primary_category("News")
+secondary_category("Business")
+
+# App Store review information
+app_review_information(
+  first_name: ENV["APP_REVIEW_FIRST_NAME"] || "App",
+  last_name: ENV["APP_REVIEW_LAST_NAME"] || "Review",
+  phone_number: ENV["APP_REVIEW_PHONE"] || "+44 20 1234 5678",
+  email_address: ENV["APP_REVIEW_EMAIL"] || "app-review@metropolis.co.uk",
+  demo_user: ENV["APP_REVIEW_DEMO_USER"] || "demo@example.com",
+  demo_password: ENV["APP_REVIEW_DEMO_PASSWORD"] || "demo123",
+  notes: "This is a news and media app for industry professionals. No special configuration required for review."
+)
+
+# Submission information
+submission_information({
+  export_compliance_platform: 'ios',
+  export_compliance_compliance_required: false,
+  export_compliance_encryption_updated: false,
+  export_compliance_app_type: nil,
+  export_compliance_uses_encryption: false,
+  export_compliance_is_exempt: false,
+  export_compliance_contains_third_party_cryptography: false,
+  export_compliance_contains_proprietary_cryptography: false,
+  export_compliance_available_on_french_store: false,
+  
+  add_id_info_limits_tracking: true,
+  add_id_info_serves_ads: false,
+  add_id_info_tracks_action: true,
+  add_id_info_tracks_install: true,
+  add_id_info_uses_idfa: true,
+  
+  content_rights_has_rights: true,
+  content_rights_contains_third_party_content: true,
+  
+  advertising_serves_ads: false
+})
+
+# Automatic release
+automatic_release(false)
+
+# Phased release
+phased_release(true)
+
+# Skip binary upload (we handle this in Fastfile)
+skip_binary_upload(false)
+
+# Skip screenshots and metadata upload by default
+# These can be overridden in the Fastfile
+skip_screenshots(true)
+skip_metadata(false)
+
+# Force upload even if nothing changed
+force(true)
+
+# Brand-specific metadata
+if ENV["BRAND"] == "cn"
+  # Construction News specific metadata
+  name({
+    'en-US' => 'Construction News'
+  })
+  
+  subtitle({
+    'en-US' => 'Industry News & Analysis'
+  })
+  
+  description({
+    'en-US' => 'Construction News is the leading source of news, analysis, and insights for the UK construction industry. Stay up-to-date with the latest developments, project updates, industry trends, and expert commentary.
+
+Features:
+• Breaking news and industry updates
+• In-depth analysis and expert commentary  
+• Project case studies and company profiles
+• Digital magazine access
+• Event listings and networking opportunities
+• Podcast episodes and video content
+• Personalized news feed
+• Offline reading capability
+
+Whether you\'re a contractor, architect, engineer, or industry professional, Construction News provides the essential information you need to stay ahead in the construction sector.'
+  })
+  
+  keywords({
+    'en-US' => 'construction,news,building,industry,contractor,architecture,engineering,projects,analysis,UK'
+  })
+  
+  marketing_url({
+    'en-US' => 'https://www.constructionnews.co.uk'
+  })
+  
+  support_url({
+    'en-US' => 'https://www.constructionnews.co.uk/support'
+  })
+  
+  privacy_url({
+    'en-US' => 'https://www.constructionnews.co.uk/privacy-policy'
+  })
+
+elsif ENV["BRAND"] == "nt"
+  # Nursing Times specific metadata
+  name({
+    'en-US' => 'Nursing Times'
+  })
+  
+  subtitle({
+    'en-US' => 'Professional Nursing News'
+  })
+  
+  description({
+    'en-US' => 'Nursing Times is the UK\'s leading nursing publication, providing essential news, clinical guidance, and professional development resources for nurses and healthcare professionals.
+
+Features:
+• Latest nursing and healthcare news
+• Clinical practice guidelines and evidence-based articles
+• Professional development opportunities
+• Career advice and job listings
+• Digital magazine access
+• CPD-accredited learning modules
+• Expert interviews and opinion pieces
+• Community forums and networking
+• Offline reading capability
+
+Trusted by nursing professionals across the UK, Nursing Times delivers the knowledge and insights you need to excel in your nursing career and provide the best patient care.'
+  })
+  
+  keywords({
+    'en-US' => 'nursing,healthcare,medical,clinical,professional,development,CPD,patient,care,UK'
+  })
+  
+  marketing_url({
+    'en-US' => 'https://www.nursingtimes.net'
+  })
+  
+  support_url({
+    'en-US' => 'https://www.nursingtimes.net/support'
+  })
+  
+  privacy_url({
+    'en-US' => 'https://www.nursingtimes.net/privacy-policy'
+  })
+end
+
+# Release notes - can be overridden per release
+release_notes({
+  'en-US' => 'Bug fixes and performance improvements.'
+})

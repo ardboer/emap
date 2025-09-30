@@ -38,3 +38,14 @@ yarn-error.*
 
 app-example
 .env
+
+# Fastlane
+fastlane/.env.fastlane
+fastlane/google-play-service-account.json
+fastlane/google-play-key.json
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/builds
+fastlane/derived_data

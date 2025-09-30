@@ -13,9 +13,25 @@
     },
     "production": {
       "autoIncrement": true
+    },
+    "production-cn": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_BRAND": "cn"
+      },
+      "prebuildCommand": "node scripts/prebuild.js cn"
+    },
+    "production-nt": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_BRAND": "nt"
+      },
+      "prebuildCommand": "node scripts/prebuild.js nt"
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "production-cn": {},
+    "production-nt": {}
   }
 }

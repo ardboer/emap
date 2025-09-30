@@ -1,0 +1,108 @@
+# The Gymfile contains the configuration for building iOS apps
+# For more information about the available options, run `fastlane gym --help`
+
+# The project's scheme. Make sure this exists in your Xcode project
+# This will be set dynamically based on the brand
+# scheme("YourAppScheme")
+
+# The workspace to use
+# workspace("./ios/YourApp.xcworkspace")
+
+# The configuration to use when building the app
+configuration("Release")
+
+# Export method for the IPA
+export_method("app-store")
+
+# Include bitcode
+include_bitcode(true)
+
+# Include symbols
+include_symbols(true)
+
+# Clean the project before building
+clean(true)
+
+# Output directory for the IPA
+output_directory("./build")
+
+# Output name for the IPA (will be set dynamically)
+# output_name("YourApp.ipa")
+
+# Build path
+build_path("./build")
+
+# Archive path
+archive_path("./build")
+
+# Derived data path
+derived_data_path("./build/DerivedData")
+
+# Skip package IPA (we want the IPA)
+skip_package_ipa(false)
+
+# Skip package PKG
+skip_package_pkg(true)
+
+# Skip archive
+skip_archive(false)
+
+# Skip codesigning
+skip_codesigning(false)
+
+# Catalyst platform (for Mac apps)
+catalyst_platform("ios")
+
+# Destination for building
+destination("generic/platform=iOS")
+
+# Disable automatic code signing (we'll handle this with match or manual provisioning)
+disable_automatic_code_signing(false)
+
+# Export options
+export_options({
+  method: "app-store",
+  uploadBitcode: true,
+  uploadSymbols: true,
+  compileBitcode: true,
+  thinning: "<thin-for-all-variants>",
+  stripSwiftSymbols: true,
+  teamID: ENV["APPLE_TEAM_ID"],
+  signingStyle: "automatic",
+  iCloudContainerEnvironment: "Production"
+})
+
+# Suppress Xcode output
+suppress_xcode_output(false)
+
+# Disable xcpretty formatting
+disable_xcpretty(false)
+
+# xcpretty test format
+xcpretty_test_format("html")
+
+# Build settings to override
+xcargs({
+  "CODE_SIGN_IDENTITY" => "iPhone Distribution",
+  "PROVISIONING_PROFILE_SPECIFIER" => "",
+  "DEVELOPMENT_TEAM" => ENV["APPLE_TEAM_ID"],
+  "CODE_SIGN_STYLE" => "Automatic"
+})
+
+# SDK to use
+sdk("iphoneos")
+
+# Toolchain to use (optional)
+# toolchain("com.apple.dt.toolchain.XcodeDefault")
+
+# Result bundle (for debugging)
+result_bundle(true)
+
+# Build for testing
+skip_build_archive(false)
+
+# Custom build command (if needed)
+# build_command("xcodebuild")
+
+# Additional xcodebuild arguments
+# xcodebuild_command("xcodebuild")

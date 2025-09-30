@@ -1,0 +1,407 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+# Global variables
+CONSTRUCTION_NEWS_BUNDLE_ID = "metropolis.co.uk.constructionnews"
+NURSING_TIMES_BUNDLE_ID = "metropolis.net.nursingtimes"
+CONSTRUCTION_NEWS_PACKAGE = "metropolis.co.uk.constructionnews"
+NURSING_TIMES_PACKAGE = "metropolis.net.nursingtimes"
+
+# Helper methods
+def ensure_env_vars(required_vars)
+  missing_vars = required_vars.select { |var| ENV[var].nil? || ENV[var].empty? }
+  unless missing_vars.empty?
+    UI.user_error!("Missing required environment variables: #{missing_vars.join(', ')}")
+  end
+end
+
+def get_brand_name(brand)
+  case brand
+  when "cn"
+    "Construction News"
+  when "nt"
+    "Nursing Times"
+  else
+    UI.user_error!("Invalid brand: #{brand}. Must be 'cn' or 'nt'")
+  end
+end
+
+def get_bundle_id(brand)
+  case brand
+  when "cn"
+    CONSTRUCTION_NEWS_BUNDLE_ID
+  when "nt"
+    NURSING_TIMES_BUNDLE_ID
+  else
+    UI.user_error!("Invalid brand: #{brand}. Must be 'cn' or 'nt'")
+  end
+end
+
+def get_package_name(brand)
+  case brand
+  when "cn"
+    CONSTRUCTION_NEWS_PACKAGE
+  when "nt"
+    NURSING_TIMES_PACKAGE
+  else
+    UI.user_error!("Invalid brand: #{brand}. Must be 'cn' or 'nt'")
+  end
+end
+
+# iOS Platform
+platform :ios do
+  desc "Upload Construction News to TestFlight"
+  lane :upload_cn_testflight do
+    upload_to_testflight_for_brand("cn")
+  end
+
+  desc "Upload Nursing Times to TestFlight"
+  lane :upload_nt_testflight do
+    upload_to_testflight_for_brand("nt")
+  end
+
+  desc "Upload Construction News to App Store"
+  lane :upload_cn_appstore do
+    upload_to_appstore_for_brand("cn")
+  end
+
+  desc "Upload Nursing Times to App Store"
+  lane :upload_nt_appstore do
+    upload_to_appstore_for_brand("nt")
+  end
+
+  # Private lane for TestFlight upload
+  private_lane :upload_to_testflight_for_brand do |options|
+    brand = options[:brand] || options[0]
+    brand_name = get_brand_name(brand)
+    bundle_id = get_bundle_id(brand)
+    
+    UI.message("🚀 Starting TestFlight upload for #{brand_name}")
+    
+    # Ensure required environment variables
+    ensure_env_vars([
+      "APPLE_ID",
+      "APPLE_TEAM_ID"
+    ])
+
+    # CLI authentication will prompt for Apple ID password and 2FA when needed
+    # No API key setup required
+
+    # Build the app using EAS
+    build_with_eas(brand: brand, platform: "ios")
+
+    # Download the latest build
+    ipa_path = download_latest_eas_build(brand: brand, platform: "ios")
+
+    # Upload to TestFlight with retry logic
+    retry_count = 0
+    max_retries = 3
+    
+    begin
+      upload_to_testflight(
+        ipa: ipa_path,
+        app_identifier: bundle_id,
+        skip_waiting_for_build_processing: false,
+        skip_submission: true,
+        distribute_external: false,
+        notify_external_testers: false,
+        changelog: "Latest build from EAS for #{brand_name}",
+        beta_app_feedback_email: ENV["BETA_FEEDBACK_EMAIL"],
+        beta_app_description: "#{brand_name} beta version for internal testing"
+      )
+      
+      UI.success("✅ Successfully uploaded #{brand_name} to TestFlight!")
+      
+    rescue => exception
+      retry_count += 1
+      if retry_count <= max_retries
+        UI.important("⚠️  Upload failed (attempt #{retry_count}/#{max_retries}): #{exception.message}")
+        UI.important("Retrying in 30 seconds...")
+        sleep(30)
+        retry
+      else
+        UI.error("❌ Failed to upload #{brand_name} to TestFlight after #{max_retries} attempts")
+        raise exception
+      end
+    end
+
+    # Clean up downloaded file
+    File.delete(ipa_path) if File.exist?(ipa_path)
+  end
+
+  # Private lane for App Store upload
+  private_lane :upload_to_appstore_for_brand do |options|
+    brand = options[:brand] || options[0]
+    brand_name = get_brand_name(brand)
+    bundle_id = get_bundle_id(brand)
+    
+    UI.message("🚀 Starting App Store upload for #{brand_name}")
+    
+    # Ensure required environment variables
+    ensure_env_vars([
+      "APPLE_ID",
+      "APPLE_TEAM_ID"
+    ])
+
+    # CLI authentication will prompt for Apple ID password and 2FA when needed
+    # No API key setup required
+
+    # Build the app using EAS
+    build_with_eas(brand: brand, platform: "ios")
+
+    # Download the latest build
+    ipa_path = download_latest_eas_build(brand: brand, platform: "ios")
+
+    # Upload to App Store
+    upload_to_app_store(
+      ipa: ipa_path,
+      app_identifier: bundle_id,
+      skip_binary_upload: false,
+      skip_screenshots: true,
+      skip_metadata: false,
+      force: true,
+      automatic_release: false,
+      submit_for_review: false
+    )
+
+    UI.success("✅ Successfully uploaded #{brand_name} to App Store!")
+
+    # Clean up downloaded file
+    File.delete(ipa_path) if File.exist?(ipa_path)
+  end
+end
+
+# Android Platform
+platform :android do
+  desc "Upload Construction News to Google Play Store (Beta)"
+  lane :upload_cn_beta do
+    upload_to_play_store_for_brand("cn", "beta")
+  end
+
+  desc "Upload Nursing Times to Google Play Store (Beta)"
+  lane :upload_nt_beta do
+    upload_to_play_store_for_brand("nt", "beta")
+  end
+
+  desc "Upload Construction News to Google Play Store (Alpha)"
+  lane :upload_cn_alpha do
+    upload_to_play_store_for_brand("cn", "alpha")
+  end
+
+  desc "Upload Nursing Times to Google Play Store (Alpha)"
+  lane :upload_nt_alpha do
+    upload_to_play_store_for_brand("nt", "alpha")
+  end
+
+  desc "Upload Construction News to Google Play Store (Internal)"
+  lane :upload_cn_internal do
+    upload_to_play_store_for_brand("cn", "internal")
+  end
+
+  desc "Upload Nursing Times to Google Play Store (Internal)"
+  lane :upload_nt_internal do
+    upload_to_play_store_for_brand("nt", "internal")
+  end
+
+  desc "Upload Construction News to Google Play Store (Production)"
+  lane :upload_cn_production do
+    upload_to_play_store_for_brand("cn", "production")
+  end
+
+  desc "Upload Nursing Times to Google Play Store (Production)"
+  lane :upload_nt_production do
+    upload_to_play_store_for_brand("nt", "production")
+  end
+
+  # Private lane for Google Play Store upload
+  private_lane :upload_to_play_store_for_brand do |options|
+    brand = options[:brand] || options[0]
+    track = options[:track] || options[1] || "beta"
+    brand_name = get_brand_name(brand)
+    package_name = get_package_name(brand)
+    
+    UI.message("🚀 Starting Google Play Store upload for #{brand_name} (#{track} track)")
+    
+    # Check for Google Play authentication
+    if ENV["GOOGLE_PLAY_JSON_KEY_PATH"].nil? || ENV["GOOGLE_PLAY_JSON_KEY_PATH"].empty?
+      UI.user_error!("❌ Google Play Console requires a service account JSON key file.\n" +
+                     "Please set GOOGLE_PLAY_JSON_KEY_PATH in your .env.fastlane file.\n" +
+                     "See the authentication setup guide for instructions.")
+    end
+    
+    unless File.exist?(ENV["GOOGLE_PLAY_JSON_KEY_PATH"])
+      UI.user_error!("❌ Google Play JSON key file not found: #{ENV['GOOGLE_PLAY_JSON_KEY_PATH']}\n" +
+                     "Please ensure the file exists and the path is correct.")
+    end
+
+    # Build the app using EAS
+    build_with_eas(brand: brand, platform: "android")
+
+    # Download the latest build
+    aab_path = download_latest_eas_build(brand: brand, platform: "android")
+
+    # Upload to Google Play Store with retry logic
+    retry_count = 0
+    max_retries = 3
+    
+    begin
+      upload_to_play_store(
+        package_name: package_name,
+        aab: aab_path,
+        track: track,
+        release_status: track == "production" ? "draft" : "completed",
+        skip_upload_metadata: false,
+        skip_upload_changelogs: false,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"]
+      )
+      
+      UI.success("✅ Successfully uploaded #{brand_name} to Google Play Store (#{track} track)!")
+      
+    rescue => exception
+      retry_count += 1
+      if retry_count <= max_retries
+        UI.important("⚠️  Upload failed (attempt #{retry_count}/#{max_retries}): #{exception.message}")
+        UI.important("Retrying in 30 seconds...")
+        sleep(30)
+        retry
+      else
+        UI.error("❌ Failed to upload #{brand_name} to Google Play Store after #{max_retries} attempts")
+        raise exception
+      end
+    end
+
+    # Clean up downloaded file
+    File.delete(aab_path) if File.exist?(aab_path)
+  end
+end
+
+# Helper lanes
+desc "Build app using EAS"
+private_lane :build_with_eas do |options|
+  brand = options[:brand]
+  platform = options[:platform]
+  brand_name = get_brand_name(brand)
+  
+  UI.message("🔨 Building #{brand_name} for #{platform} using EAS...")
+  
+  # Set environment variable for brand
+  ENV["BRAND"] = brand
+  
+  # Run EAS build
+  profile = "production-#{brand}"
+  sh("cd .. && eas build --platform #{platform} --profile #{profile} --non-interactive --wait")
+  
+  UI.success("✅ EAS build completed for #{brand_name} (#{platform})")
+end
+
+desc "Download latest EAS build"
+private_lane :download_latest_eas_build do |options|
+  brand = options[:brand]
+  platform = options[:platform]
+  brand_name = get_brand_name(brand)
+  
+  UI.message("⬇️  Downloading latest #{brand_name} build for #{platform}...")
+  
+  # Get the latest build URL from EAS
+  profile = "production-#{brand}"
+  build_info = sh("cd .. && eas build:list --platform #{platform} --profile #{profile} --limit 1 --json --non-interactive")
+  build_data = JSON.parse(build_info)
+  
+  if build_data.empty?
+    UI.user_error!("No builds found for #{brand_name} (#{platform})")
+  end
+  
+  latest_build = build_data.first
+  download_url = latest_build["artifacts"]["buildUrl"]
+  
+  if download_url.nil? || download_url.empty?
+    UI.user_error!("No download URL found for latest #{brand_name} build")
+  end
+  
+  # Download the build
+  file_extension = platform == "ios" ? "ipa" : "aab"
+  local_path = "./#{brand}_#{platform}_build.#{file_extension}"
+  
+  sh("curl -L -o '#{local_path}' '#{download_url}'")
+  
+  UI.success("✅ Downloaded #{brand_name} build to #{local_path}")
+  
+  local_path
+end
+
+# Utility lanes
+desc "Show available lanes"
+lane :show_lanes do
+  UI.header("Available Fastlane Lanes")
+  UI.message("")
+  UI.message("iOS Lanes:")
+  UI.message("  fastlane ios upload_cn_testflight    - Upload Construction News to TestFlight")
+  UI.message("  fastlane ios upload_nt_testflight    - Upload Nursing Times to TestFlight")
+  UI.message("  fastlane ios upload_cn_appstore      - Upload Construction News to App Store")
+  UI.message("  fastlane ios upload_nt_appstore      - Upload Nursing Times to App Store")
+  UI.message("")
+  UI.message("Android Lanes:")
+  UI.message("  fastlane android upload_cn_internal  - Upload Construction News to Play Store (Internal)")
+  UI.message("  fastlane android upload_nt_internal  - Upload Nursing Times to Play Store (Internal)")
+  UI.message("  fastlane android upload_cn_alpha     - Upload Construction News to Play Store (Alpha)")
+  UI.message("  fastlane android upload_nt_alpha     - Upload Nursing Times to Play Store (Alpha)")
+  UI.message("  fastlane android upload_cn_beta      - Upload Construction News to Play Store (Beta)")
+  UI.message("  fastlane android upload_nt_beta      - Upload Nursing Times to Play Store (Beta)")
+  UI.message("  fastlane android upload_cn_production - Upload Construction News to Play Store (Production)")
+  UI.message("  fastlane android upload_nt_production - Upload Nursing Times to Play Store (Production)")
+  UI.message("")
+end
+
+desc "Validate environment setup"
+lane :validate_env do
+  UI.header("Validating Environment Setup")
+  
+  # Check iOS requirements
+  UI.message("Checking iOS requirements...")
+  ios_vars = [
+    "APPLE_ID",
+    "APPLE_TEAM_ID"
+  ]
+  
+  ios_missing = ios_vars.select { |var| ENV[var].nil? || ENV[var].empty? }
+  
+  if ios_missing.empty?
+    UI.success("✅ All iOS environment variables are set")
+    UI.message("📱 iOS will use CLI authentication (you'll be prompted for password and 2FA)")
+  else
+    UI.error("❌ Missing iOS environment variables: #{ios_missing.join(', ')}")
+  end
+  
+  # Check Android requirements
+  UI.message("Checking Android requirements...")
+  
+  if ENV["GOOGLE_PLAY_JSON_KEY_PATH"] && !ENV["GOOGLE_PLAY_JSON_KEY_PATH"].empty?
+    if File.exist?(ENV["GOOGLE_PLAY_JSON_KEY_PATH"])
+      UI.success("✅ Google Play service account JSON key found")
+    else
+      UI.error("❌ Google Play JSON key file not found: #{ENV['GOOGLE_PLAY_JSON_KEY_PATH']}")
+    end
+  else
+    UI.important("⚠️  Google Play JSON key not configured")
+    UI.message("   Set GOOGLE_PLAY_JSON_KEY_PATH to enable Android deployment")
+    UI.message("   See fastlane/README-AUTH-SETUP.md for setup instructions")
+  end
+  
+  UI.message("Environment validation complete!")
+end
