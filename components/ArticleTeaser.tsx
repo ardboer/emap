@@ -34,13 +34,13 @@ export default function ArticleTeaser({
         <ThemedText type="defaultSemiBold" style={styles.title}>
           {article.title}
         </ThemedText>
-        <ThemedText style={styles.leadText} numberOfLines={2}>
+        {/* <ThemedText style={styles.leadText} numberOfLines={2}>
           {article.leadText}
         </ThemedText>
         <ThemedView style={styles.metaContainer}>
           <ThemedText style={styles.category}>{article.category}</ThemedText>
           <ThemedText style={styles.timestamp}>{article.timestamp}</ThemedText>
-        </ThemedView>
+        </ThemedView> */}
       </ThemedView>
     </TouchableOpacity>
   );
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   thumbnail: {
-    width: 120,
+    width: 180,
     height: 120,
     marginTop: 16,
     borderRadius: 4,

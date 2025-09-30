@@ -25,6 +25,9 @@ export default function TabLayout() {
     Colors[colorScheme ?? "light"].tabIconDefault;
   const tabBarBackgroundColor =
     themeColors?.tabBarBackground || Colors[colorScheme ?? "light"].background;
+  const headerBackgroundColor =
+    themeColors?.headerBackground ||
+    Colors[colorScheme ?? "light"].headerBackground;
 
   // Handle search icon press
   const handleSearchPress = () => {
@@ -59,7 +62,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Highlighted",
+            title: "Highlights",
             headerShown: false, // No header for highlighted tab (full-screen carousel)
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="star.fill" color={color} />
@@ -69,11 +72,12 @@ export default function TabLayout() {
         <Tabs.Screen
           name="news"
           options={{
-            title: "News",
+            title: "Articles",
             headerTitle: "",
             headerShadowVisible: false,
             headerStyle: {
               borderBottomWidth: 0,
+              backgroundColor: headerBackgroundColor,
             },
             headerLeft: () => (
               <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
@@ -100,6 +104,7 @@ export default function TabLayout() {
             headerShadowVisible: false,
             headerStyle: {
               borderBottomWidth: 0,
+              backgroundColor: headerBackgroundColor,
             },
             headerLeft: () => (
               <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
@@ -131,6 +136,7 @@ export default function TabLayout() {
             headerShadowVisible: false,
             headerStyle: {
               borderBottomWidth: 0,
+              backgroundColor: headerBackgroundColor,
             },
             headerLeft: () => (
               <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
@@ -158,6 +164,7 @@ export default function TabLayout() {
             headerShadowVisible: false,
             headerStyle: {
               borderBottomWidth: 0,
+              backgroundColor: headerBackgroundColor,
             },
             headerLeft: () => (
               <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
@@ -186,6 +193,11 @@ export default function TabLayout() {
           options={{
             title: "Paper",
             headerTitle: "Paper",
+            headerShadowVisible: false,
+            headerStyle: {
+              borderBottomWidth: 0,
+              backgroundColor: headerBackgroundColor,
+            },
             href: features?.enablePaper ? "/(tabs)/paper" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="doc.text.fill" color={color} />
@@ -197,6 +209,11 @@ export default function TabLayout() {
           options={{
             title: "Podcasts",
             headerTitle: "Podcasts",
+            headerShadowVisible: false,
+            headerStyle: {
+              borderBottomWidth: 0,
+              backgroundColor: headerBackgroundColor,
+            },
             href: features?.enablePodcasts ? "/(tabs)/podcasts" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="mic.fill" color={color} />

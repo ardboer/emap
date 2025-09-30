@@ -127,7 +127,12 @@ export default function HighlightedScreen() {
         contentFit="cover"
       />
       <LinearGradient
-        colors={["transparent", "rgba(0,0.4,0.6,0.8)"]}
+        colors={[
+          "transparent",
+          "rgba(0,0.4,0.6,0.8)",
+          "rgba(0,0.4,0.6,0.8)",
+          "rgba(0,0.4,0.6,0.8)",
+        ]}
         style={styles.overlay}
       >
         <ThemedView
@@ -148,7 +153,7 @@ export default function HighlightedScreen() {
           <ThemedText style={styles.leadText}>{item.leadText}</ThemedText> */}
           <ThemedView transparant style={styles.metaContainer}>
             <ThemedText style={styles.category}>{item.category}</ThemedText>
-            <ThemedText style={styles.timestamp}>{item.timestamp}</ThemedText>
+            {/* <ThemedText style={styles.timestamp}>{item.timestamp}</ThemedText> */}
           </ThemedView>
         </ThemedView>
       </LinearGradient>

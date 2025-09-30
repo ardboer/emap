@@ -18,7 +18,8 @@
         "tabIconDefault": "#687076",
         "tabIconSelected": "#00AECA",
         "tabBarBackground": "#fff",
-        "progressIndicator": "#00AECA"
+        "progressIndicator": "#00AECA",
+        "headerBackground": "#00334c"
       },
       "dark": {
         "primary": "#fff",
@@ -28,7 +29,8 @@
         "tabIconDefault": "#9BA1A6",
         "tabIconSelected": "#fff",
         "tabBarBackground": "#151718",
-        "progressIndicator": "#fff"
+        "progressIndicator": "#fff",
+        "headerBackground": "#000000"
       }
     },
     "fonts": {

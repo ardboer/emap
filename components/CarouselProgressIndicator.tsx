@@ -119,7 +119,13 @@ export const CarouselProgressIndicator: React.FC<
   return (
     <View style={[styles.container, style]}>
       <LinearGradient
-        colors={["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.3)", "transparent"]}
+        colors={[
+          "rgba(0, 0, 0, 0.5)",
+          "rgba(0, 0, 0, 0.5)",
+          "rgba(0, 0, 0, 0.5)",
+          "rgba(0, 0, 0, 0.3)",
+          "transparent",
+        ]}
         style={styles.gradientBackground}
       >
         <View style={styles.progressContainer}>
@@ -155,9 +161,13 @@ const styles = StyleSheet.create({
     paddingTop: 60, // Safe area + some padding
     paddingHorizontal: 24,
     paddingBottom: 12,
+    height: 200,
   },
   progressContainer: {
     flexDirection: "row",
+    position: "absolute",
+    top: 60,
+    left: 24,
     justifyContent: "space-between",
     alignItems: "center",
     gap: 4,

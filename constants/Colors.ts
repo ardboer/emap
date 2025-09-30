@@ -21,6 +21,9 @@ function getBrandColors() {
         icon: "#687076",
         tabIconDefault: "#687076",
         tabIconSelected: "#0a7ea4",
+        tabBarBackground: "#fff",
+        progressIndicator: "#0a7ea4",
+        headerBackground: "#fff",
       },
       dark: {
         primary: "#fff",
@@ -29,6 +32,9 @@ function getBrandColors() {
         icon: "#9BA1A6",
         tabIconDefault: "#9BA1A6",
         tabIconSelected: "#fff",
+        tabBarBackground: "#151718",
+        progressIndicator: "#fff",
+        headerBackground: "#151718",
       },
     };
   }
@@ -44,6 +50,7 @@ export const Colors = {
     icon: brandColors.light.icon,
     tabIconDefault: brandColors.light.tabIconDefault,
     tabIconSelected: brandColors.light.tabIconSelected,
+    headerBackground: brandColors.light.headerBackground,
   },
   dark: {
     text: brandColors.dark.text,
@@ -52,5 +59,6 @@ export const Colors = {
     icon: brandColors.dark.icon,
     tabIconDefault: brandColors.dark.tabIconDefault,
     tabIconSelected: brandColors.dark.tabIconSelected,
+    headerBackground: brandColors.dark.headerBackground,
   },
 };

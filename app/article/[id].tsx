@@ -1,3 +1,4 @@
+import { BannerAd } from "@/components/BannerAd";
 import RelatedArticles from "@/components/RelatedArticles";
 import { RichContentRenderer } from "@/components/RichContentRenderer";
 import { ThemedText } from "@/components/ThemedText";
@@ -174,7 +175,7 @@ export default function ArticleScreen() {
         {/* Article Content */}
         <ThemedView style={styles.contentContainer}>
           <ThemedView style={styles.metaContainer}>
-            <ThemedText style={styles.category}>{article.category}</ThemedText>
+            {/* <ThemedText style={styles.category}>{article.author}</ThemedText> */}
             <ThemedText style={styles.timestamp}>
               {article.timestamp}
             </ThemedText>
@@ -191,6 +192,17 @@ export default function ArticleScreen() {
           )}
 
           <ThemedText style={styles.leadText}>{article.leadText}</ThemedText>
+
+          {/* Banner Ad below lead text */}
+          <BannerAd
+            showLoadingIndicator={true}
+            showErrorMessage={false}
+            onAdLoaded={() => console.log("Banner ad loaded successfully")}
+            onAdFailedToLoad={(error) =>
+              console.log("Banner ad failed to load:", error)
+            }
+            style={styles.bannerAd}
+          />
 
           <ThemedView style={styles.divider} />
 
@@ -307,6 +319,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     lineHeight: 24,
     opacity: 0.9,
+  },
+  bannerAd: {
+    marginVertical: 20,
+    alignSelf: "center",
   },
   divider: {
     height: 1,
