@@ -1,4 +1,3 @@
-import WebViewPDFViewer from "@/components/pdf/WebViewPDFViewer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { fetchMagazinePDF } from "@/services/api";
