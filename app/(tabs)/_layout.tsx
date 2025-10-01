@@ -7,6 +7,8 @@ import { HapticTab } from "@/components/HapticTab";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { PodcastPlayer } from "@/components/PodcastPlayer";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import TabBarBackground from "@/components/ui/TabBarBackground";
+import TabBarBackgroundIOS from "@/components/ui/TabBarBackground.ios";
 import { Colors } from "@/constants/Colors";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -42,6 +44,13 @@ export default function TabLayout() {
           tabBarInactiveTintColor,
           headerShown: true, // Enable headers by default
           tabBarButton: HapticTab,
+          tabBarBackground: Platform.select({
+            ios: route.name === "index" ? undefined : TabBarBackgroundIOS,
+            default:
+              route.name === "index"
+                ? () => null
+                : () => <TabBarBackground shouldRender={false} />,
+          }),
           tabBarStyle: Platform.select({
             ios: {
               position: "absolute",
@@ -51,6 +60,7 @@ export default function TabLayout() {
               shadowOpacity: route.name === "index" ? 0 : undefined,
             },
             default: {
+              position: "absolute",
               backgroundColor:
                 route.name === "index" ? "transparent" : tabBarBackgroundColor,
               borderTopWidth: route.name === "index" ? 0 : undefined,
