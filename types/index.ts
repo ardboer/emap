@@ -146,3 +146,39 @@ export interface CategoryResponse {
   yoast_head_json: any;
   blocks: CategoryBlock[];
 }
+
+// Magazine-related types for emap-epaper-development API
+export interface MagazineEditionsResponse {
+  editions: string[];
+}
+
+export interface MagazineArticleContent {
+  type: string;
+  content?: string;
+  src?: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+  children?: MagazineArticleContent[];
+}
+
+export interface MagazineArticleResponse {
+  id: string;
+  title: string;
+  subtitle?: string;
+  author?: string;
+  publishDate: string;
+  content: MagazineArticleContent[];
+  tags?: string[];
+  category?: string;
+  imageUrl?: string;
+  summary?: string;
+}
+
+export interface MagazineEdition {
+  id: string;
+  title?: string;
+  publishDate?: string;
+  coverUrl?: string;
+  pdfUrl?: string;
+}

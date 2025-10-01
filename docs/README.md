@@ -23,28 +23,36 @@ This documentation package provides comprehensive guidance for deploying EMAP Pu
    - Build commands and credential management
    - Troubleshooting and verification procedures
 
-3. **[App Store Assets Checklist](app-store-assets-checklist.md)**
+3. **[Fastlane Local Build Guide](fastlane-local-build-guide.md)** ⭐ **NEW**
+
+   - Local iOS builds without EAS dependency
+   - Automatic certificate and provisioning profile management
+   - Faster builds (2-5 minutes vs 10-15 minutes)
+   - Cost-effective alternative to EAS builds
+   - [Quick Reference](fastlane-local-build-quick-reference.md) for common commands
+
+4. **[App Store Assets Checklist](app-store-assets-checklist.md)**
 
    - Detailed asset specifications for both platforms
    - Icon, screenshot, and graphic requirements
    - Brand-specific design guidelines
    - Quality assurance and testing procedures
 
-4. **[Privacy Policy and Compliance](privacy-policy-compliance.md)**
+5. **[Privacy Policy and Compliance](privacy-policy-compliance.md)**
 
    - GDPR, Apple ATT, and Google Play compliance requirements
    - Privacy policy templates and implementation guides
    - Data safety configuration for both platforms
    - Legal and regulatory considerations
 
-5. **[Deployment Timeline and Action Plan](deployment-timeline-action-plan.md)**
+6. **[Deployment Timeline and Action Plan](deployment-timeline-action-plan.md)**
 
    - 6-8 week implementation timeline
    - Phase-by-phase action items and deliverables
    - Resource requirements and budget estimates
    - Risk management and success criteria
 
-6. **[Future Brand Expansion Guide](future-brand-expansion-guide.md)**
+7. **[Future Brand Expansion Guide](future-brand-expansion-guide.md)**
    - Scalable architecture for additional brands
    - Step-by-step process for adding new brands
    - Cost analysis and operational considerations

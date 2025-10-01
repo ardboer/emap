@@ -83,6 +83,158 @@ platform :ios do
   lane :upload_nt_appstore do
     upload_to_appstore_for_brand("nt")
   end
+  desc "Build and upload Construction News locally to TestFlight"
+  lane :build_upload_cn_testflight do
+    build_and_upload_locally(brand: "cn")
+  end
+
+  desc "Build and upload Nursing Times locally to TestFlight"
+  lane :build_upload_nt_testflight do
+    build_and_upload_locally(brand: "nt")
+  end
+
+  desc "Build and upload Construction News locally to App Store"
+  lane :build_upload_cn_appstore do
+    build_and_upload_locally(brand: "cn", target: "appstore")
+  end
+
+  desc "Build and upload Nursing Times locally to App Store"
+  lane :build_upload_nt_appstore do
+    build_and_upload_locally(brand: "nt", target: "appstore")
+  end
+
+  # Private lane for local build and upload
+  private_lane :build_and_upload_locally do |options|
+    brand = options[:brand]
+    target = options[:target] || "testflight"
+    brand_name = get_brand_name(brand)
+    bundle_id = get_bundle_id(brand)
+    
+    UI.message("🚀 Starting local build and #{target} upload for #{brand_name}")
+    
+    # Ensure required environment variables
+    ensure_env_vars([
+      "APPLE_ID",
+      "APPLE_TEAM_ID"
+    ])
+
+    # Set brand for prebuild
+    ENV["BRAND"] = brand
+    
+    # Run prebuild to configure for specific brand
+    UI.message("🔧 Running prebuild for #{brand_name}...")
+    sh("cd .. && node scripts/prebuild.js #{brand}")
+    
+    # Install iOS dependencies
+    UI.message("📦 Installing iOS dependencies...")
+    sh("cd ../ios && pod install")
+    
+    # Get certificates and provisioning profiles
+    UI.message("🔐 Managing certificates and provisioning profiles...")
+    
+    # Download/create certificates
+    cert(
+      team_id: ENV["APPLE_TEAM_ID"],
+      username: ENV["APPLE_ID"]
+    )
+    
+    # Download/create provisioning profiles
+    sigh(
+      app_identifier: bundle_id,
+      team_id: ENV["APPLE_TEAM_ID"],
+      username: ENV["APPLE_ID"],
+      force: false # Set to true to regenerate profiles
+    )
+    
+    # Build the app
+    UI.message("🔨 Building #{brand_name} IPA...")
+    
+    gym(
+      workspace: "../ios/NursingTimes.xcworkspace",
+      scheme: "NursingTimes",
+      configuration: "Release",
+      output_directory: "../build",
+      output_name: "#{brand}_app.ipa",
+      clean: true,
+      include_bitcode: false,
+      include_symbols: true,
+      export_method: "app-store",
+      export_team_id: ENV["APPLE_TEAM_ID"]
+    )
+    
+    # Upload based on target
+    if target == "testflight"
+      upload_to_testflight_local(brand: brand, bundle_id: bundle_id, brand_name: brand_name)
+    else
+      upload_to_appstore_local(brand: brand, bundle_id: bundle_id, brand_name: brand_name)
+    end
+    
+    # Clean up
+    File.delete("../build/#{brand}_app.ipa") if File.exist?("../build/#{brand}_app.ipa")
+  end
+
+  # Private lane for TestFlight upload (local builds)
+  private_lane :upload_to_testflight_local do |options|
+    brand = options[:brand]
+    bundle_id = options[:bundle_id]
+    brand_name = options[:brand_name]
+    
+    UI.message("📤 Uploading #{brand_name} to TestFlight...")
+    
+    retry_count = 0
+    max_retries = 3
+    
+    begin
+      upload_to_testflight(
+        ipa: "../build/#{brand}_app.ipa",
+        app_identifier: bundle_id,
+        skip_waiting_for_build_processing: false,
+        skip_submission: true,
+        distribute_external: false,
+        notify_external_testers: false,
+        changelog: "Latest local build for #{brand_name}",
+        beta_app_feedback_email: ENV["BETA_FEEDBACK_EMAIL"],
+        beta_app_description: "#{brand_name} beta version for internal testing"
+      )
+      
+      UI.success("✅ Successfully uploaded #{brand_name} to TestFlight!")
+      
+    rescue => exception
+      retry_count += 1
+      if retry_count <= max_retries
+        UI.important("⚠️  Upload failed (attempt #{retry_count}/#{max_retries}): #{exception.message}")
+        UI.important("Retrying in 30 seconds...")
+        sleep(30)
+        retry
+      else
+        UI.error("❌ Failed to upload #{brand_name} to TestFlight after #{max_retries} attempts")
+        raise exception
+      end
+    end
+  end
+
+  # Private lane for App Store upload (local builds)
+  private_lane :upload_to_appstore_local do |options|
+    brand = options[:brand]
+    bundle_id = options[:bundle_id]
+    brand_name = options[:brand_name]
+    
+    UI.message("📤 Uploading #{brand_name} to App Store...")
+    
+    upload_to_app_store(
+      ipa: "../build/#{brand}_app.ipa",
+      app_identifier: bundle_id,
+      skip_binary_upload: false,
+      skip_screenshots: true,
+      skip_metadata: false,
+      force: true,
+      automatic_release: false,
+      submit_for_review: false
+    )
+
+    UI.success("✅ Successfully uploaded #{brand_name} to App Store!")
+  end
+
 
   # Private lane for TestFlight upload
   private_lane :upload_to_testflight_for_brand do |options|
@@ -226,6 +378,142 @@ platform :android do
   lane :upload_nt_production do
     upload_to_play_store_for_brand("nt", "production")
   end
+  desc "Build and upload Construction News locally to Google Play (Beta)"
+  lane :build_upload_cn_beta do
+    build_and_upload_android_locally(brand: "cn", track: "beta")
+  end
+
+  desc "Build and upload Nursing Times locally to Google Play (Beta)"
+  lane :build_upload_nt_beta do
+    build_and_upload_android_locally(brand: "nt", track: "beta")
+  end
+
+  desc "Build and upload Construction News locally to Google Play (Alpha)"
+  lane :build_upload_cn_alpha do
+    build_and_upload_android_locally(brand: "cn", track: "alpha")
+  end
+
+  desc "Build and upload Nursing Times locally to Google Play (Alpha)"
+  lane :build_upload_nt_alpha do
+    build_and_upload_android_locally(brand: "nt", track: "alpha")
+  end
+
+  desc "Build and upload Construction News locally to Google Play (Internal)"
+  lane :build_upload_cn_internal do
+    build_and_upload_android_locally(brand: "cn", track: "internal")
+  end
+
+  desc "Build and upload Nursing Times locally to Google Play (Internal)"
+  lane :build_upload_nt_internal do
+    build_and_upload_android_locally(brand: "nt", track: "internal")
+  end
+
+  desc "Build and upload Construction News locally to Google Play (Production)"
+  lane :build_upload_cn_production do
+    build_and_upload_android_locally(brand: "cn", track: "production")
+  end
+
+  desc "Build and upload Nursing Times locally to Google Play (Production)"
+  lane :build_upload_nt_production do
+    build_and_upload_android_locally(brand: "nt", track: "production")
+  end
+
+  # Private lane for local Android build and upload
+  private_lane :build_and_upload_android_locally do |options|
+    brand = options[:brand]
+    track = options[:track] || "beta"
+    brand_name = get_brand_name(brand)
+    package_name = get_package_name(brand)
+    
+    UI.message("🚀 Starting local Android build and Google Play upload for #{brand_name} (#{track} track)")
+    
+    # Check for Google Play authentication
+    if ENV["GOOGLE_PLAY_JSON_KEY_PATH"].nil? || ENV["GOOGLE_PLAY_JSON_KEY_PATH"].empty?
+      UI.user_error!("❌ Google Play Console requires a service account JSON key file.\n" +
+                     "Please set GOOGLE_PLAY_JSON_KEY_PATH in your .env.fastlane file.\n" +
+                     "See the authentication setup guide for instructions.")
+    end
+    
+    unless File.exist?(ENV["GOOGLE_PLAY_JSON_KEY_PATH"])
+      UI.user_error!("❌ Google Play JSON key file not found: #{ENV['GOOGLE_PLAY_JSON_KEY_PATH']}\n" +
+                     "Please ensure the file exists and the path is correct.")
+    end
+
+    # Set brand for prebuild
+    ENV["BRAND"] = brand
+    
+    # Run prebuild to configure for specific brand
+    UI.message("🔧 Running prebuild for #{brand_name}...")
+    sh("cd .. && node scripts/prebuild.js #{brand}")
+    
+    # Build the Android app bundle
+    UI.message("🔨 Building #{brand_name} AAB...")
+    
+    gradle(
+      project_dir: "../android",
+      task: "bundleRelease",
+      properties: {
+        "MYAPP_RELEASE_STORE_FILE" => ENV["ANDROID_KEYSTORE_PATH"],
+        "MYAPP_RELEASE_KEY_ALIAS" => ENV["ANDROID_KEY_ALIAS"],
+        "MYAPP_RELEASE_STORE_PASSWORD" => ENV["ANDROID_KEYSTORE_PASSWORD"],
+        "MYAPP_RELEASE_KEY_PASSWORD" => ENV["ANDROID_KEY_PASSWORD"]
+      }
+    )
+    
+    # Upload to Google Play Store
+    upload_to_play_store_local(
+      brand: brand,
+      track: track,
+      package_name: package_name,
+      brand_name: brand_name
+    )
+  end
+
+  # Private lane for Google Play Store upload (local builds)
+  private_lane :upload_to_play_store_local do |options|
+    brand = options[:brand]
+    track = options[:track]
+    package_name = options[:package_name]
+    brand_name = options[:brand_name]
+    
+    UI.message("📤 Uploading #{brand_name} to Google Play Store (#{track} track)...")
+    
+    retry_count = 0
+    max_retries = 3
+    
+    begin
+      upload_to_play_store(
+        package_name: package_name,
+        aab: "../android/app/build/outputs/bundle/release/app-release.aab",
+        track: track,
+        release_status: track == "production" ? "draft" : "completed",
+        skip_upload_metadata: false,
+        skip_upload_changelogs: false,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"]
+      )
+      
+      UI.success("✅ Successfully uploaded #{brand_name} to Google Play Store (#{track} track)!")
+      
+    rescue => exception
+      retry_count += 1
+      if retry_count <= max_retries
+        UI.important("⚠️  Upload failed (attempt #{retry_count}/#{max_retries}): #{exception.message}")
+        UI.important("Retrying in 30 seconds...")
+        sleep(30)
+        retry
+      else
+        UI.error("❌ Failed to upload #{brand_name} to Google Play Store after #{max_retries} attempts")
+        raise exception
+      end
+    end
+    
+    # Clean up build file
+    aab_path = "../android/app/build/outputs/bundle/release/app-release.aab"
+    File.delete(aab_path) if File.exist?(aab_path)
+  end
+
 
   # Private lane for Google Play Store upload
   private_lane :upload_to_play_store_for_brand do |options|
@@ -350,13 +638,19 @@ desc "Show available lanes"
 lane :show_lanes do
   UI.header("Available Fastlane Lanes")
   UI.message("")
-  UI.message("iOS Lanes:")
+  UI.message("iOS Lanes (EAS Build):")
   UI.message("  fastlane ios upload_cn_testflight    - Upload Construction News to TestFlight")
   UI.message("  fastlane ios upload_nt_testflight    - Upload Nursing Times to TestFlight")
   UI.message("  fastlane ios upload_cn_appstore      - Upload Construction News to App Store")
   UI.message("  fastlane ios upload_nt_appstore      - Upload Nursing Times to App Store")
   UI.message("")
-  UI.message("Android Lanes:")
+  UI.message("iOS Lanes (Local Build):")
+  UI.message("  fastlane ios build_upload_cn_testflight    - Build and upload Construction News to TestFlight")
+  UI.message("  fastlane ios build_upload_nt_testflight    - Build and upload Nursing Times to TestFlight")
+  UI.message("  fastlane ios build_upload_cn_appstore      - Build and upload Construction News to App Store")
+  UI.message("  fastlane ios build_upload_nt_appstore      - Build and upload Nursing Times to App Store")
+  UI.message("")
+  UI.message("Android Lanes (EAS Build):")
   UI.message("  fastlane android upload_cn_internal  - Upload Construction News to Play Store (Internal)")
   UI.message("  fastlane android upload_nt_internal  - Upload Nursing Times to Play Store (Internal)")
   UI.message("  fastlane android upload_cn_alpha     - Upload Construction News to Play Store (Alpha)")
@@ -365,6 +659,16 @@ lane :show_lanes do
   UI.message("  fastlane android upload_nt_beta      - Upload Nursing Times to Play Store (Beta)")
   UI.message("  fastlane android upload_cn_production - Upload Construction News to Play Store (Production)")
   UI.message("  fastlane android upload_nt_production - Upload Nursing Times to Play Store (Production)")
+  UI.message("")
+  UI.message("Android Lanes (Local Build):")
+  UI.message("  fastlane android build_upload_cn_internal  - Build and upload Construction News to Play Store (Internal)")
+  UI.message("  fastlane android build_upload_nt_internal  - Build and upload Nursing Times to Play Store (Internal)")
+  UI.message("  fastlane android build_upload_cn_alpha     - Build and upload Construction News to Play Store (Alpha)")
+  UI.message("  fastlane android build_upload_nt_alpha     - Build and upload Nursing Times to Play Store (Alpha)")
+  UI.message("  fastlane android build_upload_cn_beta      - Build and upload Construction News to Play Store (Beta)")
+  UI.message("  fastlane android build_upload_nt_beta      - Build and upload Nursing Times to Play Store (Beta)")
+  UI.message("  fastlane android build_upload_cn_production - Build and upload Construction News to Play Store (Production)")
+  UI.message("  fastlane android build_upload_nt_production - Build and upload Nursing Times to Play Store (Production)")
   UI.message("")
 end
 
