@@ -9,7 +9,12 @@ import {
 
 // Get API configuration from active brand
 function getApiConfig() {
-  return brandManager.getApiConfig();
+  const config = brandManager.getApiConfig();
+  console.log("🔍 API Config:", {
+    baseUrl: config.baseUrl,
+    hash: config.hash,
+  });
+  return config;
 }
 
 const POSTS_ENDPOINT = "/wp-json/wp/v2/posts";

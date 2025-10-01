@@ -49,3 +49,7 @@ fastlane/screenshots
 fastlane/test_output
 fastlane/builds
 fastlane/derived_data
+
+# Android keystore
+android/keystore.properties
+android/keystores/

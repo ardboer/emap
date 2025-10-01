@@ -4,6 +4,7 @@ import {
   BrandShortcode,
   validateShortcode,
 } from "@/brands";
+import { ACTIVE_BRAND } from "./brandKey";
 
 class BrandManager {
   private static instance: BrandManager;
@@ -53,25 +54,91 @@ class BrandManager {
    * Get current active brand configuration
    */
   getCurrentBrand(): BrandConfig {
-    if (!this.currentBrand) {
-      // Auto-load default brand if none is set
-      return this.loadBrand(this.getActiveBrandShortcode());
+    // Always check for the active brand to ensure we're using the correct one
+    const activeBrandShortcode = this.getActiveBrandShortcode();
+
+    // If we don't have a cached brand or the cached brand doesn't match the active one, reload
+    if (
+      !this.currentBrand ||
+      this.currentBrand.shortcode !== activeBrandShortcode
+    ) {
+      console.log(
+        `🔄 Loading brand configuration for: ${activeBrandShortcode}`
+      );
+      return this.loadBrand(activeBrandShortcode);
     }
+
     return this.currentBrand;
   }
 
   /**
-   * Get active brand shortcode from environment or default
+   * Clear cached brand configuration (useful for development/testing)
+   */
+  clearCache(): void {
+    console.log("🗑️ Clearing brand cache");
+    this.currentBrand = null;
+  }
+
+  /**
+   * Get active brand shortcode from environment, app config, or default
    */
   getActiveBrandShortcode(): BrandShortcode {
-    // Check for environment variable first
+    console.log("🔍 BrandManager: Getting active brand shortcode...");
+
+    // Check brand key file first (set by prebuild script)
+    console.log("🔍 Brand key file brand:", ACTIVE_BRAND);
+    if (ACTIVE_BRAND && validateShortcode(ACTIVE_BRAND)) {
+      console.log("✅ Using brand key file brand:", ACTIVE_BRAND);
+      return ACTIVE_BRAND;
+    }
+
+    // Check for environment variable as fallback
     const envBrand = process.env.EXPO_PUBLIC_BRAND || process.env.BRAND;
+    console.log("🔍 Environment brand:", envBrand);
 
     if (envBrand && validateShortcode(envBrand)) {
+      console.log("✅ Using environment brand:", envBrand);
       return envBrand;
     }
 
-    // Fallback to default
+    // Check app.json extra configuration (set by prebuild script)
+    try {
+      // @ts-ignore - Constants is available in Expo apps
+      const Constants = require("expo-constants").default;
+      console.log("🔍 Constants available:", !!Constants);
+      console.log("🔍 ExpoConfig available:", !!Constants?.expoConfig);
+      console.log("🔍 Extra available:", !!Constants?.expoConfig?.extra);
+      console.log(
+        "🔍 BrandConfig available:",
+        !!Constants?.expoConfig?.extra?.brandConfig
+      );
+
+      const appBrand = Constants?.expoConfig?.extra?.brandConfig?.brand;
+      console.log("🔍 App brand from config:", appBrand);
+
+      if (appBrand && validateShortcode(appBrand)) {
+        console.log("✅ Using app config brand:", appBrand);
+        return appBrand;
+      }
+      // Fallback: detect brand from bundle identifier
+      const bundleId =
+        Constants?.expoConfig?.ios?.bundleIdentifier ||
+        Constants?.manifest?.ios?.bundleIdentifier;
+      console.log("🔍 Bundle ID:", bundleId);
+
+      if (bundleId === "metropolis.co.uk.constructionnews") {
+        console.log("✅ Detected Construction News from bundle ID");
+        return "cn";
+      } else if (bundleId === "metropolis.net.nursingtimes") {
+        console.log("✅ Detected Nursing Times from bundle ID");
+        return "nt";
+      }
+    } catch (error) {
+      console.warn("❌ Could not access app configuration:", error);
+    }
+
+    // Final fallback to default
+    console.log("⚠️ Using default brand:", this.defaultBrand);
     return this.defaultBrand;
   }
 

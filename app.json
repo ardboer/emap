@@ -11,7 +11,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "metropolis.net.nursingtimes"
+      "bundleIdentifier": "com.emap.app",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -63,7 +66,8 @@
         "dynamicColors": true,
         "brand": "nt",
         "brandName": "Nursing Times",
-        "bundleIdentifier": "metropolis.net.nursingtimes"
+        "bundleIdentifier": "metropolis.net.nursingtimes",
+        "actualIOSBundleId": "metropolis.net.nursingtimes"
       }
     },
     "runtimeVersion": {
