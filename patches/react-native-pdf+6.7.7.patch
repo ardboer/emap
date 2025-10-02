@@ -1,0 +1,58 @@
+diff --git a/node_modules/react-native-pdf/package.json b/node_modules/react-native-pdf/package.json
+index 8d1d6aa..8d1d6aa 100644
+--- a/node_modules/react-native-pdf/package.json
++++ b/node_modules/react-native-pdf/package.json
+@@ -1,999 +1,999 @@
+ {
+   "name": "react-native-pdf",
+   "version": "6.7.7",
+   "description": "A React Native PDF view component, support ios and android platform",
+   "main": "index.js",
+   "types": "index.d.ts",
+   "react-native": "index.js",
+   "repository": {
+     "type": "git",
+     "url": "git+https://github.com/wonday/react-native-pdf.git"
+   },
+   "keywords": [
+     "react",
+     "react-native",
+     "pdf",
+     "react-native-pdf",
+     "pdf-view",
+     "android",
+     "ios"
+   ],
+   "author": "wonday <wondy2011@gmail.com>",
+   "license": "MIT",
+   "bugs": {
+     "url": "https://github.com/wonday/react-native-pdf/issues"
+   },
+   "homepage": "https://github.com/wonday/react-native-pdf#readme",
+   "scripts": {
+     "test": "echo \"Error: no test specified\" && exit 1"
+   },
+   "peerDependencies": {
+     "react": ">= 16.8.1",
+     "react-native": ">= 0.68.0"
+   },
+   "dependencies": {
+     "escape-string-regexp": "^1.0.5",
+     "prop-types": "^15.8.1"
+   },
+   "codegenConfig": {
+     "name": "rnpdf",
+     "type": "components",
+     "jsSrcsDir": "./fabric",
+     "android": {
+       "javaPackageName": "org.wonday.pdf"
+-    }
++    },
++    "ios": {
++      "componentProvider": {
++        "RNPDFPdfView": "RNPDFPdfView"
++      }
++    }
+   }
+ }
+
