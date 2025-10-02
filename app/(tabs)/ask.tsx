@@ -1,42 +1,44 @@
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import React from "react";
-import { StyleSheet } from "react-native";
+import MagazineListView from "@/components/MagazineListView";
+import PDFViewer from "@/components/PDFViewer";
+import { MagazineEdition } from "@/types";
+import React, { useState } from "react";
+import { StyleSheet, View } from "react-native";
+
+type ViewState = "list" | "pdf";
 
 export default function AskScreen() {
+  const [currentView, setCurrentView] = useState<ViewState>("list");
+  const [selectedMagazine, setSelectedMagazine] =
+    useState<MagazineEdition | null>(null);
+
+  const handleMagazineSelect = (magazine: MagazineEdition) => {
+    console.log("📖 Magazine selected:", magazine.id);
+    setSelectedMagazine(magazine);
+    setCurrentView("pdf");
+  };
+
+  const handleBackToList = () => {
+    console.log("🔙 Returning to magazine list");
+    setCurrentView("list");
+    setSelectedMagazine(null);
+  };
+
   return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={styles.centerContent}>
-        <ThemedText type="title" style={styles.title}>
-          Ask
-        </ThemedText>
-        <ThemedText style={styles.message}>
-          This feature is in development
-        </ThemedText>
-      </ThemedView>
-    </ThemedView>
+    <View style={styles.container}>
+      {currentView === "list" && (
+        <MagazineListView onMagazineSelect={handleMagazineSelect} />
+      )}
+
+      {currentView === "pdf" && selectedMagazine && (
+        <PDFViewer magazine={selectedMagazine} onBack={handleBackToList} />
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  message: {
-    fontSize: 18,
-    textAlign: "center",
-    opacity: 0.7,
+    backgroundColor: "#fff",
   },
 });

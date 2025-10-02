@@ -89,7 +89,7 @@ android {
 
     namespace 'com.emap.app'
     defaultConfig {
-        applicationId 'metropolis.net.nursingtimes'
+        applicationId 'metropolis.co.uk.constructionnews'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
