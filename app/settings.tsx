@@ -211,22 +211,20 @@ export default function SettingsScreen() {
             Development
           </ThemedText>
           {/* Brand Switcher - Only show in development */}
-          {__DEV__ && (
-            <ThemedView>
-              {React.createElement(
-                require("@/components/BrandSwitcher").BrandSwitcher
-              )}
-              {/* Test Article Button */}
-              <SettingsItem
-                title="Test Article"
-                subtitle={`Open test article for ${
-                  brandConfig?.displayName || "Unknown"
-                } (ID: ${brandConfig?.testArticleId || "Not found"})`}
-                icon="doc.text"
-                onPress={handleTestArticle}
-              />
-            </ThemedView>
-          )}
+          <ThemedView>
+            {React.createElement(
+              require("@/components/BrandSwitcher").BrandSwitcher
+            )}
+            {/* Test Article Button */}
+            <SettingsItem
+              title="Test Article"
+              subtitle={`Open test article for ${
+                brandConfig?.displayName || "Unknown"
+              } (ID: ${brandConfig?.testArticleId || "Not found"})`}
+              icon="doc.text"
+              onPress={handleTestArticle}
+            />
+          </ThemedView>
         </ThemedView>
 
         <ThemedView style={styles.section}>

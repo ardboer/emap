@@ -19,6 +19,45 @@ def getBrandKey(projectRoot) {
 
 def brandKey = getBrandKey(projectRoot)
 
+// Function to read and increment version code
+def getVersionCode() {
+    def versionFile = new File(projectRoot, 'android/version.properties')
+    def props = new Properties()
+    
+    if (versionFile.exists()) {
+        versionFile.withInputStream { props.load(it) }
+    } else {
+        // Create file with default version code if it doesn't exist
+        props.setProperty('VERSION_CODE', '2')
+        versionFile.parentFile.mkdirs()
+        versionFile.withOutputStream { props.store(it, 'Android Version Code Tracking') }
+    }
+    
+    def currentVersionCode = props.getProperty('VERSION_CODE', '2').toInteger()
+    return currentVersionCode
+}
+
+// Function to increment and save version code
+def incrementVersionCode() {
+    def versionFile = new File(projectRoot, 'android/version.properties')
+    def props = new Properties()
+    
+    if (versionFile.exists()) {
+        versionFile.withInputStream { props.load(it) }
+    }
+    
+    def currentVersionCode = props.getProperty('VERSION_CODE', '2').toInteger()
+    def newVersionCode = currentVersionCode + 1
+    
+    props.setProperty('VERSION_CODE', newVersionCode.toString())
+    versionFile.withOutputStream {
+        props.store(it, "Android Version Code Tracking\n# This file is automatically updated during release builds")
+    }
+    
+    println "Version code incremented from ${currentVersionCode} to ${newVersionCode}"
+    return newVersionCode
+}
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -107,7 +146,7 @@ android {
         applicationId 'metropolis.net.nursingtimes'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode getVersionCode()
         versionName "1.0.0"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
@@ -204,26 +243,49 @@ android {
     // Customize AAB output filename and copy to Desktop
     afterEvaluate {
         tasks.matching { it.name.startsWith('bundle') && it.name.endsWith('Release') }.all { bundleTask ->
+            bundleTask.doFirst {
+                // Auto-increment version code for release builds
+                incrementVersionCode()
+            }
             bundleTask.doLast {
                 def bundleDir = file("$buildDir/outputs/bundle/release")
                 if (bundleDir.exists()) {
                     bundleDir.listFiles().each { file ->
                         if (file.name.endsWith('.aab')) {
-                            def newName = file.name.replace('.aab', "_${brandKey}.aab")
-                            def newFile = new File(file.parent, newName)
-                            file.renameTo(newFile)
-                            println "Renamed AAB: ${file.name} -> ${newName}"
-                            
-                            // Copy to Desktop
-                            def desktopDir = new File(System.getProperty("user.home"), "Desktop")
-                            if (desktopDir.exists()) {
-                                def desktopFile = new File(desktopDir, newName)
-                                newFile.withInputStream { input ->
-                                    desktopFile.withOutputStream { output ->
-                                        output << input
+                            // Only rename if it doesn't already have the brand suffix
+                            if (!file.name.contains("_${brandKey}")) {
+                                def newName = file.name.replace('.aab', "_${brandKey}.aab")
+                                def newFile = new File(file.parent, newName)
+                                file.renameTo(newFile)
+                                println "Renamed AAB: ${file.name} -> ${newName}"
+                                
+                                // Copy to Desktop
+                                def desktopDir = new File(System.getProperty("user.home"), "Desktop")
+                                if (desktopDir.exists()) {
+                                    def desktopFile = new File(desktopDir, newName)
+                                    newFile.withInputStream { input ->
+                                        desktopFile.withOutputStream { output ->
+                                            output << input
+                                        }
+                                    }
+                                    println "Copied AAB to Desktop: ${desktopFile.absolutePath}"
+                                }
+                            } else {
+                                println "AAB already has brand suffix: ${file.name}"
+                                
+                                // Still copy to Desktop if not already there
+                                def desktopDir = new File(System.getProperty("user.home"), "Desktop")
+                                if (desktopDir.exists()) {
+                                    def desktopFile = new File(desktopDir, file.name)
+                                    if (!desktopFile.exists()) {
+                                        file.withInputStream { input ->
+                                            desktopFile.withOutputStream { output ->
+                                                output << input
+                                            }
+                                        }
+                                        println "Copied AAB to Desktop: ${desktopFile.absolutePath}"
                                     }
                                 }
-                                println "Copied AAB to Desktop: ${desktopFile.absolutePath}"
                             }
                         }
                     }
@@ -233,6 +295,10 @@ android {
         
         // Copy APK to Desktop after assembleRelease
         tasks.matching { it.name == 'assembleRelease' }.all { assembleTask ->
+            assembleTask.doFirst {
+                // Auto-increment version code for release builds
+                incrementVersionCode()
+            }
             assembleTask.doLast {
                 def apkDir = file("$buildDir/outputs/apk/release")
                 if (apkDir.exists()) {

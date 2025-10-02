@@ -2,7 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet } from "react-native";
+import { ActivityIndicator, Platform, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 
 export default function AskScreen() {
@@ -130,16 +130,23 @@ export default function AskScreen() {
         domStorageEnabled={true}
         allowsInlineMediaPlayback={true}
         mediaPlaybackRequiresUserAction={false}
-        mixedContentMode="compatibility"
-        thirdPartyCookiesEnabled={true}
-        sharedCookiesEnabled={true}
-        allowsBackForwardNavigationGestures={true}
-        decelerationRate="normal"
+        // Fixed: Use numeric value for Android compatibility
+        decelerationRate={Platform.OS === "android" ? 0.998 : "normal"}
+        // Android-specific props
+        mixedContentMode={
+          Platform.OS === "android" ? "compatibility" : undefined
+        }
+        thirdPartyCookiesEnabled={Platform.OS === "android" ? true : undefined}
+        sharedCookiesEnabled={Platform.OS === "android" ? true : undefined}
+        nestedScrollEnabled={Platform.OS === "android" ? true : undefined}
+        // iOS-specific props
+        allowsBackForwardNavigationGestures={
+          Platform.OS === "ios" ? true : undefined
+        }
+        bounces={Platform.OS === "ios" ? true : undefined}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={true}
-        bounces={true}
         scrollEnabled={true}
-        nestedScrollEnabled={true}
         accessibilityLabel={`Ask feature for ${brandConfig.displayName}`}
         accessibilityHint="Interactive web content for asking questions"
       />
