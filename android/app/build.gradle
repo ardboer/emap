@@ -4,6 +4,21 @@ apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
+// Read brand key from config file
+def getBrandKey(projectRoot) {
+    def brandKeyFile = new File(projectRoot, 'config/brandKey.ts')
+    if (brandKeyFile.exists()) {
+        def content = brandKeyFile.text
+        def matcher = content =~ /export const ACTIVE_BRAND = '([^']+)'/
+        if (matcher.find()) {
+            return matcher.group(1)
+        }
+    }
+    return 'default'
+}
+
+def brandKey = getBrandKey(projectRoot)
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -129,6 +144,33 @@ android {
             crunchPngs enablePngCrunchInRelease.toBoolean()
         }
     }
+    
+    // Customize output file names to include brand key
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def outputFileName = output.outputFileName
+            if (outputFileName != null && outputFileName.endsWith('.apk')) {
+                // For APK files: app-release.apk -> app-release_cn.apk
+                def newFileName = outputFileName.replace('.apk', "_${brandKey}.apk")
+                output.outputFileName = newFileName
+                println "APK output filename set to: ${newFileName}"
+            }
+        }
+    }
+    
+    // For AAB files, we need to configure the bundle task
+    bundle {
+        language {
+            enableSplit = false
+        }
+        density {
+            enableSplit = false
+        }
+        abi {
+            enableSplit = true
+        }
+    }
+    
     packagingOptions {
         jniLibs {
             def enableLegacyPackaging = findProperty('expo.useLegacyPackaging') ?: 'false'
@@ -156,6 +198,61 @@ android {
         // Ex: android.packagingOptions.pickFirsts += '**/SCCS/**'
         options.each {
             android.packagingOptions[prop] += it
+        }
+    }
+    
+    // Customize AAB output filename and copy to Desktop
+    afterEvaluate {
+        tasks.matching { it.name.startsWith('bundle') && it.name.endsWith('Release') }.all { bundleTask ->
+            bundleTask.doLast {
+                def bundleDir = file("$buildDir/outputs/bundle/release")
+                if (bundleDir.exists()) {
+                    bundleDir.listFiles().each { file ->
+                        if (file.name.endsWith('.aab')) {
+                            def newName = file.name.replace('.aab', "_${brandKey}.aab")
+                            def newFile = new File(file.parent, newName)
+                            file.renameTo(newFile)
+                            println "Renamed AAB: ${file.name} -> ${newName}"
+                            
+                            // Copy to Desktop
+                            def desktopDir = new File(System.getProperty("user.home"), "Desktop")
+                            if (desktopDir.exists()) {
+                                def desktopFile = new File(desktopDir, newName)
+                                newFile.withInputStream { input ->
+                                    desktopFile.withOutputStream { output ->
+                                        output << input
+                                    }
+                                }
+                                println "Copied AAB to Desktop: ${desktopFile.absolutePath}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Copy APK to Desktop after assembleRelease
+        tasks.matching { it.name == 'assembleRelease' }.all { assembleTask ->
+            assembleTask.doLast {
+                def apkDir = file("$buildDir/outputs/apk/release")
+                if (apkDir.exists()) {
+                    apkDir.listFiles().each { file ->
+                        if (file.name.endsWith('.apk')) {
+                            // Copy to Desktop
+                            def desktopDir = new File(System.getProperty("user.home"), "Desktop")
+                            if (desktopDir.exists()) {
+                                def desktopFile = new File(desktopDir, file.name)
+                                file.withInputStream { input ->
+                                    desktopFile.withOutputStream { output ->
+                                        output << input
+                                    }
+                                }
+                                println "Copied APK to Desktop: ${desktopFile.absolutePath}"
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -650,6 +650,86 @@ const updateIOSBundleIdentifier = () => {
 
 updateIOSBundleIdentifier();
 
+// Update iOS display name in Info.plist
+const updateIOSDisplayName = () => {
+  const infoPlistPath = path.join(projectRoot, "ios", "emap", "Info.plist");
+
+  if (!fs.existsSync(infoPlistPath)) {
+    console.log(`ℹ️  iOS Info.plist not found, skipping display name update`);
+    return;
+  }
+
+  try {
+    let plistContent = fs.readFileSync(infoPlistPath, "utf8");
+
+    // Update CFBundleDisplayName
+    const displayNameRegex =
+      /(<key>CFBundleDisplayName<\/key>\s*<string>)[^<]*(<\/string>)/;
+    const updatedContent = plistContent.replace(
+      displayNameRegex,
+      `$1${brandConfig.displayName}$2`
+    );
+
+    if (plistContent !== updatedContent) {
+      fs.writeFileSync(infoPlistPath, updatedContent);
+      console.log(`✅ Updated iOS display name to: ${brandConfig.displayName}`);
+    } else {
+      console.log(
+        `ℹ️  iOS display name already correct: ${brandConfig.displayName}`
+      );
+    }
+  } catch (error) {
+    console.error(`❌ Failed to update iOS display name: ${error.message}`);
+  }
+};
+
+updateIOSDisplayName();
+
+// Update Android display name in strings.xml
+const updateAndroidDisplayName = () => {
+  const stringsXmlPath = path.join(
+    projectRoot,
+    "android",
+    "app",
+    "src",
+    "main",
+    "res",
+    "values",
+    "strings.xml"
+  );
+
+  if (!fs.existsSync(stringsXmlPath)) {
+    console.log(
+      `ℹ️  Android strings.xml not found, skipping display name update`
+    );
+    return;
+  }
+
+  try {
+    let stringsContent = fs.readFileSync(stringsXmlPath, "utf8");
+
+    // Update app_name
+    const appNameRegex = /(<string name="app_name">)[^<]*(<\/string>)/;
+    const updatedContent = stringsContent.replace(
+      appNameRegex,
+      `$1${brandConfig.displayName}$2`
+    );
+
+    if (stringsContent !== updatedContent) {
+      fs.writeFileSync(stringsXmlPath, updatedContent);
+      console.log(`✅ Updated Android app name to: ${brandConfig.displayName}`);
+    } else {
+      console.log(
+        `ℹ️  Android app name already correct: ${brandConfig.displayName}`
+      );
+    }
+  } catch (error) {
+    console.error(`❌ Failed to update Android app name: ${error.message}`);
+  }
+};
+
+updateAndroidDisplayName();
+
 console.log(
   `\n🎉 Pre-build process completed successfully for ${brandConfig.displayName}`
 );
