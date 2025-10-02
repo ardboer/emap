@@ -5,7 +5,7 @@ export const BRAND_VALIDATION = {
   EXPECTED_BRAND: 'nt',
   EXPECTED_BUNDLE_ID: 'metropolis.net.nursingtimes',
   EXPECTED_DISPLAY_NAME: 'Nursing Times',
-  GENERATED_AT: '2025-10-02T12:19:10.771Z',
+  GENERATED_AT: '2025-10-02T14:14:28.574Z',
   SAFEGUARD_VERSION: '1.0.0'
 };
 

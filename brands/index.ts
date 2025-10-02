@@ -42,6 +42,7 @@ export interface BrandConfig {
     logo: string;
     icon: string;
     splash: string;
+    iconBackgroundColor?: string;
   };
   features: {
     enablePodcasts: boolean;

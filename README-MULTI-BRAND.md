@@ -18,14 +18,30 @@ brands/
 ├── index.ts              # Brand registry and validation
 ├── nt/                   # Nursing Times brand
 │   ├── config.json       # Brand configuration
-│   └── assets/           # Brand-specific assets
-│       ├── logo.png
-│       ├── icon.png
-│       └── splash.png
+│   ├── logo.svg          # Brand logo (source for all assets)
+│   └── assets/           # Auto-generated brand assets (24 total)
+│       ├── icon.png      # Main app icon (512×512)
+│       ├── adaptive-icon.png  # Android adaptive icon
+│       ├── favicon.png   # Web favicon (32×32)
+│       ├── splash-icon.png    # Splash screen icon
+│       └── icon-512.png  # Google Play Store icon
 └── [brand-shortcode]/    # Additional brands...
     ├── config.json
-    └── assets/
+    ├── logo.svg          # Brand logo SVG
+    └── assets/           # Auto-generated assets
 ```
+
+### SVG-Based Asset Generation
+
+The system automatically generates **24 platform-specific assets** from a single `logo.svg` file:
+
+- **iOS**: 6 app icon sizes + 3 splash logo scales
+- **Android**: Play Store icon + 5 mipmap densities + 5 drawable densities
+- **Web/Expo**: favicon, main icon, adaptive icon, splash icon
+
+All assets are generated during the prebuild process with automatic validation and quality checks.
+
+📖 **[Complete SVG Asset Generation Guide](docs/svg-asset-generation-guide.md)**
 
 ## Adding a New Brand
 

@@ -41,7 +41,8 @@
   "branding": {
     "logo": "./logo.svg",
     "icon": "./assets/icon.png",
-    "splash": "./assets/splash.png"
+    "splash": "./assets/splash.png",
+    "iconBackgroundColor": "#00334c"
   },
   "features": {
     "enablePodcasts": false,

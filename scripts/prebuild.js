@@ -2,6 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const AssetGenerator = require("./assetGenerator");
 
 // Get project root directory
 const projectRoot = process.cwd();
@@ -99,6 +100,10 @@ if (appJson.expo.plugins) {
   appJson.expo.plugins.forEach((plugin) => {
     if (Array.isArray(plugin) && plugin[0] === "expo-splash-screen") {
       plugin[1].image = `${brandAssetsPath}/splash-icon.png`;
+      // Set splash screen background color from brand config
+      if (brandConfig.branding?.iconBackgroundColor) {
+        plugin[1].backgroundColor = brandConfig.branding.iconBackgroundColor;
+      }
     }
   });
 }
@@ -152,6 +157,53 @@ const copyAssets = () => {
 };
 
 copyAssets();
+
+// Generate brand assets from SVG
+const generateBrandAssets = async () => {
+  console.log(`🎨 Generating brand assets from SVG...`);
+
+  try {
+    const assetGenerator = new AssetGenerator(projectRoot);
+
+    // Clean old assets first
+    await assetGenerator.cleanOldAssets(brand);
+
+    // Generate all assets from brand logo SVG
+    const results = await assetGenerator.generateBrandAssets(
+      brand,
+      brandConfig
+    );
+
+    console.log(
+      `✅ Generated ${assetGenerator.getTotalAssetCount(results)} assets from ${
+        brandConfig.displayName
+      } logo`
+    );
+    console.log(
+      `📱 iOS: ${results.ios.appIcons.length} app icons + ${results.ios.splashLogos.length} splash logos`
+    );
+    console.log(
+      `🤖 Android: 1 Play Store icon + ${results.android.mipmaps.length} mipmaps + ${results.android.drawables.length} drawables`
+    );
+    console.log(`🌐 Web/Expo: ${Object.keys(results.expo).length} assets`);
+
+    return results;
+  } catch (error) {
+    console.error(`❌ Asset generation failed: ${error.message}`);
+    console.error(`⚠️  Falling back to existing PNG assets`);
+    // Don't exit - continue with existing assets
+    return null;
+  }
+};
+
+// Run asset generation (async)
+generateBrandAssets()
+  .then(() => {
+    console.log(`🎉 Asset generation completed, continuing with prebuild...`);
+  })
+  .catch((error) => {
+    console.error(`⚠️  Asset generation error: ${error.message}`);
+  });
 
 // Generate brand key file
 const generateBrandKeyFile = () => {
@@ -729,6 +781,74 @@ const updateAndroidDisplayName = () => {
 };
 
 updateAndroidDisplayName();
+
+// Update iOS splash screen background color
+const updateIOSSplashBackgroundColor = () => {
+  const splashBackgroundColorPath = path.join(
+    projectRoot,
+    "ios",
+    "emap",
+    "Images.xcassets",
+    "SplashScreenBackground.colorset",
+    "Contents.json"
+  );
+
+  if (!fs.existsSync(splashBackgroundColorPath)) {
+    console.warn(
+      `⚠️  iOS splash background colorset not found: ${splashBackgroundColorPath}`
+    );
+    return;
+  }
+
+  // Get brand background color or default to white
+  const backgroundColorHex =
+    brandConfig.branding?.iconBackgroundColor || "#ffffff";
+
+  // Convert hex to RGB components (0-1 range for iOS)
+  const hexToRgbNormalized = (hex) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!result) return { red: 1, green: 1, blue: 1 }; // Default to white
+
+    return {
+      red: (parseInt(result[1], 16) / 255).toFixed(8),
+      green: (parseInt(result[2], 16) / 255).toFixed(8),
+      blue: (parseInt(result[3], 16) / 255).toFixed(8),
+    };
+  };
+
+  const rgbComponents = hexToRgbNormalized(backgroundColorHex);
+
+  const splashBackgroundColorContent = {
+    colors: [
+      {
+        color: {
+          components: {
+            alpha: "1.000",
+            blue: rgbComponents.blue,
+            green: rgbComponents.green,
+            red: rgbComponents.red,
+          },
+          "color-space": "srgb",
+        },
+        idiom: "universal",
+      },
+    ],
+    info: {
+      version: 1,
+      author: "expo",
+    },
+  };
+
+  fs.writeFileSync(
+    splashBackgroundColorPath,
+    JSON.stringify(splashBackgroundColorContent, null, 2)
+  );
+  console.log(
+    `✅ Updated iOS splash screen background color to: ${backgroundColorHex}`
+  );
+};
+
+updateIOSSplashBackgroundColor();
 
 console.log(
   `\n🎉 Pre-build process completed successfully for ${brandConfig.displayName}`
