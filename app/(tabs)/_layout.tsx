@@ -90,7 +90,11 @@ export default function TabLayout() {
               backgroundColor: headerBackgroundColor,
             },
             headerLeft: () => (
-              <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
+              <BrandLogo
+                width={100}
+                height={32}
+                style={{ marginLeft: 16, marginBottom: 8 }}
+              />
             ),
             headerRight: () => (
               <TouchableOpacity
@@ -117,7 +121,11 @@ export default function TabLayout() {
               backgroundColor: headerBackgroundColor,
             },
             headerLeft: () => (
-              <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
+              <BrandLogo
+                width={100}
+                height={32}
+                style={{ marginLeft: 16, marginBottom: 8 }}
+              />
             ),
             headerRight: () => (
               <TouchableOpacity
@@ -149,7 +157,11 @@ export default function TabLayout() {
               backgroundColor: headerBackgroundColor,
             },
             headerLeft: () => (
-              <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
+              <BrandLogo
+                width={100}
+                height={32}
+                style={{ marginLeft: 16, marginBottom: 8 }}
+              />
             ),
             headerRight: () => (
               <TouchableOpacity
@@ -177,7 +189,11 @@ export default function TabLayout() {
               backgroundColor: headerBackgroundColor,
             },
             headerLeft: () => (
-              <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
+              <BrandLogo
+                width={100}
+                height={32}
+                style={{ marginLeft: 16, marginBottom: 8 }}
+              />
             ),
             headerRight: () => (
               <TouchableOpacity
@@ -209,7 +225,11 @@ export default function TabLayout() {
               backgroundColor: headerBackgroundColor,
             },
             headerLeft: () => (
-              <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
+              <BrandLogo
+                width={100}
+                height={32}
+                style={{ marginLeft: 16, marginBottom: 8 }}
+              />
             ),
             headerRight: () => (
               <TouchableOpacity

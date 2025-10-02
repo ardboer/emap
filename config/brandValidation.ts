@@ -2,10 +2,10 @@
 // DO NOT EDIT MANUALLY - Brand validation safeguards
 
 export const BRAND_VALIDATION = {
-  EXPECTED_BRAND: 'cn',
-  EXPECTED_BUNDLE_ID: 'metropolis.co.uk.constructionnews',
-  EXPECTED_DISPLAY_NAME: 'Construction News',
-  GENERATED_AT: '2025-10-02T11:07:45.942Z',
+  EXPECTED_BRAND: 'nt',
+  EXPECTED_BUNDLE_ID: 'metropolis.net.nursingtimes',
+  EXPECTED_DISPLAY_NAME: 'Nursing Times',
+  GENERATED_AT: '2025-10-02T11:22:46.358Z',
   SAFEGUARD_VERSION: '1.0.0'
 };
 
