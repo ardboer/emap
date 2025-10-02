@@ -1,44 +1,41 @@
-import MagazineListView from "@/components/MagazineListView";
-import PDFViewer from "@/components/PDFViewer";
-import { MagazineEdition } from "@/types";
-import React, { useState } from "react";
-import { StyleSheet, View } from "react-native";
-
-type ViewState = "list" | "pdf";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import React from "react";
+import { StyleSheet } from "react-native";
 
 export default function AskScreen() {
-  const [currentView, setCurrentView] = useState<ViewState>("list");
-  const [selectedMagazine, setSelectedMagazine] =
-    useState<MagazineEdition | null>(null);
-
-  const handleMagazineSelect = (magazine: MagazineEdition) => {
-    console.log("📖 Magazine selected:", magazine.id);
-    setSelectedMagazine(magazine);
-    setCurrentView("pdf");
-  };
-
-  const handleBackToList = () => {
-    console.log("🔙 Returning to magazine list");
-    setCurrentView("list");
-    setSelectedMagazine(null);
-  };
-
   return (
-    <View style={styles.container}>
-      {currentView === "list" && (
-        <MagazineListView onMagazineSelect={handleMagazineSelect} />
-      )}
-
-      {currentView === "pdf" && selectedMagazine && (
-        <PDFViewer magazine={selectedMagazine} onBack={handleBackToList} />
-      )}
-    </View>
+    <ThemedView style={styles.container}>
+      <ThemedView style={styles.content}>
+        <ThemedText type="title" style={styles.title}>
+          Ask Feature
+        </ThemedText>
+        <ThemedText style={styles.message}>
+          Soon Ask will be available
+        </ThemedText>
+      </ThemedView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+  },
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  title: {
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  message: {
+    fontSize: 16,
+    textAlign: "center",
+    opacity: 0.7,
+    lineHeight: 24,
   },
 });

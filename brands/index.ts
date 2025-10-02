@@ -49,6 +49,7 @@ export interface BrandConfig {
     enableClinical: boolean;
     enableEvents: boolean;
     enableAsk: boolean;
+    enableMagazine: boolean;
   };
   testArticleId?: string;
 }

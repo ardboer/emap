@@ -199,6 +199,34 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="magazine"
+          options={{
+            title: "Magazine",
+            headerTitle: "",
+            headerShadowVisible: false,
+            headerStyle: {
+              borderBottomWidth: 0,
+              backgroundColor: headerBackgroundColor,
+            },
+            headerLeft: () => (
+              <BrandLogo width={100} height={32} style={{ marginLeft: 16 }} />
+            ),
+            headerRight: () => (
+              <TouchableOpacity
+                style={{ marginRight: 16, padding: 8 }}
+                onPress={handleSearchPress}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="search" size={24} color="#666" />
+              </TouchableOpacity>
+            ),
+            href: features?.enableMagazine ? "/(tabs)/magazine" : null,
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={28} name="book.fill" color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="paper"
           options={{
             title: "Paper",

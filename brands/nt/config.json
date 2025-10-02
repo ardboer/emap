@@ -48,7 +48,8 @@
     "enablePaper": false,
     "enableClinical": true,
     "enableEvents": true,
-    "enableAsk": true
+    "enableAsk": true,
+    "enableMagazine": true
   },
   "testArticleId": "345162"
 }

@@ -173,7 +173,7 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
 
   const renderLoadingState = () => (
     <ThemedView style={styles.centerContainer}>
-      <ActivityIndicator size="large" color="#007AFF" />
+      <ActivityIndicator size="large" />
       <ThemedText style={styles.loadingText}>
         {pdfProgress > 0
           ? `Loading PDF... ${Math.round(pdfProgress * 100)}%`
