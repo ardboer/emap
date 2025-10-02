@@ -1,5 +1,5 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
-import TabBar from "@/components/TabBar";
+import SwipeableTabBar from "@/components/SwipeableTabBar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import {
@@ -196,11 +196,10 @@ export default function NewsScreen() {
     );
   }
 
-  // Create tabs from menu items (only titles, content will be rendered dynamically)
+  // Create tabs from menu items (only titles for SwipeableTabBar)
   const tabs = menuItems.map((item) => ({
     id: item.object_id.toString(),
     title: item.title,
-    content: null, // We'll render content dynamically
   }));
 
   // If no menu items, show default tab
@@ -208,27 +207,33 @@ export default function NewsScreen() {
     tabs.push({
       id: "default",
       title: "News",
-      content: null,
     });
   }
 
-  return (
-    <ThemedView style={styles.container}>
-      <TabBar
-        tabs={tabs}
-        activeTabIndex={activeTabIndex}
-        onTabPress={handleTabChange}
-      />
-      {/* Render only the active tab's content */}
-      {menuItems.length > 0 ? (
-        renderTabContent(activeTabIndex)
-      ) : (
+  // Content renderer function for SwipeableTabBar
+  const renderTabContentForSwipe = (tabIndex: number) => {
+    if (menuItems.length === 0) {
+      return (
         <ThemedView style={styles.centerContent}>
           <ThemedText style={styles.emptyText}>
             No menu items available
           </ThemedText>
         </ThemedView>
-      )}
+      );
+    }
+
+    return renderTabContent(tabIndex);
+  };
+
+  return (
+    <ThemedView style={styles.container}>
+      <SwipeableTabBar
+        tabs={tabs}
+        activeTabIndex={activeTabIndex}
+        onTabChange={handleTabChange}
+        renderTabContent={renderTabContentForSwipe}
+        preloadAdjacentTabs={true}
+      />
     </ThemedView>
   );
 }

@@ -40,6 +40,37 @@ const ASSET_CONFIGS = {
         filename: "App-Icon-76x76@1x.png",
         description: "iPad Legacy",
       },
+      // Additional sizes referenced in Contents.json but not previously generated
+      {
+        size: 40,
+        filename: "App-Icon-40x40@2x.png",
+        description: "iPhone Spotlight iOS 7-13",
+      },
+      {
+        size: 60,
+        filename: "App-Icon-60x60@3x.png",
+        description: "iPhone Spotlight iOS 7-13",
+      },
+      {
+        size: 58,
+        filename: "App-Icon-58x58@2x.png",
+        description: "iPhone Settings iOS 7-13",
+      },
+      {
+        size: 87,
+        filename: "App-Icon-87x87@3x.png",
+        description: "iPhone Settings iOS 7-13",
+      },
+      {
+        size: 80,
+        filename: "App-Icon-80x80@2x.png",
+        description: "iPad Spotlight iOS 7-13",
+      },
+      {
+        size: 58,
+        filename: "App-Icon-58x58@2x-ipad.png",
+        description: "iPad Settings iOS 7-13",
+      },
     ],
     splashLogos: [
       {
@@ -628,8 +659,12 @@ class AssetGenerator {
 
       // Remove alpha channel if required (App Store icons)
       if (removeAlpha) {
+        // Use brand background color instead of white for App Store icons
+        const removeAlphaBackground = hasCustomBackground
+          ? backgroundColor
+          : { r: 255, g: 255, b: 255 };
         sharpInstance = sharpInstance.flatten({
-          background: { r: 255, g: 255, b: 255 },
+          background: removeAlphaBackground,
         });
       }
 
@@ -701,6 +736,49 @@ class AssetGenerator {
           idiom: "ipad",
           scale: "1x",
           size: "76x76",
+        },
+        // Additional icon sizes for complete coverage
+        {
+          filename: "App-Icon-40x40@2x.png",
+          idiom: "iphone",
+          scale: "2x",
+          size: "20x20",
+        },
+        {
+          filename: "App-Icon-60x60@3x.png",
+          idiom: "iphone",
+          scale: "3x",
+          size: "20x20",
+        },
+        {
+          filename: "App-Icon-58x58@2x.png",
+          idiom: "iphone",
+          scale: "2x",
+          size: "29x29",
+        },
+        {
+          filename: "App-Icon-87x87@3x.png",
+          idiom: "iphone",
+          scale: "3x",
+          size: "29x29",
+        },
+        {
+          filename: "App-Icon-80x80@2x.png",
+          idiom: "iphone",
+          scale: "2x",
+          size: "40x40",
+        },
+        {
+          filename: "App-Icon-80x80@2x.png",
+          idiom: "ipad",
+          scale: "2x",
+          size: "40x40",
+        },
+        {
+          filename: "App-Icon-58x58@2x-ipad.png",
+          idiom: "ipad",
+          scale: "2x",
+          size: "29x29",
         },
       ],
       info: {

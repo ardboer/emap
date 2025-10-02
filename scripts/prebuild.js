@@ -95,6 +95,15 @@ appJson.expo.icon = `${brandAssetsPath}/icon.png`;
 appJson.expo.android.adaptiveIcon.foregroundImage = `${brandAssetsPath}/adaptive-icon.png`;
 appJson.expo.web.favicon = `${brandAssetsPath}/favicon.png`;
 
+// Set Android adaptive icon background color from brand config
+if (brandConfig.branding?.iconBackgroundColor) {
+  appJson.expo.android.adaptiveIcon.backgroundColor =
+    brandConfig.branding.iconBackgroundColor;
+  console.log(
+    `✅ Set Android adaptive icon background color: ${brandConfig.branding.iconBackgroundColor}`
+  );
+}
+
 // Update splash screen
 if (appJson.expo.plugins) {
   appJson.expo.plugins.forEach((plugin) => {

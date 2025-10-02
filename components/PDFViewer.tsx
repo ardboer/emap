@@ -231,9 +231,7 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
             onPressLink={async (uri) => {
               console.log("onPressLink", uri);
             }}
-            renderActivityIndicator={() => (
-              <ActivityIndicator size="large" color="#007AFF" />
-            )}
+            renderActivityIndicator={() => <ActivityIndicator size="large" />}
             trustAllCerts={false}
             enablePaging={true}
             spacing={10}

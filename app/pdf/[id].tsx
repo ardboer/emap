@@ -1,21 +1,32 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { fetchMagazinePDF } from "@/services/api";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet } from "react-native";
+import { ActivityIndicator, Linking, StyleSheet } from "react-native";
 
 export default function PDFViewerScreen() {
+  const { features } = useBrandConfig();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!features?.enableMagazine) {
+      router.replace("/(tabs)/news");
+      return;
+    }
+
     if (id) {
       loadPDF();
     }
-  }, [id]);
+  }, [features?.enableMagazine, id]);
+
+  if (!features?.enableMagazine) {
+    return null;
+  }
 
   const loadPDF = async () => {
     try {
@@ -73,18 +84,19 @@ export default function PDFViewerScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <WebViewPDFViewer
-        pdfUrl={pdfUrl}
-        editionId={id!}
-        onError={(error: Error) => {
-          console.error("PDF Viewer Error:", error);
-          setError("Failed to load PDF viewer");
-        }}
-        onLoadComplete={(numberOfPages: number, filePath: string) => {
-          console.log(`PDF loaded: ${numberOfPages} pages from ${filePath}`);
-        }}
-      />
+    <ThemedView style={[styles.container, styles.centerContent]}>
+      <ThemedText style={styles.title}>Magazine PDF</ThemedText>
+      <ThemedText style={styles.message}>
+        Opening PDF in external viewer...
+      </ThemedText>
+      <ThemedText style={styles.urlText}>{pdfUrl}</ThemedText>
+      {(() => {
+        Linking.openURL(pdfUrl).catch((err: any) => {
+          console.error("Failed to open PDF:", err);
+          setError("Failed to open PDF");
+        });
+        return null;
+      })()}
     </ThemedView>
   );
 }

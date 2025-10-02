@@ -30,6 +30,8 @@ export default function TabLayout() {
   const headerBackgroundColor =
     themeColors?.headerBackground ||
     Colors[colorScheme ?? "light"].headerBackground;
+  const searchIconColor =
+    themeColors?.searchIcon || Colors[colorScheme ?? "light"].searchIcon;
 
   // Handle search icon press
   const handleSearchPress = () => {
@@ -102,7 +104,7 @@ export default function TabLayout() {
                 onPress={handleSearchPress}
                 activeOpacity={0.7}
               >
-                <Ionicons name="search" size={24} color="#666" />
+                <Ionicons name="search" size={24} color={searchIconColor} />
               </TouchableOpacity>
             ),
             tabBarIcon: ({ color }) => (
@@ -133,7 +135,7 @@ export default function TabLayout() {
                 onPress={handleSearchPress}
                 activeOpacity={0.7}
               >
-                <Ionicons name="search" size={24} color="#666" />
+                <Ionicons name="search" size={24} color={searchIconColor} />
               </TouchableOpacity>
             ),
             href: features?.enableClinical ? "/(tabs)/clinical" : null,
@@ -169,7 +171,7 @@ export default function TabLayout() {
                 onPress={handleSearchPress}
                 activeOpacity={0.7}
               >
-                <Ionicons name="search" size={24} color="#666" />
+                <Ionicons name="search" size={24} color={searchIconColor} />
               </TouchableOpacity>
             ),
             href: features?.enableEvents ? "/(tabs)/events" : null,
@@ -201,7 +203,7 @@ export default function TabLayout() {
                 onPress={handleSearchPress}
                 activeOpacity={0.7}
               >
-                <Ionicons name="search" size={24} color="#666" />
+                <Ionicons name="search" size={24} color={searchIconColor} />
               </TouchableOpacity>
             ),
             href: features?.enableAsk ? "/(tabs)/ask" : null,
@@ -237,28 +239,12 @@ export default function TabLayout() {
                 onPress={handleSearchPress}
                 activeOpacity={0.7}
               >
-                <Ionicons name="search" size={24} color="#666" />
+                <Ionicons name="search" size={24} color={searchIconColor} />
               </TouchableOpacity>
             ),
             href: features?.enableMagazine ? "/(tabs)/magazine" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="book.fill" color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="paper"
-          options={{
-            title: "Paper",
-            headerTitle: "Paper",
-            headerShadowVisible: false,
-            headerStyle: {
-              borderBottomWidth: 0,
-              backgroundColor: headerBackgroundColor,
-            },
-            href: features?.enablePaper ? "/(tabs)/paper" : null,
-            tabBarIcon: ({ color }) => (
-              <IconSymbol size={28} name="doc.text.fill" color={color} />
             ),
           }}
         />

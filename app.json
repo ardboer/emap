@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./brands/nt/assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#00334c"
       },
       "edgeToEdgeEnabled": true,
       "package": "metropolis.net.nursingtimes"

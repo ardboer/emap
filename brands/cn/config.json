@@ -19,7 +19,8 @@
         "tabIconSelected": "#FFDD00",
         "tabBarBackground": "#fff",
         "progressIndicator": "#FFDD00",
-        "headerBackground": "#ffffff"
+        "headerBackground": "#ffffff",
+        "searchIcon": "#333333"
       },
       "dark": {
         "primary": "#FFDD00",
@@ -30,7 +31,8 @@
         "tabIconSelected": "#FFDD00",
         "tabBarBackground": "#151718",
         "progressIndicator": "#FFDD00",
-        "headerBackground": "#000000"
+        "headerBackground": "#000000",
+        "searchIcon": "#FFFFFF"
       }
     },
     "fonts": {
@@ -45,12 +47,11 @@
     "iconBackgroundColor": "#ffffff"
   },
   "features": {
-    "enablePodcasts": false,
-    "enablePaper": false,
+    "enablePodcasts": true,
     "enableClinical": false,
     "enableEvents": true,
-    "enableAsk": true,
-    "enableMagazine": true
+    "enableAsk": false,
+    "enableMagazine": false
   },
   "testArticleId": "528406"
 }

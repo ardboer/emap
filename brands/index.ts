@@ -20,6 +20,7 @@ export interface BrandConfig {
         tabBarBackground: string;
         progressIndicator: string;
         headerBackground: string;
+        searchIcon: string;
       };
       dark: {
         primary: string;
@@ -31,6 +32,7 @@ export interface BrandConfig {
         tabBarBackground: string;
         progressIndicator: string;
         headerBackground: string;
+        searchIcon: string;
       };
     };
     fonts: {

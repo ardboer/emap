@@ -19,7 +19,8 @@
         "tabIconSelected": "#00AECA",
         "tabBarBackground": "#fff",
         "progressIndicator": "#00AECA",
-        "headerBackground": "#00334c"
+        "headerBackground": "#00334c",
+        "searchIcon": "#FFFFFF"
       },
       "dark": {
         "primary": "#fff",
@@ -30,7 +31,8 @@
         "tabIconSelected": "#fff",
         "tabBarBackground": "#151718",
         "progressIndicator": "#fff",
-        "headerBackground": "#000000"
+        "headerBackground": "#000000",
+        "searchIcon": "#FFFFFF"
       }
     },
     "fonts": {
@@ -46,7 +48,6 @@
   },
   "features": {
     "enablePodcasts": false,
-    "enablePaper": false,
     "enableClinical": true,
     "enableEvents": true,
     "enableAsk": true,

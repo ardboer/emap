@@ -24,6 +24,7 @@ function getBrandColors() {
         tabBarBackground: "#fff",
         progressIndicator: "#0a7ea4",
         headerBackground: "#fff",
+        searchIcon: "#666666",
       },
       dark: {
         primary: "#fff",
@@ -35,6 +36,7 @@ function getBrandColors() {
         tabBarBackground: "#151718",
         progressIndicator: "#fff",
         headerBackground: "#151718",
+        searchIcon: "#9BA1A6",
       },
     };
   }
@@ -51,6 +53,7 @@ export const Colors = {
     tabIconDefault: brandColors.light.tabIconDefault,
     tabIconSelected: brandColors.light.tabIconSelected,
     headerBackground: brandColors.light.headerBackground,
+    searchIcon: brandColors.light.searchIcon,
   },
   dark: {
     text: brandColors.dark.text,
@@ -60,5 +63,6 @@ export const Colors = {
     tabIconDefault: brandColors.dark.tabIconDefault,
     tabIconSelected: brandColors.dark.tabIconSelected,
     headerBackground: brandColors.dark.headerBackground,
+    searchIcon: brandColors.dark.searchIcon,
   },
 };
