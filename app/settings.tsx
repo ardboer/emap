@@ -212,9 +212,6 @@ export default function SettingsScreen() {
           </ThemedText>
           {/* Brand Switcher - Only show in development */}
           <ThemedView>
-            {React.createElement(
-              require("@/components/BrandSwitcher").BrandSwitcher
-            )}
             {/* Test Article Button */}
             <SettingsItem
               title="Test Article"

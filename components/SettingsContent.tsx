@@ -208,22 +208,17 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           Development
         </ThemedText>
         {/* Brand Switcher - Only show in development */}
-        {__DEV__ && (
-          <ThemedView>
-            {React.createElement(
-              require("@/components/BrandSwitcher").BrandSwitcher
-            )}
-            {/* Test Article Button */}
-            {brandConfig?.testArticleId && (
-              <SettingsItem
-                title="Test Article"
-                subtitle={`Open test article for ${brandConfig.displayName} (ID: ${brandConfig.testArticleId})`}
-                icon="doc.text"
-                onPress={handleTestArticle}
-              />
-            )}
-          </ThemedView>
-        )}
+        <ThemedView>
+          {/* Test Article Button */}
+          {brandConfig?.testArticleId && (
+            <SettingsItem
+              title="Test Article"
+              subtitle={`Open test article for ${brandConfig.displayName} (ID: ${brandConfig.testArticleId})`}
+              icon="doc.text"
+              onPress={handleTestArticle}
+            />
+          )}
+        </ThemedView>
       </ThemedView>
 
       <ThemedView style={styles.section}>
