@@ -17,17 +17,11 @@ export default function AskScreen() {
   // Construct the dynamic URL based on brand configuration
   const webViewUrl = useMemo(() => {
     if (!brandConfig) return null;
-
-    // Ensure domain has proper protocol and trailing slash handling
-    let domain = brandConfig.domain;
-    if (!domain.startsWith("http://") && !domain.startsWith("https://")) {
-      domain = `https://${domain}`;
-    }
-    if (!domain.endsWith("/")) {
-      domain += "/";
-    }
-
-    return `${domain}mobile-app-ai-search/?hash=${brandConfig.apiConfig.hash}`;
+    console.log(
+      "Ask webviewUrl",
+      `${brandConfig.apiConfig.baseUrl}/mobile-app-ai-search/?hash=${brandConfig.apiConfig.hash}`
+    );
+    return `${brandConfig.apiConfig.baseUrl}/mobile-app-ai-search/?hash=${brandConfig.apiConfig.hash}`;
   }, [brandConfig]);
 
   // Show loading state while brand config is loading

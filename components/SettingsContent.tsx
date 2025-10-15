@@ -2,9 +2,16 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { resetOnboarding } from "@/services/onboarding";
 import { router } from "expo-router";
 import React from "react";
-import { ScrollView, StyleSheet, Switch, TouchableOpacity } from "react-native";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+} from "react-native";
 
 interface SettingsContentProps {
   onClose?: () => void;
@@ -85,6 +92,40 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
       router.push(`/article/${brandConfig.testArticleId}`);
       onClose?.(); // Close the drawer after navigation
     }
+  };
+
+  const handleResetOnboarding = async () => {
+    Alert.alert(
+      "Reset Onboarding",
+      "This will reset the onboarding flag. The welcome flow will appear the next time you restart the app.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await resetOnboarding();
+              Alert.alert(
+                "Onboarding Reset",
+                "The onboarding flag has been cleared. Restart the app to see the welcome flow again.",
+                [{ text: "OK" }]
+              );
+            } catch (error) {
+              console.error("Error resetting onboarding:", error);
+              Alert.alert(
+                "Error",
+                "Failed to reset onboarding. Please try again.",
+                [{ text: "OK" }]
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
   const SettingsItem = ({
@@ -222,6 +263,13 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
                 onPress={handleTestArticle}
               />
             )}
+            {/* Reset Onboarding Button */}
+            <SettingsItem
+              title="Reset Onboarding"
+              subtitle="Clear onboarding flag to see the welcome flow again"
+              icon="arrow.counterclockwise"
+              onPress={handleResetOnboarding}
+            />
           </ThemedView>
         )}
       </ThemedView>
