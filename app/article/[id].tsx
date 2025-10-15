@@ -1,9 +1,11 @@
 import { BannerAd } from "@/components/BannerAd";
+import { PaywallBottomSheet } from "@/components/PaywallBottomSheet";
 import RelatedArticles from "@/components/RelatedArticles";
 import { RichContentRenderer } from "@/components/RichContentRenderer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Article, StructuredContentNode } from "@/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -30,6 +32,8 @@ export default function ArticleScreen() {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallEnabled, setPaywallEnabled] = useState(true);
 
   // Scroll position tracking
   const scrollY = useSharedValue(0);
@@ -60,6 +64,13 @@ export default function ArticleScreen() {
   });
 
   useEffect(() => {
+    // Load paywall debug setting
+    AsyncStorage.getItem("debug_show_paywall").then((value) => {
+      setPaywallEnabled(value !== "false"); // Default to true if not set
+    });
+  }, []);
+
+  useEffect(() => {
     const loadArticle = async () => {
       if (!id) {
         setError("No article ID provided");
@@ -87,6 +98,33 @@ export default function ArticleScreen() {
 
     loadArticle();
   }, [id]);
+
+  useEffect(() => {
+    if (article && paywallEnabled) {
+      // Show paywall after 2 seconds
+      const timer = setTimeout(() => {
+        setShowPaywall(true);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [article, paywallEnabled]);
+
+  const handleClosePaywall = () => {
+    setShowPaywall(false);
+  };
+
+  const handleSubscribe = () => {
+    console.log("Subscribe button pressed");
+    // TODO: Implement subscription flow
+    setShowPaywall(false);
+  };
+
+  const handleSignIn = () => {
+    console.log("Sign In button pressed");
+    // TODO: Implement sign in flow
+    setShowPaywall(false);
+  };
 
   // Helper function to render content based on type
   const renderContent = () => {
@@ -213,6 +251,13 @@ export default function ArticleScreen() {
           <RelatedArticles currentArticleId={article.id} />
         </ThemedView>
       </Animated.ScrollView>
+
+      <PaywallBottomSheet
+        visible={showPaywall}
+        onClose={handleClosePaywall}
+        onSubscribe={handleSubscribe}
+        onSignIn={handleSignIn}
+      />
     </View>
   );
 }

@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { resetOnboarding } from "@/services/onboarding";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -20,6 +21,7 @@ interface SettingsContentProps {
 export function SettingsContent({ onClose }: SettingsContentProps) {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
+  const [showPaywall, setShowPaywall] = React.useState(true);
   const [cacheStats, setCacheStats] = React.useState<{
     totalKeys: number;
     totalSize: number;
@@ -32,6 +34,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   // Load cache stats on component mount
   React.useEffect(() => {
     loadCacheStats();
+  }, []);
+
+  // Load paywall debug setting
+  React.useEffect(() => {
+    AsyncStorage.getItem("debug_show_paywall").then((value) => {
+      if (value !== null) {
+        setShowPaywall(value === "true");
+      }
+    });
   }, []);
 
   const loadCacheStats = async () => {
@@ -126,6 +137,11 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         },
       ]
     );
+  };
+
+  const handlePaywallToggle = async (value: boolean) => {
+    setShowPaywall(value);
+    await AsyncStorage.setItem("debug_show_paywall", value.toString());
   };
 
   const SettingsItem = ({
@@ -294,6 +310,25 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           title="Version"
           subtitle="1.0.0"
           icon="info.circle.fill"
+        />
+      </ThemedView>
+
+      <ThemedView style={styles.section}>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          Debug
+        </ThemedText>
+        <SettingsItem
+          title="Show Paywall"
+          subtitle="Enable paywall for testing"
+          icon="ladybug.fill"
+          rightElement={
+            <Switch
+              value={showPaywall}
+              onValueChange={handlePaywallToggle}
+              trackColor={{ false: "#767577", true: "#007AFF" }}
+              thumbColor="#fff"
+            />
+          }
         />
       </ThemedView>
     </ScrollView>
