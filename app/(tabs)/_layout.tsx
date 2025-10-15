@@ -64,7 +64,11 @@ export default function TabLayout() {
             default: {
               position: "absolute",
               backgroundColor:
-                route.name === "index" ? "transparent" : tabBarBackgroundColor,
+                route.name === "index"
+                  ? colorScheme === "light"
+                    ? tabBarBackgroundColor
+                    : "transparent"
+                  : tabBarBackgroundColor,
               borderTopWidth: route.name === "index" ? 0 : undefined,
               elevation: route.name === "index" ? 0 : undefined,
             },

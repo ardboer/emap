@@ -1,6 +1,6 @@
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
 export default function TabBarBackground({
   shouldRender = true,
@@ -26,7 +26,21 @@ export default function TabBarBackground({
     );
   }
 
-  // For index tab, return fully transparent (null means no background)
+  // For index tab on Android in light mode, use opaque background
+  if (Platform.OS === "android" && colorScheme === "light") {
+    return (
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            backgroundColor: "rgba(255, 255, 255, 1)", // Opaque white background
+          },
+        ]}
+      />
+    );
+  }
+
+  // For index tab on iOS or Android dark mode, return fully transparent
   return null;
 }
 
