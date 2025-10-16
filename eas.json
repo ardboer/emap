@@ -19,26 +19,14 @@
       "env": {
         "EXPO_PUBLIC_BRAND": "cn"
       },
-      "prebuildCommand": "node scripts/prebuild.js cn && node scripts/verify-build.js",
-      "ios": {
-        "bundleIdentifier": "metropolis.co.uk.constructionnews"
-      },
-      "android": {
-        "package": "metropolis.co.uk.constructionnews"
-      }
+      "prebuildCommand": "node scripts/prebuild.js cn && node scripts/verify-build.js"
     },
     "production-nt": {
       "extends": "production",
       "env": {
         "EXPO_PUBLIC_BRAND": "nt"
       },
-      "prebuildCommand": "node scripts/prebuild.js nt && node scripts/verify-build.js",
-      "ios": {
-        "bundleIdentifier": "metropolis.net.nursingtimes"
-      },
-      "android": {
-        "package": "metropolis.net.nursingtimes"
-      }
+      "prebuildCommand": "node scripts/prebuild.js nt && node scripts/verify-build.js"
     }
   },
   "submit": {

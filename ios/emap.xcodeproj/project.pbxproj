@@ -22,6 +22,7 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = emap/Info.plist; sourceTree = "<group>"; };
 		3F6BD27FBAB368A087F87E18 /* libPods-emap.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-emap.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		545CCAB38CFC243B44AD5629 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-emap/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		584FE47A2EA11D41006CAD0D /* emapDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = emapDebug.entitlements; path = emap/emapDebug.entitlements; sourceTree = "<group>"; };
 		651E8B69DB50B3565E407847 /* Pods-emap.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-emap.release.xcconfig"; path = "Target Support Files/Pods-emap/Pods-emap.release.xcconfig"; sourceTree = "<group>"; };
 		9972A92001A8AFD20004592A /* Pods-emap.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-emap.debug.xcconfig"; path = "Target Support Files/Pods-emap/Pods-emap.debug.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = emap/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -47,6 +48,7 @@
 		13B07FAE1A68108700A75B9A /* emap */ = {
 			isa = PBXGroup;
 			children = (
+				584FE47A2EA11D41006CAD0D /* emapDebug.entitlements */,
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748442D0722820044C1D9 /* emap-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
@@ -244,7 +246,7 @@
 			inputPaths = (
 				"$(SRCROOT)/.xcode.env",
 				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/emap/emap.entitlements",
+				"$(SRCROOT)/emap/emapDebug.entitlements",
 				"$(SRCROOT)/Pods/Target Support Files/Pods-emap/expo-configure-project.sh",
 			);
 			name = "[Expo] Configure project";
@@ -308,8 +310,10 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-emap/Pods-emap-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXNotifications/ExpoNotifications_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXUpdates/EXUpdates.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoSystemUI/ExpoSystemUI_privacy.bundle",
@@ -325,8 +329,10 @@
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoNotifications_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXUpdates.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoSystemUI_privacy.bundle",
@@ -366,7 +372,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = emap/emap.entitlements;
+				CODE_SIGN_ENTITLEMENTS = emap/emapDebug.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = E579993L4E;
 				ENABLE_BITCODE = NO;

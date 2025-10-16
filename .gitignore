@@ -53,3 +53,6 @@ fastlane/derived_data
 # Android keystore
 android/keystore.properties
 android/keystores/
+
+# Push notification tokens (sensitive data)
+push-tokens.json

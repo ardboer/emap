@@ -1,8 +1,11 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import React from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
+import * as Notifications from "expo-notifications";
+import React, { useState } from "react";
+import { Alert, StyleSheet, TouchableOpacity } from "react-native";
 import { OnboardingStepProps } from "./types";
 import { useBrandColors } from "./useBrandColors";
 
@@ -11,11 +14,93 @@ export function NotificationPermissionScreen({
   onSkip,
 }: OnboardingStepProps) {
   const { primaryColor } = useBrandColors();
+  const [isRequesting, setIsRequesting] = useState(false);
 
-  const handleRequestPermission = () => {
-    // TODO: Implement actual notification permission request
-    // For now, just proceed to next step
-    onNext();
+  const handleRequestPermission = async () => {
+    if (isRequesting) return;
+
+    setIsRequesting(true);
+
+    try {
+      // Request notification permissions
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      // If permission hasn't been determined yet, ask for it
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus === "granted") {
+        // Permission granted - get the push token
+        try {
+          // Get project ID from app.json via Constants
+          const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+
+          if (!projectId) {
+            throw new Error("Project ID not found in app configuration");
+          }
+
+          const token = await Notifications.getExpoPushTokenAsync({
+            projectId,
+          });
+
+          // Store the push token
+          await AsyncStorage.setItem("expoPushToken", token.data);
+
+          // Store permission status
+          await AsyncStorage.setItem("notificationPermissionGranted", "true");
+
+          // Store the timestamp when permission was granted
+          await AsyncStorage.setItem(
+            "notificationPermissionGrantedAt",
+            new Date().toISOString()
+          );
+
+          console.log("Push token obtained and stored:", token.data);
+
+          // Proceed to next step without showing alert for smoother UX
+          onNext();
+        } catch (tokenError) {
+          console.error("Error getting push token:", tokenError);
+
+          // Even if token fails, mark permission as granted and continue
+          await AsyncStorage.setItem("notificationPermissionGranted", "true");
+          await AsyncStorage.setItem(
+            "notificationPermissionGrantedAt",
+            new Date().toISOString()
+          );
+
+          // Continue to next step - token can be obtained later
+          onNext();
+        }
+      } else {
+        // Permission denied
+        await AsyncStorage.setItem("notificationPermissionGranted", "false");
+        await AsyncStorage.setItem(
+          "notificationPermissionDeniedAt",
+          new Date().toISOString()
+        );
+
+        Alert.alert(
+          "Notifications Disabled",
+          "You can enable notifications later in your device settings if you change your mind.",
+          [{ text: "OK", onPress: () => onNext() }]
+        );
+      }
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
+
+      Alert.alert(
+        "Error",
+        "There was a problem setting up notifications. You can try again later in settings.",
+        [{ text: "OK", onPress: () => onNext() }]
+      );
+    } finally {
+      setIsRequesting(false);
+    }
   };
 
   return (

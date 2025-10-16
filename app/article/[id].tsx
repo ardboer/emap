@@ -77,7 +77,7 @@ export default function ArticleScreen() {
         setLoading(false);
         return;
       }
-
+      console.log("article id to be retrieved", id);
       try {
         setLoading(true);
         setError(null);

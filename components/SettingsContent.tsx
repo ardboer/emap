@@ -4,6 +4,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { resetOnboarding } from "@/services/onboarding";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -22,6 +23,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
   const [showPaywall, setShowPaywall] = React.useState(true);
+  const [pushToken, setPushToken] = React.useState<string | null>(null);
   const [cacheStats, setCacheStats] = React.useState<{
     totalKeys: number;
     totalSize: number;
@@ -31,9 +33,10 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   // Get brand configuration for test article
   const { brandConfig } = useBrandConfig();
 
-  // Load cache stats on component mount
+  // Load cache stats and push token on component mount
   React.useEffect(() => {
     loadCacheStats();
+    loadPushToken();
   }, []);
 
   // Load paywall debug setting
@@ -56,6 +59,24 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
       });
     } catch (error) {
       console.error("Error loading cache stats:", error);
+    }
+  };
+
+  const loadPushToken = async () => {
+    try {
+      const token = await AsyncStorage.getItem("expoPushToken");
+      setPushToken(token);
+    } catch (error) {
+      console.error("Error loading push token:", error);
+    }
+  };
+
+  const handleCopyPushToken = async () => {
+    if (pushToken) {
+      await Clipboard.setStringAsync(pushToken);
+      Alert.alert("Copied!", "Push token copied to clipboard", [
+        { text: "OK" },
+      ]);
     }
   };
 
@@ -330,6 +351,14 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             />
           }
         />
+        {pushToken && (
+          <SettingsItem
+            title="Push Token"
+            subtitle={`${pushToken.substring(0, 30)}...`}
+            icon="key.fill"
+            onPress={handleCopyPushToken}
+          />
+        )}
       </ThemedView>
     </ScrollView>
   );
