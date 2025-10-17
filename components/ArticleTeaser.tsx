@@ -19,6 +19,7 @@ export default function ArticleTeaser({
     if (onPress) {
       onPress(article);
     } else {
+      console.log("opening article.id", article.id);
       router.push(`/article/${article.id}`);
     }
   };

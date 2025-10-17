@@ -247,8 +247,8 @@ export default function ArticleScreen() {
           {/* Render content based on type */}
           {renderContent()}
 
-          {/* Related Articles Section */}
-          <RelatedArticles currentArticleId={article.id} />
+          {/* Trending Articles Section */}
+          <RelatedArticles />
         </ThemedView>
       </Animated.ScrollView>
 

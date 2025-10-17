@@ -1,4 +1,11 @@
 // Brand registry and management
+export interface MisoConfig {
+  apiKey: string;
+  publishableKey: string;
+  brandFilter: string;
+  endpoint: string;
+}
+
 export interface BrandConfig {
   shortcode: string;
   name: string;
@@ -54,6 +61,7 @@ export interface BrandConfig {
     enableAsk: boolean;
     enableMagazine: boolean;
   };
+  misoConfig?: MisoConfig;
   testArticleId?: string;
 }
 

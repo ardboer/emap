@@ -43,6 +43,10 @@ export function NotificationPermissionScreen({
             throw new Error("Project ID not found in app configuration");
           }
 
+          // Add a small delay to ensure native modules are fully initialized
+          // This helps prevent Firebase initialization errors on Android
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
           const token = await Notifications.getExpoPushTokenAsync({
             projectId,
           });
@@ -59,12 +63,13 @@ export function NotificationPermissionScreen({
             new Date().toISOString()
           );
 
-          console.log("Push token obtained and stored:", token.data);
+          console.log("✅ Push token obtained and stored:", token.data);
 
           // Proceed to next step without showing alert for smoother UX
           onNext();
         } catch (tokenError) {
-          console.error("Error getting push token:", tokenError);
+          console.error("⚠️ Error getting push token:", tokenError);
+          console.log("📝 Note: Push token will be obtained in background");
 
           // Even if token fails, mark permission as granted and continue
           await AsyncStorage.setItem("notificationPermissionGranted", "true");

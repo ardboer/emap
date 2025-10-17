@@ -1,18 +1,12 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { fetchRelatedArticles } from "@/services/api";
+import { fetchTrendingArticles } from "@/services/api";
 import { Article } from "@/types";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import ArticleTeaser from "./ArticleTeaser";
 
-interface RelatedArticlesProps {
-  currentArticleId: string;
-}
-
-export default function RelatedArticles({
-  currentArticleId,
-}: RelatedArticlesProps) {
+export default function RelatedArticles() {
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,29 +16,29 @@ export default function RelatedArticles({
       try {
         setLoading(true);
         setError(null);
-        const articles = await fetchRelatedArticles(currentArticleId, 5);
+        const articles = await fetchTrendingArticles(5);
         setRelatedArticles(articles);
       } catch (err) {
-        setError("Failed to load related articles");
-        console.error("Error loading related articles:", err);
+        setError("Failed to load trending articles");
+        console.error("Error loading trending articles:", err);
       } finally {
         setLoading(false);
       }
     };
 
     loadRelatedArticles();
-  }, [currentArticleId]);
+  }, []);
 
   if (loading) {
     return (
       <ThemedView style={styles.container}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
-          Related Articles
+          Trending Articles
         </ThemedText>
         <ThemedView style={styles.loadingContainer}>
           <ActivityIndicator size="small" />
           <ThemedText style={styles.loadingText}>
-            Loading related articles...
+            Loading trending articles...
           </ThemedText>
         </ThemedView>
       </ThemedView>
@@ -59,7 +53,7 @@ export default function RelatedArticles({
     <ThemedView style={styles.container}>
       <ThemedView style={styles.divider} />
       <ThemedText type="subtitle" style={styles.sectionTitle}>
-        Related Articles
+        Trending Articles
       </ThemedText>
       <ThemedView style={styles.articlesContainer}>
         {relatedArticles.map((article) => (

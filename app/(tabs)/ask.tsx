@@ -85,9 +85,7 @@ export default function AskScreen() {
       {webViewLoading && (
         <ThemedView style={styles.loadingOverlay}>
           <ActivityIndicator size="large" />
-          <ThemedText style={styles.loadingText}>
-            Loading Ask feature...
-          </ThemedText>
+          <ThemedText style={styles.loadingText}>Loading Ask...</ThemedText>
         </ThemedView>
       )}
 

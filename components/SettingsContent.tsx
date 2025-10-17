@@ -81,8 +81,6 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   };
 
   const handleClearCache = async () => {
-    const { Alert } = await import("react-native");
-
     Alert.alert(
       "Clear WordPress Cache",
       `This will remove all cached WordPress content (${
