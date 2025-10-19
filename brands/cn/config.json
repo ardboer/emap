@@ -3,6 +3,7 @@
   "name": "Construction News",
   "displayName": "Construction News",
   "domain": "https://www.constructionnews.co.uk/",
+  "bundleId": "metropolis.co.uk.constructionnews",
   "apiConfig": {
     "baseUrl": "https://www.constructionnews.co.uk",
     "hash": "5c159d9d79114126d3e27224180295",
@@ -59,5 +60,16 @@
     "brandFilter": "Construction News",
     "endpoint": "https://api.askmiso.com/v1/recommendation/user_to_trending"
   },
-  "testArticleId": "528406"
+  "testArticleId": "528406",
+  "pushCredentials": {
+    "configured": true,
+    "details": "Push credentials configured (manually verified)",
+    "lastChecked": "2025-10-19T19:27:30.168Z"
+  },
+  "keystoreStatus": {
+    "configured": true,
+    "details": "Keystore alias found: construction-news-key",
+    "lastChecked": "2025-10-19T19:43:50.473Z",
+    "alias": "construction-news-key"
+  }
 }

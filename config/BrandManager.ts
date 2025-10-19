@@ -120,18 +120,28 @@ class BrandManager {
         console.log("✅ Using app config brand:", appBrand);
         return appBrand;
       }
-      // Fallback: detect brand from bundle identifier
+      // Fallback: detect brand from bundle identifier by checking all brand configs
       const bundleId =
         Constants?.expoConfig?.ios?.bundleIdentifier ||
         Constants?.manifest?.ios?.bundleIdentifier;
       console.log("🔍 Bundle ID:", bundleId);
 
-      if (bundleId === "metropolis.co.uk.constructionnews") {
-        console.log("✅ Detected Construction News from bundle ID");
-        return "cn";
-      } else if (bundleId === "metropolis.net.nursingtimes") {
-        console.log("✅ Detected Nursing Times from bundle ID");
-        return "nt";
+      if (bundleId) {
+        // Try to match bundle ID with any brand's config
+        const availableBrands = Object.keys(AVAILABLE_BRANDS);
+        for (const brandShortcode of availableBrands) {
+          try {
+            const brandLoader = AVAILABLE_BRANDS[brandShortcode];
+            const config = brandLoader();
+            if (config.bundleId === bundleId) {
+              console.log(`✅ Detected ${config.displayName} from bundle ID`);
+              return brandShortcode as BrandShortcode;
+            }
+          } catch (error) {
+            console.warn(`Failed to load config for ${brandShortcode}:`, error);
+          }
+        }
+        console.warn(`⚠️ No brand found matching bundle ID: ${bundleId}`);
       }
     } catch (error) {
       console.warn("❌ Could not access app configuration:", error);
@@ -155,6 +165,11 @@ class BrandManager {
   getBrandAssetPath(assetType: keyof BrandConfig["branding"]): string {
     const brand = this.getCurrentBrand();
     const relativePath = brand.branding[assetType];
+
+    // Handle undefined or missing paths
+    if (!relativePath) {
+      throw new Error(`Asset path not found for type: ${assetType}`);
+    }
 
     // Convert relative path to absolute brand path
     return relativePath.replace(

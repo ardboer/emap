@@ -1,4 +1,6 @@
 // Brand registry and management
+import { discoverBrandsSync, type BrandsRegistry } from "./brandDiscovery";
+
 export interface MisoConfig {
   apiKey: string;
   publishableKey: string;
@@ -11,6 +13,7 @@ export interface BrandConfig {
   name: string;
   displayName: string;
   domain: string;
+  bundleId?: string;
   apiConfig: {
     baseUrl: string;
     hash: string;
@@ -65,16 +68,59 @@ export interface BrandConfig {
   testArticleId?: string;
 }
 
-// Available brands registry
-export const AVAILABLE_BRANDS = {
-  nt: () => require("./nt/config.json"),
-  cn: () => require("./cn/config.json"),
-  // Add more brands here as needed
-} as const;
+// Dynamically discover available brands from filesystem
+// This replaces the hardcoded AVAILABLE_BRANDS object
+let _cachedBrands: BrandsRegistry | null = null;
 
-export type BrandShortcode = keyof typeof AVAILABLE_BRANDS;
+function getAvailableBrandsRegistry(): BrandsRegistry {
+  if (!_cachedBrands) {
+    _cachedBrands = discoverBrandsSync();
 
-// Validate shortcode format
+    // If discovery fails or returns empty, provide fallback to known brands
+    if (Object.keys(_cachedBrands).length === 0) {
+      console.warn(
+        "⚠️ Brand discovery returned no brands, using fallback registry"
+      );
+      _cachedBrands = {
+        nt: () => require("./nt/config.json"),
+        cn: () => require("./cn/config.json"),
+        jnl: () => require("./jnl/config.json"),
+      };
+    }
+  }
+  return _cachedBrands;
+}
+
+// Available brands registry - now dynamically populated
+export const AVAILABLE_BRANDS = new Proxy({} as BrandsRegistry, {
+  get(target, prop: string) {
+    const registry = getAvailableBrandsRegistry();
+    return registry[prop];
+  },
+  has(target, prop: string) {
+    const registry = getAvailableBrandsRegistry();
+    return prop in registry;
+  },
+  ownKeys(target) {
+    const registry = getAvailableBrandsRegistry();
+    return Object.keys(registry);
+  },
+  getOwnPropertyDescriptor(target, prop: string) {
+    const registry = getAvailableBrandsRegistry();
+    if (prop in registry) {
+      return {
+        enumerable: true,
+        configurable: true,
+      };
+    }
+    return undefined;
+  },
+});
+
+// Type for brand shortcodes - now dynamically inferred
+export type BrandShortcode = string;
+
+// Validate shortcode format and existence
 export function validateShortcode(
   shortcode: string
 ): shortcode is BrandShortcode {
@@ -83,5 +129,10 @@ export function validateShortcode(
 
 // Get list of all available brand shortcodes
 export function getAvailableBrands(): BrandShortcode[] {
-  return Object.keys(AVAILABLE_BRANDS) as BrandShortcode[];
+  return Object.keys(getAvailableBrandsRegistry());
+}
+
+// Clear the cached brands registry (useful for testing)
+export function clearBrandsCache(): void {
+  _cachedBrands = null;
 }

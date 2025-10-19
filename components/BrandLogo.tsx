@@ -2,8 +2,9 @@ import { useBrandConfig } from "@/hooks/useBrandConfig";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
-// Import both SVG logos
+// Import all brand SVG logos
 import CNLogo from "@/brands/cn/logo.svg";
+import JNLLogo from "@/brands/jnl/logo.svg";
 import NTLogo from "@/brands/nt/logo.svg";
 
 interface BrandLogoProps {
@@ -20,7 +21,12 @@ export function BrandLogo({ width = 120, height = 40, style }: BrandLogoProps) {
   }
 
   // Select the appropriate logo component based on brand
-  const LogoComponent = brandConfig.shortcode === "nt" ? NTLogo : CNLogo;
+  const LogoComponent =
+    brandConfig.shortcode === "nt"
+      ? NTLogo
+      : brandConfig.shortcode === "jnl"
+      ? JNLLogo
+      : CNLogo;
 
   return (
     <View style={[styles.container, { width, height }, style]}>

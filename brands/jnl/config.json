@@ -1,0 +1,69 @@
+{
+  "shortcode": "jnl",
+  "name": "Journal of Nursing Leadership",
+  "displayName": "JNL",
+  "domain": "https://jnl.nursingtimes.net/",
+  "bundleId": "metropolis.net.jnl",
+  "apiConfig": {
+    "baseUrl": "https://jnl.nursingtimes.net/",
+    "hash": "5506c4c9af9349c87a364b3b0b1988",
+    "menuId": 103571
+  },
+  "theme": {
+    "colors": {
+      "light": {
+        "primary": "#df7446",
+        "background": "#fff",
+        "text": "#11181C",
+        "icon": "#687076",
+        "tabIconDefault": "#687076",
+        "tabIconSelected": "#df7446",
+        "tabBarBackground": "#fff",
+        "progressIndicator": "#df7446",
+        "headerBackground": "#ffffff",
+        "searchIcon": "#333333"
+      },
+      "dark": {
+        "primary": "#df7446",
+        "background": "#151718",
+        "text": "#ECEDEE",
+        "icon": "#9BA1A6",
+        "tabIconDefault": "#9BA1A6",
+        "tabIconSelected": "#df7446",
+        "tabBarBackground": "#151718",
+        "progressIndicator": "#df7446",
+        "headerBackground": "#000000",
+        "searchIcon": "#FFFFFF"
+      }
+    },
+    "fonts": {
+      "primary": "System",
+      "secondary": "System"
+    }
+  },
+  "branding": {
+    "logo": "./logo.svg",
+    "icon": "./assets/icon.png",
+    "splash": "./assets/splash.png",
+    "iconBackgroundColor": "#df7446"
+  },
+  "features": {
+    "enablePodcasts": false,
+    "enableClinical": false,
+    "enableEvents": false,
+    "enableAsk": true,
+    "enableMagazine": false
+  },
+  "misoConfig": {
+    "apiKey": "FcakM2bTHy0Sf0uaM6mYpwI9vnXWKdu4E9jO6Bx2",
+    "publishableKey": "4yxesK8tUzRGIz17RXDPgplM0c5ZAWnWjtD9cdcD",
+    "brandFilter": "Journal of Nursing Leadership",
+    "endpoint": "https://api.askmiso.com/v1/recommendation/user_to_trending"
+  },
+  "testArticleId": "528406",
+  "keystoreStatus": {
+    "configured": false,
+    "details": "No keystore alias found for jnl",
+    "lastChecked": "2025-10-19T19:43:46.872Z"
+  }
+}

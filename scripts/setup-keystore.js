@@ -17,22 +17,41 @@ if (!brand || !password) {
   process.exit(1);
 }
 
+// Dynamically discover valid brands from filesystem
+const projectRoot = process.cwd();
+const brandsDir = path.join(projectRoot, "brands");
+const validBrands = fs
+  .readdirSync(brandsDir, { withFileTypes: true })
+  .filter((entry) => {
+    if (
+      !entry.isDirectory() ||
+      entry.name.startsWith(".") ||
+      entry.name.startsWith("_")
+    ) {
+      return false;
+    }
+    const configPath = path.join(brandsDir, entry.name, "config.json");
+    return fs.existsSync(configPath) && /^[a-z0-9]{2,6}$/.test(entry.name);
+  })
+  .map((entry) => entry.name)
+  .sort();
+
+console.log(`📦 Discovered brands: ${validBrands.join(", ")}`);
+
 // Validate brand
-const validBrands = ["cn", "nt"];
 if (!validBrands.includes(brand)) {
   console.error(`❌ Invalid brand: ${brand}`);
   console.error(`Valid brands: ${validBrands.join(", ")}`);
   process.exit(1);
 }
 
-// Map brand to key alias
-const brandKeyAliases = {
-  cn: "construction-news-key",
-  nt: "nursing-times-key",
-};
+// Load brand configuration to get display name
+const brandConfigPath = path.join(brandsDir, brand, "config.json");
+const brandConfig = JSON.parse(fs.readFileSync(brandConfigPath, "utf8"));
 
-const keyAlias = brandKeyAliases[brand];
-const brandName = brand === "cn" ? "Construction News" : "Nursing Times";
+// Generate key alias from brand shortcode
+const keyAlias = `${brand}-key`;
+const brandName = brandConfig.displayName;
 
 console.log(`🔑 Setting up keystore for ${brandName} (${brand})`);
 console.log(`🔑 Key alias: ${keyAlias}`);
