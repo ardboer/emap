@@ -1,7 +1,13 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { brandManager } from "@/config/BrandManager";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import {
+  checkNotificationPermission,
+  subscribeToTopic,
+  unsubscribeFromTopic,
+} from "@/services/firebaseNotifications";
 import { resetOnboarding } from "@/services/onboarding";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
@@ -9,6 +15,8 @@ import { router } from "expo-router";
 import React from "react";
 import {
   Alert,
+  AppState,
+  Linking,
   ScrollView,
   StyleSheet,
   Switch,
@@ -19,11 +27,24 @@ interface SettingsContentProps {
   onClose?: () => void;
 }
 
+interface TopicSubscription {
+  id: string;
+  label: string;
+  description: string;
+  subscribed: boolean;
+}
+
 export function SettingsContent({ onClose }: SettingsContentProps) {
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const [notificationStatus, setNotificationStatus] = React.useState<{
+    enabled: boolean;
+    loading: boolean;
+  }>({ enabled: false, loading: true });
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
   const [showPaywall, setShowPaywall] = React.useState(true);
   const [pushToken, setPushToken] = React.useState<string | null>(null);
+  const [topicSubscriptions, setTopicSubscriptions] = React.useState<
+    TopicSubscription[]
+  >([]);
   const [cacheStats, setCacheStats] = React.useState<{
     totalKeys: number;
     totalSize: number;
@@ -33,10 +54,42 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   // Get brand configuration for test article
   const { brandConfig } = useBrandConfig();
 
-  // Load cache stats and push token on component mount
+  // Available topics for subscription (with brand prefix)
+  const brandShortcode = brandManager.getActiveBrandShortcode();
+  const AVAILABLE_TOPICS: Omit<TopicSubscription, "subscribed">[] = [
+    {
+      id: `${brandShortcode}-breaking`,
+      label: "Breaking News",
+      description: "Get notified about urgent breaking news",
+    },
+    {
+      id: `${brandShortcode}-interview`,
+      label: "Interviews",
+      description: "Exclusive interviews with key figures",
+    },
+    {
+      id: `${brandShortcode}-background`,
+      label: "Background Stories",
+      description: "In-depth analysis and background articles",
+    },
+  ];
+
+  // Load cache stats, push token, notification status, and topics on component mount
   React.useEffect(() => {
     loadCacheStats();
     loadPushToken();
+    loadNotificationStatus();
+    loadTopicSubscriptions();
+  }, []);
+
+  // Auto-refresh notification status when app comes to foreground
+  React.useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        loadNotificationStatus();
+      }
+    });
+    return () => subscription.remove();
   }, []);
 
   // Load paywall debug setting
@@ -68,6 +121,115 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
       setPushToken(token);
     } catch (error) {
       console.error("Error loading push token:", error);
+    }
+  };
+
+  const loadNotificationStatus = async () => {
+    try {
+      const hasPermission = await checkNotificationPermission();
+      setNotificationStatus({ enabled: hasPermission, loading: false });
+    } catch (error) {
+      console.error("Error checking notification permission:", error);
+      setNotificationStatus({ enabled: false, loading: false });
+    }
+  };
+
+  const loadTopicSubscriptions = async () => {
+    try {
+      const storedTopics = await AsyncStorage.getItem("subscribedTopics");
+      const subscribedTopicIds: string[] = storedTopics
+        ? JSON.parse(storedTopics)
+        : [];
+
+      // Add brand topic to the list
+      const brandShortcode = brandManager.getActiveBrandShortcode();
+      const brandTopic = {
+        id: brandShortcode,
+        label: `${brandManager.getCurrentBrand().displayName} Updates`,
+        description: "General updates and news from this publication",
+        subscribed: subscribedTopicIds.includes(brandShortcode),
+      };
+
+      const topics: TopicSubscription[] = [
+        brandTopic,
+        ...AVAILABLE_TOPICS.map((topic) => ({
+          ...topic,
+          subscribed: subscribedTopicIds.includes(topic.id),
+        })),
+      ];
+
+      setTopicSubscriptions(topics);
+    } catch (error) {
+      console.error("Error loading topic subscriptions:", error);
+    }
+  };
+
+  const handleOpenNotificationSettings = async () => {
+    try {
+      await Linking.openSettings();
+    } catch (error) {
+      console.error("Error opening settings:", error);
+      Alert.alert(
+        "Cannot Open Settings",
+        "Please open your device settings manually to change notification permissions.",
+        [{ text: "OK" }]
+      );
+    }
+  };
+
+  const handleTopicToggle = async (topicId: string, currentValue: boolean) => {
+    // Prevent toggling the brand topic
+    const brandShortcode = brandManager.getActiveBrandShortcode();
+    if (topicId === brandShortcode) {
+      Alert.alert(
+        "Cannot Disable",
+        "You cannot unsubscribe from the main publication updates.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    try {
+      const newValue = !currentValue;
+
+      // Update Firebase subscription
+      if (newValue) {
+        await subscribeToTopic(topicId);
+      } else {
+        await unsubscribeFromTopic(topicId);
+      }
+
+      // Update local state
+      setTopicSubscriptions((prev) =>
+        prev.map((topic) =>
+          topic.id === topicId ? { ...topic, subscribed: newValue } : topic
+        )
+      );
+
+      // Update AsyncStorage
+      const updatedTopics = topicSubscriptions
+        .filter((t) => t.id !== brandShortcode) // Exclude brand topic
+        .map((t) => (t.id === topicId ? { ...t, subscribed: newValue } : t))
+        .filter((t) => t.subscribed)
+        .map((t) => t.id);
+
+      await AsyncStorage.setItem(
+        "subscribedTopics",
+        JSON.stringify(updatedTopics)
+      );
+
+      console.log(
+        `✅ ${
+          newValue ? "Subscribed to" : "Unsubscribed from"
+        } topic: ${topicId}`
+      );
+    } catch (error) {
+      console.error("Error toggling topic subscription:", error);
+      Alert.alert(
+        "Error",
+        "Failed to update topic subscription. Please try again.",
+        [{ text: "OK" }]
+      );
     }
   };
 
@@ -199,21 +361,59 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
+      {/* Notifications Section */}
       <ThemedView style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
-          Preferences
+          Notifications
         </ThemedText>
         <SettingsItem
-          title="Notifications"
-          subtitle="Receive push notifications for breaking news"
+          title="Notification Settings"
+          subtitle={
+            notificationStatus.loading
+              ? "Checking permission status..."
+              : notificationStatus.enabled
+              ? "Enabled - Tap to change in system settings"
+              : "Disabled - Tap to enable in system settings"
+          }
           icon="bell.fill"
+          onPress={handleOpenNotificationSettings}
           rightElement={
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-            />
+            <IconSymbol name="chevron.right" size={20} color="#666" />
           }
         />
+
+        {/* Show topics only if notifications are enabled */}
+        {notificationStatus.enabled && topicSubscriptions.length > 0 && (
+          <>
+            <ThemedText style={styles.sectionDescription}>
+              Choose which topics you want to receive notifications about
+            </ThemedText>
+            {topicSubscriptions.map((topic) => (
+              <SettingsItem
+                key={topic.id}
+                title={topic.label}
+                subtitle={topic.description}
+                icon="tag.fill"
+                rightElement={
+                  <Switch
+                    value={topic.subscribed}
+                    onValueChange={() =>
+                      handleTopicToggle(topic.id, topic.subscribed)
+                    }
+                    trackColor={{ false: "#767577", true: "#007AFF" }}
+                    thumbColor="#fff"
+                  />
+                }
+              />
+            ))}
+          </>
+        )}
+      </ThemedView>
+
+      <ThemedView style={styles.section}>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          Content
+        </ThemedText>
         <SettingsItem
           title="Dark Mode"
           subtitle="Switch between light and dark themes"
@@ -225,12 +425,6 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             />
           }
         />
-      </ThemedView>
-
-      <ThemedView style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>
-          Content
-        </ThemedText>
         <SettingsItem
           title="Reading Preferences"
           subtitle="Customize your reading experience"
@@ -370,6 +564,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   sectionTitle: {
+    marginBottom: 16,
+    marginLeft: 4,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    opacity: 0.7,
     marginBottom: 16,
     marginLeft: 4,
   },

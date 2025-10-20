@@ -19,20 +19,40 @@ export interface TopicOption {
   description: string;
 }
 
-export const MOCK_TOPICS: TopicOption[] = [
+// Note: Topic IDs should be prefixed with brand shortcode at runtime
+// This is a template - actual IDs will be like "nt-breaking", "cn-interview", etc.
+export const TOPIC_TEMPLATES: Omit<TopicOption, "id">[] = [
   {
-    id: "breaking",
     label: "Breaking News",
     description: "Get notified about urgent breaking news",
   },
   {
-    id: "interview",
     label: "Interviews",
     description: "Exclusive interviews with key figures",
   },
   {
-    id: "background",
     label: "Background Stories",
     description: "In-depth analysis and background articles",
   },
 ];
+
+// Helper to get brand-prefixed topics
+export function getBrandTopics(brandShortcode: string): TopicOption[] {
+  return [
+    {
+      id: `${brandShortcode}-breaking`,
+      ...TOPIC_TEMPLATES[0],
+    },
+    {
+      id: `${brandShortcode}-interview`,
+      ...TOPIC_TEMPLATES[1],
+    },
+    {
+      id: `${brandShortcode}-background`,
+      ...TOPIC_TEMPLATES[2],
+    },
+  ];
+}
+
+// Keep MOCK_TOPICS for backward compatibility (will use "nt" as default)
+export const MOCK_TOPICS: TopicOption[] = getBrandTopics("nt");

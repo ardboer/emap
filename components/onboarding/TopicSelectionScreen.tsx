@@ -1,14 +1,21 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { brandManager } from "@/config/BrandManager";
+import { subscribeToTopic } from "@/services/firebaseNotifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity } from "react-native";
-import { MOCK_TOPICS, OnboardingStepProps } from "./types";
+import { getBrandTopics, OnboardingStepProps } from "./types";
 import { useBrandColors } from "./useBrandColors";
 
 export function TopicSelectionScreen({ onNext, onSkip }: OnboardingStepProps) {
   const { primaryColor } = useBrandColors();
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+
+  // Get brand-specific topics
+  const brandShortcode = brandManager.getActiveBrandShortcode();
+  const TOPICS = getBrandTopics(brandShortcode);
 
   const toggleTopic = (topicId: string) => {
     setSelectedTopics((prev) =>
@@ -18,9 +25,26 @@ export function TopicSelectionScreen({ onNext, onSkip }: OnboardingStepProps) {
     );
   };
 
-  const handleContinue = () => {
-    // TODO: Save selected topics to user preferences
-    onNext();
+  const handleContinue = async () => {
+    try {
+      // Save selected topics to AsyncStorage
+      await AsyncStorage.setItem(
+        "subscribedTopics",
+        JSON.stringify(selectedTopics)
+      );
+
+      // Subscribe to selected topics in Firebase
+      for (const topicId of selectedTopics) {
+        await subscribeToTopic(topicId);
+        console.log(`✅ Subscribed to topic: ${topicId}`);
+      }
+
+      onNext();
+    } catch (error) {
+      console.error("Error saving topic preferences:", error);
+      // Continue anyway - topics can be configured later in settings
+      onNext();
+    }
   };
 
   return (
@@ -42,7 +66,7 @@ export function TopicSelectionScreen({ onNext, onSkip }: OnboardingStepProps) {
         </ThemedView>
 
         <ThemedView style={styles.topicsList}>
-          {MOCK_TOPICS.map((topic) => {
+          {TOPICS.map((topic) => {
             const isSelected = selectedTopics.includes(topic.id);
             return (
               <TouchableOpacity

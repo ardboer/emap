@@ -50,9 +50,26 @@ export function NotificationPermissionScreen({
 
             console.log("✅ FCM token obtained and stored:", token);
 
-            // Subscribe to brand-specific topic
+            // Subscribe to brand-specific topic and save to AsyncStorage
             const brandShortcode = brandManager.getActiveBrandShortcode();
             await subscribeToTopic(brandShortcode);
+
+            // Store brand topic subscription in AsyncStorage
+            const existingTopics = await AsyncStorage.getItem(
+              "subscribedTopics"
+            );
+            const subscribedTopics: string[] = existingTopics
+              ? JSON.parse(existingTopics)
+              : [];
+
+            if (!subscribedTopics.includes(brandShortcode)) {
+              subscribedTopics.push(brandShortcode);
+              await AsyncStorage.setItem(
+                "subscribedTopics",
+                JSON.stringify(subscribedTopics)
+              );
+            }
+
             console.log(`🔔 User subscribed to brand topic: ${brandShortcode}`);
 
             // Proceed to next step without showing alert for smoother UX
