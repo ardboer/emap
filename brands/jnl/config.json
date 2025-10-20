@@ -6,8 +6,8 @@
   "bundleId": "metropolis.net.jnl",
   "apiConfig": {
     "baseUrl": "https://jnl.nursingtimes.net/",
-    "hash": "5506c4c9af9349c87a364b3b0b1988",
-    "menuId": 103571
+    "hash": "61b050b9706d89e8b932a8acd4594f",
+    "menuId": 166
   },
   "theme": {
     "colors": {

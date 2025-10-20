@@ -86,7 +86,7 @@ function App() {
     <div className="app">
       <header className="header">
         <div className="header-content">
-          <h1>EMAP App Management Dashboard</h1>
+          <h1>EMAP App Development Dashboard</h1>
           {activeBrand && (
             <div className="active-brand-info">
               <div>

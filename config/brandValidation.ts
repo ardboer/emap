@@ -2,10 +2,10 @@
 // DO NOT EDIT MANUALLY - Brand validation safeguards
 
 export const BRAND_VALIDATION = {
-  EXPECTED_BRAND: 'jnl',
-  EXPECTED_BUNDLE_ID: 'metropolis.net.jnl',
-  EXPECTED_DISPLAY_NAME: 'JNL',
-  GENERATED_AT: '2025-10-19T15:49:17.819Z',
+  EXPECTED_BRAND: 'cn',
+  EXPECTED_BUNDLE_ID: 'metropolis.co.uk.constructionnews',
+  EXPECTED_DISPLAY_NAME: 'Construction News',
+  GENERATED_AT: '2025-10-20T08:33:23.978Z',
   SAFEGUARD_VERSION: '1.0.0'
 };
 

@@ -247,9 +247,9 @@ export async function fetchArticles(): Promise<Article[]> {
     console.log("Returning cached articles");
     return cached;
   }
-
   try {
     const { baseUrl } = getApiConfig();
+    console.log("api call", `${baseUrl}${HIGHLIGHTS_ENDPOINT}?hash=${hash}`);
     const response = await fetch(
       `${baseUrl}${HIGHLIGHTS_ENDPOINT}?hash=${hash}`
     );
@@ -387,11 +387,12 @@ export async function fetchFeaturedArticles(): Promise<Article[]> {
   const cached = await cacheService.get<Article[]>(cacheKey, { hash });
   if (cached) {
     console.log("Returning cached featured articles");
-    return cached;
+    // return cached;
   }
 
   try {
     const { baseUrl } = getApiConfig();
+    console.log("api call", `${baseUrl}${HIGHLIGHTS_ENDPOINT}?hash=${hash}`);
     const response = await fetch(
       `${baseUrl}${HIGHLIGHTS_ENDPOINT}?hash=${hash}`
     );
