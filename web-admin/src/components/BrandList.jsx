@@ -280,7 +280,7 @@ const BrandList = ({
                           display: "inline-flex",
                           alignItems: "center",
                           gap: "0.5rem",
-                          marginBottom: 8,
+                          marginBottom: 4,
                           padding: "0.25rem 0.5rem",
                           borderRadius: "4px",
                           fontSize: "0.75rem",
@@ -328,7 +328,7 @@ const BrandList = ({
                   )}
 
                   {/* Keystore Status */}
-                  <div style={{ marginTop: "0.25rem" }}>
+                  <div>
                     {keystoreStatus[brand.shortcode] ? (
                       <div
                         style={{
