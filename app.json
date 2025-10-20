@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "emap",
+    "name": "Nursing Times",
     "owner": "emap-publishing",
     "slug": "emap",
     "version": "1.0.0",
@@ -11,7 +11,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.emap.app",
+      "bundleIdentifier": "metropolis.net.nursingtimes",
       "config": {
         "usesNonExemptEncryption": false
       }
