@@ -1,9 +1,11 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { brandManager } from "@/config/BrandManager";
 import {
   getFCMToken,
   requestNotificationPermission,
+  subscribeToTopic,
 } from "@/services/firebaseNotifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useState } from "react";
@@ -47,6 +49,11 @@ export function NotificationPermissionScreen({
             );
 
             console.log("✅ FCM token obtained and stored:", token);
+
+            // Subscribe to brand-specific topic
+            const brandShortcode = brandManager.getActiveBrandShortcode();
+            await subscribeToTopic(brandShortcode);
+            console.log(`🔔 User subscribed to brand topic: ${brandShortcode}`);
 
             // Proceed to next step without showing alert for smoother UX
             onNext();
