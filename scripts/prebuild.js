@@ -85,9 +85,12 @@ const appJsonPath = path.join(projectRoot, "app.json");
 const appJson = JSON.parse(fs.readFileSync(appJsonPath, "utf8"));
 
 // Update app configuration
-appJson.expo.name = brandConfig.displayName;
+// IMPORTANT: Keep name as "emap" to maintain generic iOS/Android project structure
+// This prevents eas prebuild from creating brand-specific folders like "NursingTimes/"
+// The actual brand display name is stored in extra.brandConfig for runtime use
+appJson.expo.name = "emap";
 // Keep slug as "emap" for EAS project consistency
-// appJson.expo.slug = `emap-${brand}`;
+appJson.expo.slug = "emap";
 
 // Get bundle identifier from brand config
 const bundleId = brandConfig.bundleId;
@@ -189,6 +192,131 @@ const copyAssets = () => {
 };
 
 copyAssets();
+// Copy Firebase configuration files if they exist
+const copyFirebaseConfig = () => {
+  console.log(`🔥 Checking for Firebase configuration files...`);
+
+  const brandDir = path.join(projectRoot, "brands", brand);
+  const androidAppDir = path.join(projectRoot, "android", "app");
+  const iosAppDir = path.join(projectRoot, "ios", "emap");
+
+  // Copy google-services.json for Android
+  const googleServicesSource = path.join(brandDir, "google-services.json");
+  const googleServicesDest = path.join(androidAppDir, "google-services.json");
+
+  if (fs.existsSync(googleServicesSource)) {
+    // Ensure android/app directory exists
+    if (!fs.existsSync(androidAppDir)) {
+      fs.mkdirSync(androidAppDir, { recursive: true });
+    }
+    fs.copyFileSync(googleServicesSource, googleServicesDest);
+    console.log(`✅ Copied google-services.json for Android`);
+  } else {
+    console.log(`ℹ️  No google-services.json found for ${brand}`);
+  }
+
+  // Copy GoogleService-Info.plist for iOS
+  const googleServiceInfoSource = path.join(
+    brandDir,
+    "GoogleService-Info.plist"
+  );
+  const googleServiceInfoDest = path.join(
+    iosAppDir,
+    "GoogleService-Info.plist"
+  );
+
+  if (fs.existsSync(googleServiceInfoSource)) {
+    // Ensure ios/emap directory exists
+    if (!fs.existsSync(iosAppDir)) {
+      fs.mkdirSync(iosAppDir, { recursive: true });
+    }
+    fs.copyFileSync(googleServiceInfoSource, googleServiceInfoDest);
+    console.log(`✅ Copied GoogleService-Info.plist for iOS`);
+
+    // Add to Xcode project if not already present
+    addGoogleServiceInfoToXcode();
+  } else {
+    console.log(`ℹ️  No GoogleService-Info.plist found for ${brand}`);
+  }
+};
+
+// Add GoogleService-Info.plist to Xcode project
+const addGoogleServiceInfoToXcode = () => {
+  const xcodeProjectPath = path.join(
+    projectRoot,
+    "ios",
+    "emap.xcodeproj",
+    "project.pbxproj"
+  );
+
+  if (!fs.existsSync(xcodeProjectPath)) {
+    console.log(
+      `ℹ️  Xcode project not found, skipping GoogleService-Info.plist addition`
+    );
+    return;
+  }
+
+  try {
+    let projectContent = fs.readFileSync(xcodeProjectPath, "utf8");
+
+    // Check if GoogleService-Info.plist is already referenced
+    if (projectContent.includes("GoogleService-Info.plist")) {
+      console.log(`ℹ️  GoogleService-Info.plist already in Xcode project`);
+      return;
+    }
+
+    console.log(`🔧 Adding GoogleService-Info.plist to Xcode project...`);
+
+    // Generate unique IDs for the file reference and build file
+    const fileRefId =
+      "FIREBASE" + Math.random().toString(36).substr(2, 20).toUpperCase();
+    const buildFileId =
+      "FIREBASE" + Math.random().toString(36).substr(2, 20).toUpperCase();
+
+    // Add file reference in PBXFileReference section
+    const fileReferenceEntry = `\t\t${fileRefId} /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "emap/GoogleService-Info.plist"; sourceTree = "<group>"; };`;
+
+    projectContent = projectContent.replace(
+      /\/\* End PBXFileReference section \*\//,
+      `${fileReferenceEntry}\n/* End PBXFileReference section */`
+    );
+
+    // Add build file in PBXBuildFile section
+    const buildFileEntry = `\t\t${buildFileId} /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = ${fileRefId} /* GoogleService-Info.plist */; };`;
+
+    projectContent = projectContent.replace(
+      /\/\* End PBXBuildFile section \*\//,
+      `${buildFileEntry}\n/* End PBXBuildFile section */`
+    );
+
+    // Add to emap group (where other files like Info.plist are)
+    const groupEntry = `\t\t\t\t${fileRefId} /* GoogleService-Info.plist */,`;
+
+    // Find the emap group and add the file reference
+    projectContent = projectContent.replace(
+      /(13B07FAE1A68108700A75B9A \/\* emap \*\/ = \{[^}]+children = \([^)]+)(13B07FB61A68108700A75B9A \/\* Info\.plist \*\/,)/,
+      `$1${groupEntry}\n\t\t\t\t$2`
+    );
+
+    // Add to Resources build phase
+    const resourceEntry = `\t\t\t\t${buildFileId} /* GoogleService-Info.plist in Resources */,`;
+
+    projectContent = projectContent.replace(
+      /(13B07F8E1A680F5B00A75B9A \/\* Resources \*\/ = \{[^}]+files = \([^)]+)(BB2F792D24A3F905000567C9 \/\* Expo\.plist in Resources \*\/,)/,
+      `$1${resourceEntry}\n\t\t\t\t$2`
+    );
+
+    fs.writeFileSync(xcodeProjectPath, projectContent);
+    console.log(`✅ Added GoogleService-Info.plist to Xcode project`);
+  } catch (error) {
+    console.error(
+      `❌ Failed to add GoogleService-Info.plist to Xcode project: ${error.message}`
+    );
+    console.log(`⚠️  You may need to add it manually in Xcode`);
+  }
+};
+
+copyFirebaseConfig();
 
 // Generate brand assets from SVG
 const generateBrandAssets = async () => {

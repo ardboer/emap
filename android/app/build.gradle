@@ -1,5 +1,6 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.google.gms.google-services"
 apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
@@ -104,7 +105,7 @@ android {
 
     namespace 'com.emap.app'
     defaultConfig {
-        applicationId 'metropolis.co.uk.constructionnews'
+        applicationId 'metropolis.net.nursingtimes'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 3

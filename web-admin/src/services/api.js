@@ -100,19 +100,16 @@ export const brandApi = {
     return `${API_BASE_URL}/brands/${shortcode}/assets/${assetName}`;
   },
 
-  // Get push credentials status
-  getPushCredentials: async (shortcode) => {
-    const response = await api.get(`/system/push-credentials/${shortcode}`);
-    return response.data.credentials;
+  // Get Firebase configuration status for all brands
+  getFirebaseStatus: async () => {
+    const response = await api.get(`/system/firebase-status`);
+    return response.data;
   },
 
-  // Set push credentials status (manual verification)
-  checkPushCredentials: async (shortcode, configured) => {
-    const response = await api.post(
-      `/system/push-credentials/${shortcode}/check`,
-      { configured }
-    );
-    return response.data.credentials;
+  // Get Firebase configuration status for a specific brand
+  getFirebaseStatusForBrand: async (shortcode) => {
+    const response = await api.get(`/system/firebase-status/${shortcode}`);
+    return response.data;
   },
 
   // Get keystore status

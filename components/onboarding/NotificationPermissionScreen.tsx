@@ -1,9 +1,11 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import {
+  getFCMToken,
+  requestNotificationPermission,
+} from "@/services/firebaseNotifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Constants from "expo-constants";
-import * as Notifications from "expo-notifications";
 import React, { useState } from "react";
 import { Alert, StyleSheet, TouchableOpacity } from "react-native";
 import { OnboardingStepProps } from "./types";
@@ -22,54 +24,48 @@ export function NotificationPermissionScreen({
     setIsRequesting(true);
 
     try {
-      // Request notification permissions
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
+      // Request notification permissions using Firebase
+      const permissionGranted = await requestNotificationPermission();
 
-      // If permission hasn't been determined yet, ask for it
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus === "granted") {
-        // Permission granted - get the push token
+      if (permissionGranted) {
+        // Permission granted - get the FCM token
         try {
-          // Get project ID from app.json via Constants
-          const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-
-          if (!projectId) {
-            throw new Error("Project ID not found in app configuration");
-          }
-
           // Add a small delay to ensure native modules are fully initialized
-          // This helps prevent Firebase initialization errors on Android
           await new Promise((resolve) => setTimeout(resolve, 500));
 
-          const token = await Notifications.getExpoPushTokenAsync({
-            projectId,
-          });
+          const token = await getFCMToken();
 
-          // Store the push token
-          await AsyncStorage.setItem("expoPushToken", token.data);
+          if (token) {
+            // Store the push token (already stored in firebaseNotifications service)
+            // Store permission status
+            await AsyncStorage.setItem("notificationPermissionGranted", "true");
 
-          // Store permission status
-          await AsyncStorage.setItem("notificationPermissionGranted", "true");
+            // Store the timestamp when permission was granted
+            await AsyncStorage.setItem(
+              "notificationPermissionGrantedAt",
+              new Date().toISOString()
+            );
 
-          // Store the timestamp when permission was granted
-          await AsyncStorage.setItem(
-            "notificationPermissionGrantedAt",
-            new Date().toISOString()
-          );
+            console.log("✅ FCM token obtained and stored:", token);
 
-          console.log("✅ Push token obtained and stored:", token.data);
+            // Proceed to next step without showing alert for smoother UX
+            onNext();
+          } else {
+            console.log("⚠️ No FCM token obtained, but permission granted");
 
-          // Proceed to next step without showing alert for smoother UX
-          onNext();
+            // Even if token fails, mark permission as granted and continue
+            await AsyncStorage.setItem("notificationPermissionGranted", "true");
+            await AsyncStorage.setItem(
+              "notificationPermissionGrantedAt",
+              new Date().toISOString()
+            );
+
+            // Continue to next step - token can be obtained later
+            onNext();
+          }
         } catch (tokenError) {
-          console.error("⚠️ Error getting push token:", tokenError);
-          console.log("📝 Note: Push token will be obtained in background");
+          console.error("⚠️ Error getting FCM token:", tokenError);
+          console.log("📝 Note: FCM token will be obtained in background");
 
           // Even if token fails, mark permission as granted and continue
           await AsyncStorage.setItem("notificationPermissionGranted", "true");

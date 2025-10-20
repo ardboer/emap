@@ -4,28 +4,22 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import * as Notifications from "expo-notifications";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
-import { AppState, AppStateStatus } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 import { OnboardingContainer } from "@/components/onboarding";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { initializeFirebase } from "@/services/firebaseInit";
+import {
+  getInitialNotification,
+  onMessageReceived,
+  onNotificationOpened,
+} from "@/services/firebaseNotifications";
 import { hasCompletedOnboarding } from "@/services/onboarding";
-
-// Configure how notifications are handled when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
@@ -34,61 +28,45 @@ export default function RootLayout() {
   });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
-  const notificationListener = useRef<Notifications.Subscription | undefined>(
-    undefined
-  );
-  const responseListener = useRef<Notifications.Subscription | undefined>(
-    undefined
-  );
+  const notificationUnsubscribe = useRef<(() => void) | undefined>(undefined);
+  const messageUnsubscribe = useRef<(() => void) | undefined>(undefined);
   const lastHandledNotificationTime = useRef<number>(0);
 
   useEffect(() => {
-    console.log("🚀 App starting - setting up notification handlers...");
-    checkOnboardingStatus();
+    console.log("🚀 App starting - initializing Firebase...");
 
-    // Call async function
-    setupNotificationHandlers().catch((error) => {
-      console.error("Error setting up notification handlers:", error);
-    });
+    // Initialize Firebase first, then set up notification handlers
+    const initializeApp = async () => {
+      try {
+        // Initialize Firebase
+        const firebaseInitialized = await initializeFirebase();
 
-    // Handle app state changes (background to foreground)
-    const subscription = AppState.addEventListener(
-      "change",
-      async (nextAppState: AppStateStatus) => {
-        if (nextAppState === "active") {
+        if (firebaseInitialized) {
           console.log(
-            "📱 App came to foreground - checking for notifications..."
+            "✅ Firebase initialized, setting up notification handlers..."
           );
-          const lastResponse =
-            await Notifications.getLastNotificationResponseAsync();
-          if (lastResponse) {
-            const responseTime = lastResponse.notification.date;
-
-            // Only handle if this notification is newer than the last one we handled
-            if (responseTime > lastHandledNotificationTime.current) {
-              console.log("🎯 Found new notification from background!");
-              lastHandledNotificationTime.current = responseTime;
-              handleNotificationResponse(lastResponse);
-            } else {
-              console.log("⏭️ Already handled this notification, skipping");
-            }
-          }
+          await setupNotificationHandlers();
+        } else {
+          console.warn(
+            "⚠️ Firebase initialization failed - notifications will not work"
+          );
         }
+      } catch (error) {
+        console.error("❌ Error during app initialization:", error);
       }
-    );
+    };
+
+    checkOnboardingStatus();
+    initializeApp();
 
     return () => {
       console.log("🛑 App unmounting - cleaning up notification listeners");
-      subscription.remove();
-      console.log("🛑 App unmounting - cleaning up notification listeners");
       // Cleanup notification listeners
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(
-          notificationListener.current
-        );
+      if (notificationUnsubscribe.current) {
+        notificationUnsubscribe.current();
       }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
+      if (messageUnsubscribe.current) {
+        messageUnsubscribe.current();
       }
     };
   }, []);
@@ -106,18 +84,16 @@ export default function RootLayout() {
     }
   };
 
-  const handleNotificationResponse = (
-    response: Notifications.NotificationResponse
-  ) => {
+  const handleNotificationResponse = (remoteMessage: any) => {
     console.log("👆 Notification tapped!");
-    console.log("👆 Full response:", JSON.stringify(response, null, 2));
+    console.log("👆 Full message:", JSON.stringify(remoteMessage, null, 2));
 
     // Update the last handled notification time
-    const responseTime = response.notification.date;
+    const responseTime = Date.now();
     lastHandledNotificationTime.current = responseTime;
     console.log("⏰ Updated last handled time:", responseTime);
 
-    const data = response.notification.request.content.data;
+    const data = remoteMessage.data;
     console.log("👆 Notification data:", data);
 
     // Handle article notifications
@@ -135,45 +111,41 @@ export default function RootLayout() {
   };
 
   const setupNotificationHandlers = async () => {
-    console.log("📱 Setting up notification handlers...");
+    console.log("📱 Setting up Firebase notification handlers...");
 
     try {
       // Check if app was opened by tapping a notification
-      const lastNotificationResponse =
-        await Notifications.getLastNotificationResponseAsync();
-      console.log("🔍 Checking for last notification response...");
+      const initialNotification = await getInitialNotification();
+      console.log("🔍 Checking for initial notification...");
 
-      if (lastNotificationResponse) {
+      if (initialNotification) {
         console.log("🎯 App was opened from notification!");
-        handleNotificationResponse(lastNotificationResponse);
+        handleNotificationResponse(initialNotification);
       } else {
         console.log("ℹ️ App was opened normally (not from notification)");
       }
 
       // Handle notifications received while app is in foreground
-      notificationListener.current =
-        Notifications.addNotificationReceivedListener((notification) => {
-          console.log("📬 Notification received:", notification);
-          console.log(
-            "📬 Notification data:",
-            notification.request.content.data
-          );
-        });
-      console.log("✅ Notification received listener registered");
+      messageUnsubscribe.current = onMessageReceived((remoteMessage) => {
+        console.log("📬 Foreground notification received:", remoteMessage);
+        console.log("📬 Notification data:", remoteMessage.data);
+      });
+      console.log("✅ Foreground message listener registered");
 
-      // Handle notification taps (when user taps on notification)
-      responseListener.current =
-        Notifications.addNotificationResponseReceivedListener((response) => {
-          console.log("🔔 Response listener triggered!");
-          handleNotificationResponse(response);
-        });
-      console.log("✅ Notification response listener registered");
-      console.log("✅ All notification handlers set up successfully!");
+      // Handle notification taps (when user taps on notification from background)
+      notificationUnsubscribe.current = onNotificationOpened(
+        (remoteMessage) => {
+          console.log("🔔 Notification opened from background!");
+          handleNotificationResponse(remoteMessage);
+        }
+      );
+      console.log("✅ Notification opened listener registered");
+      console.log("✅ All Firebase notification handlers set up successfully!");
 
       // Test that listeners are working
       console.log("🧪 Listeners registered:", {
-        received: !!notificationListener.current,
-        response: !!responseListener.current,
+        message: !!messageUnsubscribe.current,
+        opened: !!notificationUnsubscribe.current,
       });
     } catch (error) {
       console.error("❌ Error setting up notification handlers:", error);

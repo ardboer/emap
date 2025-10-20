@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Nursing Times",
+    "name": "emap",
     "owner": "emap-publishing",
     "slug": "emap",
     "version": "1.0.0",
@@ -11,7 +11,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "metropolis.net.nursingtimes",
+      "bundleIdentifier": "com.emap.app",
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -50,14 +50,8 @@
           "iosAppId": "ca-app-pub-3940256099942544~1458002511"
         }
       ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./brands/nt/assets/icon.png",
-          "color": "#00334c",
-          "sounds": []
-        }
-      ]
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging"
     ],
     "experiments": {
       "typedRoutes": true

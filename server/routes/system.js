@@ -15,14 +15,14 @@ const {
 } = require("../utils/brandOperations");
 
 const {
-  checkPushCredentials,
-  getPushCredentialsStatus,
-} = require("../utils/pushCredentialsChecker");
-
-const {
   checkKeystoreAlias,
   getKeystoreStatus,
 } = require("../utils/keystoreChecker");
+
+const {
+  verifyBrandFirebase,
+  verifyAllBrands,
+} = require("../utils/firebaseConfigChecker");
 
 const router = express.Router();
 
@@ -173,32 +173,20 @@ router.post("/prebuild", async (req, res) => {
 });
 
 /**
- * GET /api/system/push-credentials/:shortcode
- * Get stored push notification credentials status for a specific brand
+ * GET /api/system/firebase-status
+ * Get Firebase configuration status for all brands
  */
-router.get("/push-credentials/:shortcode", async (req, res) => {
+router.get("/firebase-status", async (req, res) => {
   try {
-    const { shortcode } = req.params;
+    const result = await verifyAllBrands();
 
-    const status = await getPushCredentialsStatus(shortcode);
-
-    if (!status) {
-      return res.json({
-        success: true,
-        credentials: {
-          configured: false,
-          details: "Not checked yet",
-          lastChecked: null,
-        },
-      });
+    if (!result.success) {
+      return res.status(500).json(result);
     }
 
-    res.json({
-      success: true,
-      credentials: status,
-    });
+    res.json(result);
   } catch (error) {
-    console.error("Error getting brand push credentials status:", error);
+    console.error("Error checking Firebase status for all brands:", error);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -207,41 +195,30 @@ router.get("/push-credentials/:shortcode", async (req, res) => {
 });
 
 /**
- * POST /api/system/push-credentials/:shortcode/check
- * Manually set push credentials status for a specific brand
- * Body: { configured: boolean } - true if push is configured, false if not
+ * GET /api/system/firebase-status/:shortcode
+ * Get Firebase configuration status for a specific brand
  */
-router.post("/push-credentials/:shortcode/check", async (req, res) => {
+router.get("/firebase-status/:shortcode", async (req, res) => {
   try {
     const { shortcode } = req.params;
-    const { configured } = req.body;
 
-    const brand = await getBrand(shortcode);
-    if (!brand) {
+    // Check if brand exists
+    if (!(await brandExists(shortcode))) {
       return res.status(404).json({
         success: false,
         error: `Brand ${shortcode} not found`,
       });
     }
 
-    // If configured status is not provided, return instructions
-    if (configured === undefined || configured === null) {
-      return res.json({
-        success: false,
-        message: "Please verify push credentials manually and provide status",
-        instructions: `Run: npx eas credentials -p ios\nThen call this endpoint with { "configured": true } or { "configured": false }`,
-      });
+    const result = await verifyBrandFirebase(shortcode);
+
+    if (!result.success) {
+      return res.status(500).json(result);
     }
 
-    const status = await checkPushCredentials(shortcode, configured);
-
-    res.json({
-      success: true,
-      message: `Push credentials status updated for ${shortcode}`,
-      credentials: status,
-    });
+    res.json(result);
   } catch (error) {
-    console.error("Error updating push credentials:", error);
+    console.error("Error checking Firebase status:", error);
     res.status(500).json({
       success: false,
       error: error.message,

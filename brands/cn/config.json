@@ -61,11 +61,6 @@
     "endpoint": "https://api.askmiso.com/v1/recommendation/user_to_trending"
   },
   "testArticleId": "528406",
-  "pushCredentials": {
-    "configured": true,
-    "details": "Push credentials configured (manually verified)",
-    "lastChecked": "2025-10-19T19:27:30.168Z"
-  },
   "keystoreStatus": {
     "configured": true,
     "details": "Keystore alias found: construction-news-key",

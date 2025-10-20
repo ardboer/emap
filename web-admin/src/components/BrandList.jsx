@@ -13,25 +13,26 @@ const BrandList = ({
   const [switching, setSwitching] = useState(null);
   const [deletingBrand, setDeletingBrand] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
-  const [checkingPush, setCheckingPush] = useState(null);
-  const [pushStatus, setPushStatus] = useState({});
-  const [pushModalBrand, setPushModalBrand] = useState(null);
+  const [firebaseStatus, setFirebaseStatus] = useState({});
+  const [checkingFirebase, setCheckingFirebase] = useState(null);
   const [checkingKeystore, setCheckingKeystore] = useState(null);
   const [keystoreStatus, setKeystoreStatus] = useState({});
 
-  // Load push credentials and keystore status on mount
+  // Load Firebase and keystore status on mount
   useEffect(() => {
     const loadStatuses = async () => {
-      const pushStatuses = {};
+      const firebaseStatuses = {};
       const keystoreStatuses = {};
 
       for (const brand of brands) {
         try {
-          const pushStat = await brandApi.getPushCredentials(brand.shortcode);
-          pushStatuses[brand.shortcode] = pushStat;
+          const firebaseStat = await brandApi.getFirebaseStatusForBrand(
+            brand.shortcode
+          );
+          firebaseStatuses[brand.shortcode] = firebaseStat.firebase;
         } catch (error) {
           console.error(
-            `Error loading push status for ${brand.shortcode}:`,
+            `Error loading Firebase status for ${brand.shortcode}:`,
             error
           );
         }
@@ -49,7 +50,7 @@ const BrandList = ({
         }
       }
 
-      setPushStatus(pushStatuses);
+      setFirebaseStatus(firebaseStatuses);
       setKeystoreStatus(keystoreStatuses);
     };
 
@@ -58,51 +59,39 @@ const BrandList = ({
     }
   }, [brands]);
 
-  const handleOpenPushModal = (brand, e) => {
+  const handleCheckFirebase = async (shortcode, e) => {
     e.stopPropagation();
-    setPushModalBrand(brand);
-  };
-
-  const handleClosePushModal = () => {
-    setPushModalBrand(null);
-  };
-
-  const handleSetPushStatus = async (configured) => {
-    if (!pushModalBrand) return;
-
-    setCheckingPush(pushModalBrand.shortcode);
+    setCheckingFirebase(shortcode);
 
     try {
-      const response = await brandApi.checkPushCredentials(
-        pushModalBrand.shortcode,
-        configured
-      );
-      setPushStatus((prev) => ({
+      const firebaseStat = await brandApi.getFirebaseStatusForBrand(shortcode);
+      setFirebaseStatus((prev) => ({
         ...prev,
-        [pushModalBrand.shortcode]: response,
+        [shortcode]: firebaseStat.firebase,
       }));
 
-      if (configured) {
+      const status = firebaseStat.firebase.overallStatus;
+      if (status === "configured") {
         toast.success(
-          `✓ Push credentials marked as configured for ${pushModalBrand.shortcode.toUpperCase()}`
+          `Firebase configured for ${shortcode.toUpperCase()} on both platforms`
         );
+      } else if (status === "partially_configured") {
+        toast.warning(
+          `Firebase partially configured for ${shortcode.toUpperCase()}`
+        );
+      } else if (status === "misconfigured") {
+        toast.error(`✗ Firebase misconfigured for ${shortcode.toUpperCase()}`);
       } else {
-        toast.info(
-          `Push credentials marked as not configured for ${pushModalBrand.shortcode.toUpperCase()}`
-        );
+        toast.error(`✗ Firebase not configured for ${shortcode.toUpperCase()}`);
       }
-
-      handleClosePushModal();
-      // Refresh brands to get updated config
-      onRefresh();
     } catch (error) {
-      console.error("Error updating push credentials:", error);
+      console.error("Error checking Firebase:", error);
       toast.error(
-        "Failed to update push credentials: " +
+        "Failed to check Firebase: " +
           (error.response?.data?.error || error.message)
       );
     } finally {
-      setCheckingPush(null);
+      setCheckingFirebase(null);
     }
   };
 
@@ -247,33 +236,79 @@ const BrandList = ({
                   </div>
                 )}
 
-                {/* Push Credentials Status */}
+                {/* Firebase Configuration Status */}
                 <div style={{ marginTop: "0.5rem" }}>
-                  {pushStatus[brand.shortcode] ? (
-                    <div
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        marginBottom: 8,
-                        padding: "0.25rem 0.5rem",
-                        borderRadius: "4px",
-                        fontSize: "0.75rem",
-                        fontWeight: "500",
-                        backgroundColor: pushStatus[brand.shortcode].configured
-                          ? "#d1fae5"
-                          : "#fee2e2",
-                        color: pushStatus[brand.shortcode].configured
-                          ? "#065f46"
-                          : "#991b1b",
-                      }}
-                    >
-                      {pushStatus[brand.shortcode].configured ? "✓" : "✗"}
-                      <span>
-                        {pushStatus[brand.shortcode].configured
-                          ? "Push Configured"
-                          : "Push Not Configured"}
-                      </span>
+                  {firebaseStatus[brand.shortcode] ? (
+                    <div>
+                      {/* iOS Firebase Status */}
+                      <div
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          marginBottom: 4,
+                          padding: "0.25rem 0.5rem",
+                          borderRadius: "4px",
+                          fontSize: "0.75rem",
+                          fontWeight: "500",
+                          backgroundColor: firebaseStatus[brand.shortcode].ios
+                            .configured
+                            ? "#d1fae5"
+                            : "#fee2e2",
+                          color: firebaseStatus[brand.shortcode].ios.configured
+                            ? "#065f46"
+                            : "#991b1b",
+                        }}
+                        title={
+                          firebaseStatus[brand.shortcode].ios.error ||
+                          "iOS Firebase configuration"
+                        }
+                      >
+                        {firebaseStatus[brand.shortcode].ios.configured
+                          ? "✓"
+                          : "✗"}
+                        <span>
+                          Firebase iOS:{" "}
+                          {firebaseStatus[brand.shortcode].ios.configured
+                            ? "Configured"
+                            : "Not Configured"}
+                        </span>
+                      </div>
+                      {/* Android Firebase Status */}
+                      <div
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          marginBottom: 8,
+                          padding: "0.25rem 0.5rem",
+                          borderRadius: "4px",
+                          fontSize: "0.75rem",
+                          fontWeight: "500",
+                          backgroundColor: firebaseStatus[brand.shortcode]
+                            .android.configured
+                            ? "#d1fae5"
+                            : "#fee2e2",
+                          color: firebaseStatus[brand.shortcode].android
+                            .configured
+                            ? "#065f46"
+                            : "#991b1b",
+                        }}
+                        title={
+                          firebaseStatus[brand.shortcode].android.error ||
+                          "Android Firebase configuration"
+                        }
+                      >
+                        {firebaseStatus[brand.shortcode].android.configured
+                          ? "✓"
+                          : "✗"}
+                        <span>
+                          Firebase Android:{" "}
+                          {firebaseStatus[brand.shortcode].android.configured
+                            ? "Configured"
+                            : "Not Configured"}
+                        </span>
+                      </div>
                     </div>
                   ) : (
                     <div
@@ -288,7 +323,7 @@ const BrandList = ({
                         color: "#6b7280",
                       }}
                     >
-                      Push Status Unknown
+                      Firebase Status Unknown
                     </div>
                   )}
 
@@ -354,16 +389,16 @@ const BrandList = ({
                 </button>
                 <button
                   className="btn btn-secondary btn-small"
-                  onClick={(e) => handleOpenPushModal(brand, e)}
-                  disabled={checkingPush === brand.shortcode}
+                  onClick={(e) => handleCheckFirebase(brand.shortcode, e)}
+                  disabled={checkingFirebase === brand.shortcode}
                   style={{
                     backgroundColor: "#10b981",
                     color: "white",
                   }}
                 >
-                  {checkingPush === brand.shortcode
-                    ? "Updating..."
-                    : "Set Push Status"}
+                  {checkingFirebase === brand.shortcode
+                    ? "Checking..."
+                    : "Check Firebase"}
                 </button>
                 <button
                   className="btn btn-secondary btn-small"
@@ -505,97 +540,6 @@ const BrandList = ({
                 }}
               >
                 Delete Brand
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Push Credentials Modal */}
-      {pushModalBrand && (
-        <div
-          className="modal-overlay"
-          onClick={(e) =>
-            e.target.className === "modal-overlay" && handleClosePushModal()
-          }
-        >
-          <div className="modal" style={{ maxWidth: "500px" }}>
-            <div className="modal-header">
-              <h2>🔔 Set Push Notification Status</h2>
-              <button className="modal-close" onClick={handleClosePushModal}>
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              <p style={{ marginBottom: "1rem" }}>
-                Brand:{" "}
-                <strong>
-                  {pushModalBrand.displayName || pushModalBrand.name}
-                </strong>
-              </p>
-              <p style={{ marginBottom: "1rem", color: "#6b7280" }}>
-                Bundle ID: <code>{pushModalBrand.bundleId}</code>
-              </p>
-
-              <div
-                style={{
-                  padding: "1rem",
-                  background: "#f3f4f6",
-                  borderRadius: "8px",
-                  marginBottom: "1.5rem",
-                  fontSize: "0.875rem",
-                }}
-              >
-                <p style={{ marginBottom: "0.5rem", fontWeight: "500" }}>
-                  To verify push credentials:
-                </p>
-                <ol style={{ marginLeft: "1.25rem", marginBottom: "0" }}>
-                  <li>
-                    Run:{" "}
-                    <code
-                      style={{
-                        background: "#e5e7eb",
-                        padding: "0.125rem 0.25rem",
-                        borderRadius: "3px",
-                      }}
-                    >
-                      npx eas credentials -p ios
-                    </code>
-                  </li>
-                  <li>Check if push notification key is configured</li>
-                  <li>Set the status below based on your verification</li>
-                </ol>
-              </div>
-
-              <p style={{ marginBottom: "1rem", fontWeight: "500" }}>
-                Are push credentials configured for this brand?
-              </p>
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn btn-secondary"
-                onClick={handleClosePushModal}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-danger"
-                onClick={() => handleSetPushStatus(false)}
-                disabled={checkingPush === pushModalBrand.shortcode}
-                style={{ backgroundColor: "#ef4444" }}
-              >
-                {checkingPush === pushModalBrand.shortcode
-                  ? "Updating..."
-                  : "Not Configured"}
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={() => handleSetPushStatus(true)}
-                disabled={checkingPush === pushModalBrand.shortcode}
-                style={{ backgroundColor: "#10b981" }}
-              >
-                {checkingPush === pushModalBrand.shortcode
-                  ? "Updating..."
-                  : "✓ Configured"}
               </button>
             </div>
           </div>

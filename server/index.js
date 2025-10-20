@@ -63,6 +63,10 @@ app.get("/", (req, res) => {
         switchBrand: "POST /api/system/switch-brand",
         prebuild: "POST /api/system/prebuild",
         prebuildStatus: "GET /api/system/prebuild-status",
+        firebaseStatus: "GET /api/system/firebase-status",
+        firebaseStatusBrand: "GET /api/system/firebase-status/:shortcode",
+        keystoreStatus: "GET /api/system/keystore-status/:shortcode",
+        keystoreCheck: "POST /api/system/keystore-status/:shortcode/check",
         health: "GET /api/system/health",
       },
     },
@@ -128,6 +132,10 @@ app.listen(PORT, HOST, () => {
   console.log(`    POST   http://${HOST}:${PORT}/api/system/switch-brand`);
   console.log(`    POST   http://${HOST}:${PORT}/api/system/prebuild`);
   console.log(`    GET    http://${HOST}:${PORT}/api/system/prebuild-status`);
+  console.log(`    GET    http://${HOST}:${PORT}/api/system/firebase-status`);
+  console.log(
+    `    GET    http://${HOST}:${PORT}/api/system/firebase-status/:shortcode`
+  );
   console.log("");
   console.log("Press Ctrl+C to stop the server");
   console.log("");
