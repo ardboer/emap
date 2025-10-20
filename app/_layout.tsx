@@ -4,15 +4,17 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack, useRouter } from "expo-router";
+import { Stack, usePathname, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
+import { AppState, AppStateStatus } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 import { OnboardingContainer } from "@/components/onboarding";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { analyticsService } from "@/services/analytics";
 import { initializeFirebase } from "@/services/firebaseInit";
 import {
   getInitialNotification,
@@ -23,6 +25,8 @@ import { hasCompletedOnboarding } from "@/services/onboarding";
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
+  const pathname = usePathname();
+  const segments = useSegments();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
@@ -32,10 +36,14 @@ export default function RootLayout() {
   const messageUnsubscribe = useRef<(() => void) | undefined>(undefined);
   const lastHandledNotificationTime = useRef<number>(0);
 
+  // App state tracking for analytics
+  const appState = useRef(AppState.currentState);
+  const previousRoute = useRef<string | null>(null);
+
   useEffect(() => {
     console.log("🚀 App starting - initializing Firebase...");
 
-    // Initialize Firebase first, then set up notification handlers
+    // Initialize Firebase first, then set up notification handlers and analytics
     const initializeApp = async () => {
       try {
         // Initialize Firebase
@@ -43,12 +51,15 @@ export default function RootLayout() {
 
         if (firebaseInitialized) {
           console.log(
-            "✅ Firebase initialized, setting up notification handlers..."
+            "✅ Firebase initialized, setting up notification handlers and analytics..."
           );
           await setupNotificationHandlers();
+
+          // Initialize Firebase Analytics
+          await analyticsService.initialize();
         } else {
           console.warn(
-            "⚠️ Firebase initialization failed - notifications will not work"
+            "⚠️ Firebase initialization failed - notifications and analytics will not work"
           );
         }
       } catch (error) {
@@ -60,7 +71,9 @@ export default function RootLayout() {
     initializeApp();
 
     return () => {
-      console.log("🛑 App unmounting - cleaning up notification listeners");
+      console.log(
+        "🛑 App unmounting - cleaning up listeners and ending session"
+      );
       // Cleanup notification listeners
       if (notificationUnsubscribe.current) {
         notificationUnsubscribe.current();
@@ -68,8 +81,60 @@ export default function RootLayout() {
       if (messageUnsubscribe.current) {
         messageUnsubscribe.current();
       }
+
+      // End analytics session
+      analyticsService.endSession();
     };
   }, []);
+
+  // Track app state changes (foreground/background)
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+    if (
+      appState.current.match(/inactive|background/) &&
+      nextAppState === "active"
+    ) {
+      // App came to foreground
+      await analyticsService.logAppForeground(appState.current);
+      console.log("📱 App came to foreground");
+    } else if (
+      appState.current === "active" &&
+      nextAppState.match(/inactive|background/)
+    ) {
+      // App went to background
+      await analyticsService.logAppBackground(nextAppState);
+      console.log("📱 App went to background");
+    }
+
+    appState.current = nextAppState;
+  };
+
+  // Track navigation changes
+  useEffect(() => {
+    if (!pathname) return;
+
+    const currentRoute = pathname;
+
+    if (previousRoute.current && previousRoute.current !== currentRoute) {
+      // Log navigation event
+      analyticsService.logNavigation(previousRoute.current, currentRoute, {
+        segments: segments.join("/"),
+      });
+      console.log(`📍 Navigation: ${previousRoute.current} → ${currentRoute}`);
+    }
+
+    previousRoute.current = currentRoute;
+  }, [pathname, segments]);
 
   const checkOnboardingStatus = async () => {
     try {
