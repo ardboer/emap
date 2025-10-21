@@ -18,6 +18,7 @@ import {
   NativeSyntheticEvent,
   StyleSheet,
   TouchableOpacity,
+  View,
 } from "react-native";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
@@ -429,46 +430,105 @@ export default function HighlightedScreen() {
     };
   }, []);
 
-  const renderCarouselItem = ({ item }: { item: Article }) => (
-    <TouchableOpacity
-      style={styles.carouselItem}
-      onPress={() => handleArticlePress(item)}
-      activeOpacity={1}
-    >
-      <Image
-        source={{ uri: item.imageUrl }}
-        style={styles.backgroundImage}
-        contentFit={item.isLandscape ? "contain" : "cover"}
-        contentPosition="center"
-      />
-      <LinearGradient
-        colors={[
-          "transparent",
-          "transparent",
-          "rgba(0,0,0,0.3)",
-          "rgba(0,0,0,0.7)",
-          "rgba(0,0,0,0.9)",
-        ]}
-        locations={[0, 0.3, 0.5, 0.7, 1]}
-        style={styles.overlay}
-      >
-        <ThemedView
-          transparant
-          style={[
-            styles.contentContainer,
-            audioState.showMiniPlayer && styles.contentContainerWithMiniPlayer,
-          ]}
+  const renderCarouselItem = ({ item }: { item: Article }) => {
+    // For landscape images, use a blurred background effect
+    if (item.isLandscape) {
+      return (
+        <TouchableOpacity
+          style={styles.carouselItem}
+          onPress={() => handleArticlePress(item)}
+          activeOpacity={1}
         >
-          <ThemedText type="title" style={styles.title}>
-            {item.title}
-          </ThemedText>
-          <ThemedView transparant style={styles.metaContainer}>
-            <ThemedText style={styles.category}>{item.category}</ThemedText>
+          {/* Blurred background image */}
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.backgroundImageBlurred}
+            contentFit="cover"
+            blurRadius={40}
+          />
+          {/* Dark overlay for blurred background */}
+          <View style={styles.darkOverlay} />
+          {/* Main centered image */}
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.centeredImage}
+            contentFit="contain"
+            contentPosition="center"
+          />
+          <LinearGradient
+            colors={[
+              "transparent",
+              "transparent",
+              "rgba(0,0,0,0.3)",
+              "rgba(0,0,0,0.7)",
+              "rgba(0,0,0,0.9)",
+            ]}
+            locations={[0, 0.3, 0.5, 0.7, 1]}
+            style={styles.overlay}
+          >
+            <ThemedView
+              transparant
+              style={[
+                styles.contentContainer,
+                audioState.showMiniPlayer &&
+                  styles.contentContainerWithMiniPlayer,
+              ]}
+            >
+              <ThemedText type="title" style={styles.title}>
+                {item.title}
+              </ThemedText>
+              <ThemedView transparant style={styles.metaContainer}>
+                <ThemedText style={styles.category}>{item.category}</ThemedText>
+              </ThemedView>
+            </ThemedView>
+          </LinearGradient>
+        </TouchableOpacity>
+      );
+    }
+
+    // Portrait images use the original layout
+    return (
+      <TouchableOpacity
+        style={styles.carouselItem}
+        onPress={() => handleArticlePress(item)}
+        activeOpacity={1}
+      >
+        <Image
+          source={{ uri: item.imageUrl }}
+          style={styles.backgroundImage}
+          contentFit="cover"
+          contentPosition="center"
+        />
+        <LinearGradient
+          colors={[
+            "transparent",
+            "transparent",
+            "rgba(0,0,0,0.3)",
+            "rgba(0,0,0,0.7)",
+            "rgba(0,0,0,0.9)",
+          ]}
+          locations={[0, 0.3, 0.5, 0.7, 1]}
+          style={styles.overlay}
+        >
+          <ThemedView
+            transparant
+            style={[
+              styles.contentContainer,
+              audioState.showMiniPlayer &&
+                styles.contentContainerWithMiniPlayer,
+            ]}
+          >
+            <ThemedText type="title" style={styles.title}>
+              {item.title}
+            </ThemedText>
+            <ThemedView transparant style={styles.metaContainer}>
+              <ThemedText style={styles.category}>{item.category}</ThemedText>
+            </ThemedView>
           </ThemedView>
-        </ThemedView>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
@@ -574,7 +634,28 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    // backgroundColor: "green",
+  },
+  backgroundImageBlurred: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  darkOverlay: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+  },
+  centeredImage: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   overlay: {
     position: "absolute",
