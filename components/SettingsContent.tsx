@@ -42,6 +42,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
   const [showPaywall, setShowPaywall] = React.useState(true);
   const [forceLandscapeImages, setForceLandscapeImages] = React.useState(false);
+  const [useColorGradient, setUseColorGradient] = React.useState(false);
   const [pushToken, setPushToken] = React.useState<string | null>(null);
   const [topicSubscriptions, setTopicSubscriptions] = React.useState<
     TopicSubscription[]
@@ -107,6 +108,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     AsyncStorage.getItem("debug_force_landscape_images").then((value) => {
       if (value !== null) {
         setForceLandscapeImages(value === "true");
+      }
+    });
+  }, []);
+
+  // Load color gradient debug setting
+  React.useEffect(() => {
+    AsyncStorage.getItem("debug_use_color_gradient").then((value) => {
+      if (value !== null) {
+        setUseColorGradient(value === "true");
       }
     });
   }, []);
@@ -355,6 +365,16 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
       console.error("Error clearing highlights cache:", error);
     }
   };
+  const handleColorGradientToggle = async (value: boolean) => {
+    setUseColorGradient(value);
+    await AsyncStorage.setItem("debug_use_color_gradient", value.toString());
+
+    Alert.alert(
+      "Setting Updated",
+      "Pull to refresh the highlights tab to see the changes.",
+      [{ text: "OK" }]
+    );
+  };
 
   const SettingsItem = ({
     title,
@@ -582,6 +602,19 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             <Switch
               value={forceLandscapeImages}
               onValueChange={handleForceLandscapeToggle}
+              trackColor={{ false: "#767577", true: "#007AFF" }}
+              thumbColor="#fff"
+            />
+          }
+        />
+        <SettingsItem
+          title="Use Color Gradient Background"
+          subtitle="Use dominant color gradient instead of blurred image for landscape items"
+          icon="paintpalette.fill"
+          rightElement={
+            <Switch
+              value={useColorGradient}
+              onValueChange={handleColorGradientToggle}
               trackColor={{ false: "#767577", true: "#007AFF" }}
               thumbColor="#fff"
             />

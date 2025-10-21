@@ -20,6 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getColors } from "react-native-image-colors";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -34,6 +35,10 @@ export default function HighlightedScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
+  const [useColorGradient, setUseColorGradient] = useState(false);
+  const [imageColors, setImageColors] = useState<{ [key: string]: string[] }>(
+    {}
+  );
   const flatListRef = useRef<FlatList>(null);
   const { state: audioState } = useAudio();
 
@@ -89,12 +94,57 @@ export default function HighlightedScreen() {
     router.push(`/article/${article.id}`);
   };
 
+  const extractImageColors = async (imageUrl: string, articleId: string) => {
+    try {
+      const result = await getColors(imageUrl, {
+        fallback: "#1a1a2e",
+        cache: true,
+        key: articleId,
+      });
+
+      if (result.platform === "android") {
+        return [result.dominant, result.vibrant, result.darkVibrant].filter(
+          Boolean
+        );
+      } else if (result.platform === "ios") {
+        return [result.secondary, result.secondary, result.secondary].filter(
+          Boolean
+        );
+      }
+      return ["#1a1a2e", "#16213e", "#0f3460"];
+    } catch (error) {
+      console.error("Error extracting colors:", error);
+      return ["#1a1a2e", "#16213e", "#0f3460"];
+    }
+  };
+
   const loadArticles = async () => {
     try {
       setLoading(true);
       setError(null);
       const fetchedArticles = await fetchFeaturedArticles();
       setArticles(fetchedArticles);
+
+      // Load color gradient setting
+      const AsyncStorage = (
+        await import("@react-native-async-storage/async-storage")
+      ).default;
+      const colorGradientSetting = await AsyncStorage.getItem(
+        "debug_use_color_gradient"
+      );
+      setUseColorGradient(colorGradientSetting === "true");
+
+      // Extract colors from landscape images
+      const colors: { [key: string]: string[] } = {};
+      for (const article of fetchedArticles) {
+        if (article.isLandscape) {
+          colors[article.id] = await extractImageColors(
+            article.imageUrl,
+            article.id
+          );
+        }
+      }
+      setImageColors(colors);
     } catch (err) {
       setError("Failed to load articles");
       console.error("Error loading articles:", err);
@@ -431,59 +481,131 @@ export default function HighlightedScreen() {
   }, []);
 
   const renderCarouselItem = ({ item }: { item: Article }) => {
-    // For landscape images, use a blurred background effect
+    // For landscape images, choose between blurred background or color gradient
     if (item.isLandscape) {
-      return (
-        <TouchableOpacity
-          style={styles.carouselItem}
-          onPress={() => handleArticlePress(item)}
-          activeOpacity={1}
-        >
-          {/* Blurred background image */}
-          <Image
-            source={{ uri: item.imageUrl }}
-            style={styles.backgroundImageBlurred}
-            contentFit="cover"
-            blurRadius={40}
-          />
-          {/* Dark overlay for blurred background */}
-          <View style={styles.darkOverlay} />
-          {/* Main centered image */}
-          <Image
-            source={{ uri: item.imageUrl }}
-            style={styles.centeredImage}
-            contentFit="contain"
-            contentPosition="center"
-          />
-          <LinearGradient
-            colors={[
-              "transparent",
-              "transparent",
-              "rgba(0,0,0,0.3)",
-              "rgba(0,0,0,0.7)",
-              "rgba(0,0,0,0.9)",
-            ]}
-            locations={[0, 0.3, 0.5, 0.7, 1]}
-            style={styles.overlay}
+      if (useColorGradient) {
+        // Get extracted colors for this image, or use default gradient
+        const extractedColors = imageColors[item.id] || [
+          "#1a1a2e",
+          "#16213e",
+          "#0f3460",
+        ];
+        // Ensure we have at least 2 colors for the gradient
+        const colors =
+          extractedColors.length >= 2
+            ? (extractedColors as [string, string, ...string[]])
+            : (["#1a1a2e", "#16213e", "#0f3460"] as [
+                string,
+                string,
+                ...string[]
+              ]);
+
+        // Color gradient background version
+        return (
+          <TouchableOpacity
+            style={styles.carouselItem}
+            onPress={() => handleArticlePress(item)}
+            activeOpacity={1}
           >
-            <ThemedView
-              transparant
-              style={[
-                styles.contentContainer,
-                audioState.showMiniPlayer &&
-                  styles.contentContainerWithMiniPlayer,
+            {/* Color gradient background - using extracted colors from image */}
+            <LinearGradient
+              colors={colors}
+              style={styles.backgroundImageBlurred}
+            />
+            {/* Main centered image */}
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={styles.centeredImage}
+              contentFit="contain"
+              contentPosition="center"
+            />
+            <LinearGradient
+              colors={[
+                "transparent",
+                "transparent",
+                "rgba(0,0,0,0.3)",
+                "rgba(0,0,0,0.7)",
+                "rgba(0,0,0,0.9)",
               ]}
+              locations={[0, 0.3, 0.5, 0.7, 1]}
+              style={styles.overlay}
             >
-              <ThemedText type="title" style={styles.title}>
-                {item.title}
-              </ThemedText>
-              <ThemedView transparant style={styles.metaContainer}>
-                <ThemedText style={styles.category}>{item.category}</ThemedText>
+              <ThemedView
+                transparant
+                style={[
+                  styles.contentContainer,
+                  audioState.showMiniPlayer &&
+                    styles.contentContainerWithMiniPlayer,
+                ]}
+              >
+                <ThemedText type="title" style={styles.title}>
+                  {item.title}
+                </ThemedText>
+                <ThemedView transparant style={styles.metaContainer}>
+                  <ThemedText style={styles.category}>
+                    {item.category}
+                  </ThemedText>
+                </ThemedView>
               </ThemedView>
-            </ThemedView>
-          </LinearGradient>
-        </TouchableOpacity>
-      );
+            </LinearGradient>
+          </TouchableOpacity>
+        );
+      } else {
+        // Blurred background version
+        return (
+          <TouchableOpacity
+            style={styles.carouselItem}
+            onPress={() => handleArticlePress(item)}
+            activeOpacity={1}
+          >
+            {/* Blurred background image */}
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={styles.backgroundImageBlurred}
+              contentFit="cover"
+              blurRadius={50}
+            />
+            {/* Dark overlay for blurred background */}
+            <View style={styles.darkOverlay} />
+            {/* Main centered image */}
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={styles.centeredImage}
+              contentFit="contain"
+              contentPosition="center"
+            />
+            <LinearGradient
+              colors={[
+                "transparent",
+                "transparent",
+                "rgba(0,0,0,0.3)",
+                "rgba(0,0,0,0.7)",
+                "rgba(0,0,0,0.9)",
+              ]}
+              locations={[0, 0.3, 0.5, 0.7, 1]}
+              style={styles.overlay}
+            >
+              <ThemedView
+                transparant
+                style={[
+                  styles.contentContainer,
+                  audioState.showMiniPlayer &&
+                    styles.contentContainerWithMiniPlayer,
+                ]}
+              >
+                <ThemedText type="title" style={styles.title}>
+                  {item.title}
+                </ThemedText>
+                <ThemedView transparant style={styles.metaContainer}>
+                  <ThemedText style={styles.category}>
+                    {item.category}
+                  </ThemedText>
+                </ThemedView>
+              </ThemedView>
+            </LinearGradient>
+          </TouchableOpacity>
+        );
+      }
     }
 
     // Portrait images use the original layout
