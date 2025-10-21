@@ -438,15 +438,18 @@ export default function HighlightedScreen() {
       <Image
         source={{ uri: item.imageUrl }}
         style={styles.backgroundImage}
-        contentFit="cover"
+        contentFit={item.isLandscape ? "contain" : "cover"}
+        contentPosition="center"
       />
       <LinearGradient
         colors={[
           "transparent",
-          "rgba(0,0.4,0.6,0.8)",
-          "rgba(0,0.4,0.6,0.8)",
-          "rgba(0,0.4,0.6,0.8)",
+          "transparent",
+          "rgba(0,0,0,0.3)",
+          "rgba(0,0,0,0.7)",
+          "rgba(0,0,0,0.9)",
         ]}
+        locations={[0, 0.3, 0.5, 0.7, 1]}
         style={styles.overlay}
       >
         <ThemedView
@@ -459,15 +462,8 @@ export default function HighlightedScreen() {
           <ThemedText type="title" style={styles.title}>
             {item.title}
           </ThemedText>
-          {/* {item.subtitle && (
-            <ThemedText type="subtitle" style={styles.subtitle}>
-              {item.subtitle}
-            </ThemedText>
-          )}
-          <ThemedText style={styles.leadText}>{item.leadText}</ThemedText> */}
           <ThemedView transparant style={styles.metaContainer}>
             <ThemedText style={styles.category}>{item.category}</ThemedText>
-            {/* <ThemedText style={styles.timestamp}>{item.timestamp}</ThemedText> */}
           </ThemedView>
         </ThemedView>
       </LinearGradient>

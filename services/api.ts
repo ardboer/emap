@@ -31,7 +31,11 @@ export interface HighlightsApiItem {
   post_title: string;
   post_excerpt: string;
   post_image: string;
+  post_image_width: number;
+  post_image_height: number;
   post_highlights_image: string;
+  post_highlights_image_width: number;
+  post_highlights_image_height: number;
   post_url: string;
   post_publish_date: string;
 }
@@ -196,11 +200,46 @@ function extractCategoryFromUrl(url: string): string {
 }
 
 // Transform highlights API item to Article interface
-function transformHighlightsItemToArticle(item: HighlightsApiItem): Article {
-  const imageUrl =
-    item.post_highlights_image ||
-    item.post_image ||
-    "https://picsum.photos/800/600?random=1";
+async function transformHighlightsItemToArticle(
+  item: HighlightsApiItem
+): Promise<Article> {
+  // Check if debug setting is enabled to force landscape images
+  const AsyncStorage = (
+    await import("@react-native-async-storage/async-storage")
+  ).default;
+  const forceLandscape = await AsyncStorage.getItem(
+    "debug_force_landscape_images"
+  );
+  const useLandscape = forceLandscape === "true";
+
+  // Select image and dimensions based on debug setting
+  let imageUrl: string;
+  let imageWidth: number;
+  let imageHeight: number;
+
+  if (useLandscape) {
+    imageUrl =
+      item.post_image ||
+      item.post_highlights_image ||
+      "https://picsum.photos/800/600?random=1";
+    imageWidth =
+      item.post_image_width || item.post_highlights_image_width || 800;
+    imageHeight =
+      item.post_image_height || item.post_highlights_image_height || 600;
+  } else {
+    imageUrl =
+      item.post_highlights_image ||
+      item.post_image ||
+      "https://picsum.photos/800/600?random=1";
+    imageWidth =
+      item.post_highlights_image_width || item.post_image_width || 800;
+    imageHeight =
+      item.post_highlights_image_height || item.post_image_height || 600;
+  }
+
+  // Determine if image is landscape (width > height)
+  const isLandscape = imageWidth > imageHeight;
+
   const category = extractCategoryFromUrl(item.post_url);
 
   return {
@@ -211,6 +250,7 @@ function transformHighlightsItemToArticle(item: HighlightsApiItem): Article {
     imageUrl,
     timestamp: formatDate(item.post_publish_date),
     category,
+    isLandscape,
   };
 }
 
@@ -258,7 +298,9 @@ export async function fetchArticles(): Promise<Article[]> {
     }
 
     const highlightsItems: HighlightsApiItem[] = await response.json();
-    const articles = highlightsItems.map(transformHighlightsItemToArticle);
+    const articles = await Promise.all(
+      highlightsItems.map(transformHighlightsItemToArticle)
+    );
 
     // Cache the result
     await cacheService.set(cacheKey, articles, { hash });
@@ -410,9 +452,11 @@ export async function fetchFeaturedArticles(): Promise<Article[]> {
 
     // Transform and return first 5
     console.log("itemsWithHighlightImages", itemsWithHighlightImages.length);
-    const featuredArticles = itemsWithHighlightImages
-      // .slice(0, 5)
-      .map(transformHighlightsItemToArticle);
+    const featuredArticles = await Promise.all(
+      itemsWithHighlightImages
+        // .slice(0, 5)
+        .map(transformHighlightsItemToArticle)
+    );
 
     // Cache the result
     await cacheService.set(cacheKey, featuredArticles, { hash });
@@ -774,10 +818,12 @@ export async function fetchRelatedArticles(
     const highlightsItems: HighlightsApiItem[] = await response.json();
 
     // Filter out the current article and transform to Article interface
-    const relatedArticles = highlightsItems
-      .filter((item) => item.post_id.toString() !== excludeId)
-      .slice(0, limit)
-      .map(transformHighlightsItemToArticle);
+    const relatedArticles = await Promise.all(
+      highlightsItems
+        .filter((item) => item.post_id.toString() !== excludeId)
+        .slice(0, limit)
+        .map(transformHighlightsItemToArticle)
+    );
 
     // Cache the result
     await cacheService.set(cacheKey, relatedArticles, {

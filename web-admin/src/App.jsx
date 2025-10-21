@@ -128,7 +128,7 @@ function App() {
           onRefresh={fetchBrands}
         />
 
-        {brands.length > 0 && (
+        {brands.length === 0 && (
           <div
             style={{
               marginTop: "3rem",

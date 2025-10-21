@@ -7,6 +7,7 @@ export interface Article {
   imageUrl: string;
   timestamp: string;
   category: string;
+  isLandscape?: boolean;
 }
 
 export interface StructuredContentNode {

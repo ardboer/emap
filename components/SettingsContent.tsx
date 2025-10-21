@@ -41,6 +41,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   }>({ enabled: false, loading: true });
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
   const [showPaywall, setShowPaywall] = React.useState(true);
+  const [forceLandscapeImages, setForceLandscapeImages] = React.useState(false);
   const [pushToken, setPushToken] = React.useState<string | null>(null);
   const [topicSubscriptions, setTopicSubscriptions] = React.useState<
     TopicSubscription[]
@@ -97,6 +98,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     AsyncStorage.getItem("debug_show_paywall").then((value) => {
       if (value !== null) {
         setShowPaywall(value === "true");
+      }
+    });
+  }, []);
+
+  // Load force landscape images debug setting
+  React.useEffect(() => {
+    AsyncStorage.getItem("debug_force_landscape_images").then((value) => {
+      if (value !== null) {
+        setForceLandscapeImages(value === "true");
       }
     });
   }, []);
@@ -325,6 +335,27 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     await AsyncStorage.setItem("debug_show_paywall", value.toString());
   };
 
+  const handleForceLandscapeToggle = async (value: boolean) => {
+    setForceLandscapeImages(value);
+    await AsyncStorage.setItem(
+      "debug_force_landscape_images",
+      value.toString()
+    );
+
+    // Clear highlights cache to force reload with new image setting
+    try {
+      const { cacheService } = await import("@/services/cache");
+      await cacheService.remove("highlights");
+      Alert.alert(
+        "Setting Updated",
+        "Highlights cache cleared. Pull to refresh the highlights tab to see the changes.",
+        [{ text: "OK" }]
+      );
+    } catch (error) {
+      console.error("Error clearing highlights cache:", error);
+    }
+  };
+
   const SettingsItem = ({
     title,
     subtitle,
@@ -538,6 +569,19 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             <Switch
               value={showPaywall}
               onValueChange={handlePaywallToggle}
+              trackColor={{ false: "#767577", true: "#007AFF" }}
+              thumbColor="#fff"
+            />
+          }
+        />
+        <SettingsItem
+          title="Force Landscape Images"
+          subtitle="Use landscape images (post_image) in highlights carousel for testing fallback"
+          icon="photo.fill"
+          rightElement={
+            <Switch
+              value={forceLandscapeImages}
+              onValueChange={handleForceLandscapeToggle}
               trackColor={{ false: "#767577", true: "#007AFF" }}
               thumbColor="#fff"
             />
