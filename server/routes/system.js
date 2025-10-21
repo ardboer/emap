@@ -6,6 +6,7 @@
 const express = require("express");
 const { spawn } = require("child_process");
 const path = require("path");
+const fs = require("fs");
 const { validateBrandSwitch } = require("../middleware/validation");
 const {
   getActiveBrand,
@@ -369,6 +370,50 @@ function runPrebuildScript(shortcode) {
     prebuildStatus.error = error.message;
   });
 }
+
+/**
+ * GET /api/system/available-fonts
+ * Get list of available fonts from assets/fonts directory
+ */
+router.get("/available-fonts", (req, res) => {
+  try {
+    // Get project root directory (one level up from server/)
+    const projectRoot = path.join(process.cwd(), "..");
+    const fontsDir = path.join(projectRoot, "assets", "fonts");
+
+    // Check if fonts directory exists
+    if (!fs.existsSync(fontsDir)) {
+      return res.json({
+        success: true,
+        fonts: ["System"], // Always include System as fallback
+      });
+    }
+
+    // Read font files
+    const files = fs.readdirSync(fontsDir);
+    const fontFiles = files.filter((file) => /\.(ttf|otf)$/i.test(file));
+
+    // Extract font names (remove extension)
+    const fontNames = fontFiles.map((file) =>
+      file.replace(/\.(ttf|otf)$/i, "")
+    );
+
+    // Always include System font as an option
+    const availableFonts = ["System", ...fontNames];
+
+    res.json({
+      success: true,
+      fonts: availableFonts,
+    });
+  } catch (error) {
+    console.error("Error getting available fonts:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      fonts: ["System"], // Fallback to System font
+    });
+  }
+});
 
 /**
  * GET /api/system/health

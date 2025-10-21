@@ -6,6 +6,7 @@ import ConfigEditor from "./ConfigEditor";
 
 const BrandForm = ({ brand, onClose, onSuccess }) => {
   const [activeTab, setActiveTab] = useState("basic");
+  const [availableFonts, setAvailableFonts] = useState(["System"]);
   const [config, setConfig] = useState(
     brand?.config || {
       shortcode: "",
@@ -75,6 +76,20 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
     }
   }, [brand, setValue]);
 
+  // Fetch available fonts on mount
+  useEffect(() => {
+    const fetchFonts = async () => {
+      try {
+        const fonts = await brandApi.getAvailableFonts();
+        setAvailableFonts(fonts);
+      } catch (error) {
+        console.error("Error fetching fonts:", error);
+        // Keep default System font if fetch fails
+      }
+    };
+    fetchFonts();
+  }, []);
+
   // Update config when form fields change
   const updateConfig = (updates) => {
     setConfig((prev) => ({ ...prev, ...updates }));
@@ -115,6 +130,20 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
       apiConfig: {
         ...prev.apiConfig,
         [field]: value,
+      },
+    }));
+  };
+
+  // Update fonts
+  const updateFont = (fontType, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      theme: {
+        ...prev.theme,
+        fonts: {
+          ...prev.theme?.fonts,
+          [fontType]: value,
+        },
       },
     }));
   };
@@ -210,7 +239,13 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
             className={`tab ${activeTab === "theme" ? "active" : ""}`}
             onClick={() => setActiveTab("theme")}
           >
-            Theme
+            Colours
+          </button>
+          <button
+            className={`tab ${activeTab === "fonts" ? "active" : ""}`}
+            onClick={() => setActiveTab("fonts")}
+          >
+            Fonts
           </button>
           <button
             className={`tab ${activeTab === "features" ? "active" : ""}`}
@@ -499,6 +534,81 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                     </div>
                   </div>
                 ))}
+              </>
+            )}
+
+            {activeTab === "fonts" && (
+              <>
+                <div className="form-help" style={{ marginBottom: "1.5rem" }}>
+                  Configure custom fonts for this brand. Fonts must be added to
+                  the <code>assets/fonts/</code> directory first. Use
+                  &quot;System&quot; for the default platform font.
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Primary Font</label>
+                  <select
+                    className="form-input"
+                    value={config.theme?.fonts?.primary || "System"}
+                    onChange={(e) => updateFont("primary", e.target.value)}
+                  >
+                    {availableFonts.map((font) => (
+                      <option key={font} value={font}>
+                        {font}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="form-help">
+                    Main font used throughout the app for all text elements
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Secondary Font</label>
+                  <select
+                    className="form-input"
+                    value={config.theme?.fonts?.secondary || "System"}
+                    onChange={(e) => updateFont("secondary", e.target.value)}
+                  >
+                    {availableFonts.map((font) => (
+                      <option key={font} value={font}>
+                        {font}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="form-help">
+                    Optional secondary font (currently not used in the app)
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: "2rem",
+                    padding: "1rem",
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "6px",
+                    border: "1px solid #dee2e6",
+                  }}
+                >
+                  <h4 style={{ marginTop: 0, marginBottom: "0.5rem" }}>
+                    Available Fonts
+                  </h4>
+                  <ul style={{ marginBottom: 0, paddingLeft: "1.5rem" }}>
+                    {availableFonts.map((font) => (
+                      <li key={font} style={{ marginBottom: "0.25rem" }}>
+                        <strong>{font}</strong>
+                        {font === "System" && " (Platform default)"}
+                      </li>
+                    ))}
+                  </ul>
+                  <div
+                    className="form-help"
+                    style={{ marginTop: "1rem", marginBottom: 0 }}
+                  >
+                    To add more fonts, place .ttf or .otf files in the{" "}
+                    <code>assets/fonts/</code> directory and restart the server.
+                  </div>
+                </div>
               </>
             )}
 

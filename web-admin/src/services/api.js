@@ -125,6 +125,12 @@ export const brandApi = {
     );
     return response.data.keystoreStatus;
   },
+
+  // Get available fonts
+  getAvailableFonts: async () => {
+    const response = await api.get("/system/available-fonts");
+    return response.data.fonts || ["System"];
+  },
 };
 
 export default api;
