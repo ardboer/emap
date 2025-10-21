@@ -22,14 +22,16 @@ import {
   onNotificationOpened,
 } from "@/services/firebaseNotifications";
 import { hasCompletedOnboarding } from "@/services/onboarding";
+import { getAllFonts } from "@/utils/fontLoader";
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const pathname = usePathname();
   const segments = useSegments();
-  const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  });
+
+  // Automatically load all fonts from assets/fonts directory
+  const [loaded] = useFonts(getAllFonts());
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
   const notificationUnsubscribe = useRef<(() => void) | undefined>(undefined);

@@ -89,5 +89,10 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
-  </dict>
+  	<key>UIAppFonts</key>
+	<array>
+		<string>Klavika-Regular-Regular.otf</string>
+		<string>SpaceMono-Regular.ttf</string>
+	</array>
+</dict>
 </plist>

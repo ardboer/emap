@@ -7,17 +7,26 @@ import { useEffect, useState } from "react";
  * Provides reactive access to brand settings throughout the app
  */
 export function useBrandConfig() {
-  const [brandConfig, setBrandConfig] = useState<BrandConfig | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Initialize with current brand immediately to prevent flash
+  const [brandConfig, setBrandConfig] = useState<BrandConfig | null>(() => {
+    try {
+      return brandManager.getCurrentBrand();
+    } catch (err) {
+      console.error("Error loading initial brand configuration:", err);
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Verify and update if needed
     const loadBrandConfig = async () => {
       try {
-        setLoading(true);
-        setError(null);
         const config = brandManager.getCurrentBrand();
-        setBrandConfig(config);
+        if (config !== brandConfig) {
+          setBrandConfig(config);
+        }
       } catch (err) {
         setError(
           err instanceof Error
@@ -25,8 +34,6 @@ export function useBrandConfig() {
             : "Failed to load brand configuration"
         );
         console.error("Error loading brand configuration:", err);
-      } finally {
-        setLoading(false);
       }
     };
 
