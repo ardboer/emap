@@ -7,7 +7,8 @@
   "apiConfig": {
     "baseUrl": "https://www.nursingtimes.net",
     "hash": "5506c4c9af9349c87a364b3b0b1988",
-    "menuId": 162196
+    "menuId": 162196,
+    "maxNbOfItems": 10
   },
   "theme": {
     "colors": {

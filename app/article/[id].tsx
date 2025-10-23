@@ -1,14 +1,15 @@
 import { BannerAd } from "@/components/BannerAd";
 import { PaywallBottomSheet } from "@/components/PaywallBottomSheet";
-import RelatedArticles from "@/components/RelatedArticles";
 import { RichContentRenderer } from "@/components/RichContentRenderer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import TrendingArticles from "@/components/TrendingArticles";
 import { Article, StructuredContentNode } from "@/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -16,6 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   interpolate,
   useAnimatedScrollHandler,
@@ -34,6 +36,11 @@ export default function ArticleScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallEnabled, setPaywallEnabled] = useState(true);
+
+  // Related articles state for swipe navigation
+  const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
+  const [currentRelatedIndex, setCurrentRelatedIndex] = useState(-1);
+  const scrollViewRef = useRef<Animated.ScrollView>(null);
 
   // Scroll position tracking
   const scrollY = useSharedValue(0);
@@ -99,6 +106,50 @@ export default function ArticleScreen() {
     loadArticle();
   }, [id]);
 
+  // Fetch related articles for swipe navigation
+  useEffect(() => {
+    const loadRelatedArticles = async () => {
+      if (!id) {
+        console.log("No article ID for fetching related articles");
+        return;
+      }
+
+      console.log("Fetching related articles for article ID:", id);
+      try {
+        const { fetchRelatedArticles } = await import("@/services/api");
+        const related = await fetchRelatedArticles(id);
+        console.log(
+          "Related articles fetched:",
+          related?.length || 0,
+          "articles"
+        );
+
+        // Fallback to trending articles if no related articles found
+        // if (!related || related.length === 0) {
+        //   console.log(
+        //     "No related articles found, falling back to trending articles"
+        //   );
+        //   const { fetchTrendingArticles } = await import("@/services/api");
+        //   related = await fetchTrendingArticles(5);
+        //   console.log(
+        //     "Trending articles fetched:",
+        //     related?.length || 0,
+        //     "articles"
+        //   );
+        // }
+
+        console.log("Final articles data:", related);
+        setRelatedArticles(related);
+        setCurrentRelatedIndex(-1); // Reset index when article changes
+      } catch (err) {
+        console.error("Error loading related articles:", err);
+        setRelatedArticles([]);
+      }
+    };
+
+    loadRelatedArticles();
+  }, [id]);
+
   useEffect(() => {
     if (article && paywallEnabled) {
       // Show paywall after 2 seconds
@@ -156,6 +207,72 @@ export default function ArticleScreen() {
     );
   };
 
+  // Handle swipe to next related article
+  const handleSwipeToNextArticle = () => {
+    console.log("handleSwipeToNextArticle called");
+    console.log("Related articles:", relatedArticles.length);
+    console.log("Current index:", currentRelatedIndex);
+
+    if (relatedArticles.length === 0) {
+      console.log("No related articles available");
+      return;
+    }
+
+    const nextIndex = currentRelatedIndex + 1;
+    console.log("Next index:", nextIndex);
+
+    if (nextIndex >= relatedArticles.length) {
+      console.log("At the end of related articles");
+      // At the end of related articles, provide haptic feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      return;
+    }
+
+    const nextArticle = relatedArticles[nextIndex];
+    console.log("Next article:", nextArticle);
+
+    if (nextArticle?.id) {
+      console.log("Navigating to article:", nextArticle.id);
+      // Haptic feedback for successful navigation
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Update index
+      setCurrentRelatedIndex(nextIndex);
+
+      // Navigate to next article
+      router.push(`/article/${nextArticle.id}`);
+    } else {
+      console.log("Next article has no ID");
+    }
+  };
+
+  // Create pan gesture for swipe detection
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-20, 20]) // Activate when horizontal movement exceeds 20px
+    .failOffsetY([-15, 15]) // Fail if vertical movement exceeds 15px (prioritize horizontal)
+    .onStart(() => {
+      console.log("Gesture started");
+    })
+    .onUpdate((event) => {
+      console.log("Gesture update:", {
+        translationX: event.translationX,
+        velocityX: event.velocityX,
+      });
+    })
+    .onEnd((event) => {
+      const { translationX, velocityX } = event;
+
+      console.log("Swipe ended:", { translationX, velocityX });
+
+      // Detect left swipe (negative X direction)
+      // Require sufficient velocity and distance
+      if (translationX < -50 && velocityX < -500) {
+        console.log("Left swipe triggered!");
+        handleSwipeToNextArticle();
+      }
+    })
+    .runOnJS(true);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -184,81 +301,102 @@ export default function ArticleScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Fixed Header Image */}
-      <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
-        <Image source={{ uri: article.imageUrl }} style={styles.headerImage} />
-      </Animated.View>
-
-      {/* Back Button */}
-      <Animated.View style={[styles.backButtonTop, backButtonAnimatedStyle]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <ThemedText style={styles.backButtonText}>← Back</ThemedText>
-        </TouchableOpacity>
-      </Animated.View>
-
-      {/* Scrollable Content */}
-      <Animated.ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        bounces={true}
-        alwaysBounceVertical={true}
-      >
-        {/* Spacer to push content below header */}
-        <View style={styles.headerSpacer} />
-
-        {/* Article Content */}
-        <ThemedView style={styles.contentContainer}>
-          <ThemedView style={styles.metaContainer}>
-            {/* <ThemedText style={styles.category}>{article.author}</ThemedText> */}
-            <ThemedText style={styles.timestamp}>
-              {article.timestamp}
-            </ThemedText>
-          </ThemedView>
-
-          <ThemedText type="title" style={styles.title}>
-            {article.title}
-          </ThemedText>
-
-          {article.subtitle && (
-            <ThemedText type="subtitle" style={styles.subtitle}>
-              {article.subtitle}
-            </ThemedText>
-          )}
-
-          <ThemedText style={styles.leadText}>{article.leadText}</ThemedText>
-
-          {/* Banner Ad below lead text */}
-          <BannerAd
-            showLoadingIndicator={true}
-            showErrorMessage={false}
-            onAdLoaded={() => console.log("Banner ad loaded successfully")}
-            onAdFailedToLoad={(error) =>
-              console.log("Banner ad failed to load:", error)
-            }
-            style={styles.bannerAd}
+    <GestureDetector gesture={panGesture}>
+      <View style={styles.container}>
+        {/* Fixed Header Image */}
+        <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
+          <Image
+            source={{ uri: article.imageUrl }}
+            style={styles.headerImage}
           />
+        </Animated.View>
 
-          <ThemedView style={styles.divider} />
+        {/* Back Button */}
+        <Animated.View style={[styles.backButtonTop, backButtonAnimatedStyle]}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <ThemedText style={styles.backButtonText}>← Back</ThemedText>
+          </TouchableOpacity>
+        </Animated.View>
 
-          {/* Render content based on type */}
-          {renderContent()}
+        {/* Swipe Indicator */}
+        {/* {relatedArticles.length > 0 &&
+          currentRelatedIndex < relatedArticles.length - 1 && (
+            <View style={styles.swipeIndicator}>
+              <ThemedText style={styles.swipeIndicatorText}>
+                ← Swipe for next article
+              </ThemedText>
+              {currentRelatedIndex >= 0 && (
+                <ThemedText style={styles.swipeProgress}>
+                  {currentRelatedIndex + 2} of {relatedArticles.length}
+                </ThemedText>
+              )}
+            </View>
+          )} */}
 
-          {/* Trending Articles Section */}
-          <RelatedArticles />
-        </ThemedView>
-      </Animated.ScrollView>
+        {/* Scrollable Content */}
+        <Animated.ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          bounces={true}
+          alwaysBounceVertical={true}
+        >
+          {/* Spacer to push content below header */}
+          <View style={styles.headerSpacer} />
 
-      <PaywallBottomSheet
-        visible={showPaywall}
-        onClose={handleClosePaywall}
-        onSubscribe={handleSubscribe}
-        onSignIn={handleSignIn}
-      />
-    </View>
+          {/* Article Content */}
+          <ThemedView style={styles.contentContainer}>
+            <ThemedView style={styles.metaContainer}>
+              {/* <ThemedText style={styles.category}>{article.author}</ThemedText> */}
+              <ThemedText style={styles.timestamp}>
+                {article.timestamp}
+              </ThemedText>
+            </ThemedView>
+
+            <ThemedText type="title" style={styles.title}>
+              {article.title}
+            </ThemedText>
+
+            {article.subtitle && (
+              <ThemedText type="subtitle" style={styles.subtitle}>
+                {article.subtitle}
+              </ThemedText>
+            )}
+
+            <ThemedText style={styles.leadText}>{article.leadText}</ThemedText>
+
+            {/* Banner Ad below lead text */}
+            <BannerAd
+              showLoadingIndicator={true}
+              showErrorMessage={false}
+              onAdLoaded={() => console.log("Banner ad loaded successfully")}
+              onAdFailedToLoad={(error) =>
+                console.log("Banner ad failed to load:", error)
+              }
+              style={styles.bannerAd}
+            />
+
+            <ThemedView style={styles.divider} />
+
+            {/* Render content based on type */}
+            {renderContent()}
+
+            {/* Trending Articles Section */}
+            <TrendingArticles />
+          </ThemedView>
+        </Animated.ScrollView>
+
+        <PaywallBottomSheet
+          visible={showPaywall}
+          onClose={handleClosePaywall}
+          onSubscribe={handleSubscribe}
+          onSignIn={handleSignIn}
+        />
+      </View>
+    </GestureDetector>
   );
 }
 
@@ -391,5 +529,28 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
+  },
+  swipeIndicator: {
+    position: "absolute",
+    top: 100,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    flexDirection: "column",
+    alignItems: "flex-end",
+  },
+  swipeIndicatorText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  swipeProgress: {
+    color: "white",
+    fontSize: 10,
+    marginTop: 2,
+    opacity: 0.8,
   },
 });

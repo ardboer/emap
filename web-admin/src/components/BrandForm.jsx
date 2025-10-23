@@ -449,6 +449,28 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                       Menu identifier for the brand&apos;s navigation
                     </div>
                   </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Max Featured Articles</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={config.apiConfig?.maxNbOfItems || 10}
+                      onChange={(e) =>
+                        updateApiConfig(
+                          "maxNbOfItems",
+                          parseInt(e.target.value) || 10
+                        )
+                      }
+                      min="1"
+                      max="50"
+                      placeholder="10"
+                    />
+                    <div className="form-help">
+                      Maximum number of featured articles to display (default:
+                      10)
+                    </div>
+                  </div>
                 </div>
               </>
             )}

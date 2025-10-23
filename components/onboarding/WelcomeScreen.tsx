@@ -15,7 +15,7 @@ export function WelcomeScreen({ onNext, onSkip }: OnboardingStepProps) {
       <ThemedView style={styles.content}>
         {/* Brand Logo */}
         <View style={styles.logoContainer}>
-          <BrandLogo width={200} height={80} />
+          <BrandLogo width={200} height={80} variant="header" />
         </View>
 
         {/* Placeholder for editor image */}
@@ -39,12 +39,6 @@ export function WelcomeScreen({ onNext, onSkip }: OnboardingStepProps) {
           onPress={onNext}
         >
           <ThemedText style={styles.primaryButtonText}>Get Started</ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.secondaryButton} onPress={onSkip}>
-          <ThemedText style={styles.secondaryButtonText}>
-            Skip for now
-          </ThemedText>
         </TouchableOpacity>
       </ThemedView>
     </ThemedView>
@@ -75,7 +69,8 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   imagePlaceholderText: {
-    fontSize: 60,
+    fontSize: 40,
+    lineHeight: 100,
   },
   title: {
     textAlign: "center",
@@ -96,6 +91,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     gap: 12,
+    paddingBottom: 32,
   },
   primaryButton: {
     paddingVertical: 16,

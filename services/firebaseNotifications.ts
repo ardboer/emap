@@ -1,5 +1,20 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import messaging from "@react-native-firebase/messaging";
+import { getApp } from "@react-native-firebase/app";
+import {
+  AuthorizationStatus,
+  deleteToken as firebaseDeleteToken,
+  getInitialNotification as firebaseGetInitialNotification,
+  getToken as firebaseGetToken,
+  hasPermission as firebaseHasPermission,
+  onMessage as firebaseOnMessage,
+  onNotificationOpenedApp as firebaseOnNotificationOpenedApp,
+  onTokenRefresh as firebaseOnTokenRefresh,
+  requestPermission as firebaseRequestPermission,
+  setBackgroundMessageHandler as firebaseSetBackgroundMessageHandler,
+  subscribeToTopic as firebaseSubscribeToTopic,
+  unsubscribeFromTopic as firebaseUnsubscribeFromTopic,
+  getMessaging,
+} from "@react-native-firebase/messaging";
 import { PermissionsAndroid, Platform } from "react-native";
 import { isFirebaseInitialized, isMessagingAvailable } from "./firebaseInit";
 
@@ -52,10 +67,12 @@ export async function requestNotificationPermission(): Promise<boolean> {
     }
 
     // iOS or older Android versions - use Firebase messaging API
-    const authStatus = await messaging().requestPermission();
+    const app = getApp();
+    const messaging = getMessaging(app);
+    const authStatus = await firebaseRequestPermission(messaging);
     const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+      authStatus === AuthorizationStatus.AUTHORIZED ||
+      authStatus === AuthorizationStatus.PROVISIONAL;
 
     if (enabled) {
       console.log("✅ Notification permission granted:", authStatus);
@@ -90,10 +107,12 @@ export async function checkNotificationPermission(): Promise<boolean> {
     }
 
     // iOS or older Android versions
-    const authStatus = await messaging().hasPermission();
+    const app = getApp();
+    const messaging = getMessaging(app);
+    const authStatus = await firebaseHasPermission(messaging);
     return (
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL
+      authStatus === AuthorizationStatus.AUTHORIZED ||
+      authStatus === AuthorizationStatus.PROVISIONAL
     );
   } catch (error) {
     console.error("Error checking notification permission:", error);
@@ -112,8 +131,10 @@ export async function getFCMToken(): Promise<string | null> {
   }
 
   try {
-    // Get FCM token directly - messaging().getToken() will handle permission check
-    const token = await messaging().getToken();
+    // Get FCM token directly - firebaseGetToken() will handle permission check
+    const app = getApp();
+    const messaging = getMessaging(app);
+    const token = await firebaseGetToken(messaging);
 
     if (token) {
       console.log("✅ FCM token obtained:", token);
@@ -153,7 +174,9 @@ export async function deleteFCMToken(): Promise<void> {
   }
 
   try {
-    await messaging().deleteToken();
+    const app = getApp();
+    const messaging = getMessaging(app);
+    await firebaseDeleteToken(messaging);
     await AsyncStorage.removeItem(FCM_TOKEN_KEY);
     console.log("✅ FCM token deleted");
   } catch (error) {
@@ -172,7 +195,9 @@ export function onTokenRefresh(callback: (token: string) => void): () => void {
     return () => {};
   }
 
-  return messaging().onTokenRefresh(async (token) => {
+  const app = getApp();
+  const messaging = getMessaging(app);
+  return firebaseOnTokenRefresh(messaging, async (token) => {
     console.log("🔄 FCM token refreshed:", token);
     await AsyncStorage.setItem(FCM_TOKEN_KEY, token);
     callback(token);
@@ -192,7 +217,9 @@ export function onMessageReceived(
     return () => {};
   }
 
-  return messaging().onMessage(async (remoteMessage) => {
+  const app = getApp();
+  const messaging = getMessaging(app);
+  return firebaseOnMessage(messaging, async (remoteMessage) => {
     console.log("📬 Foreground message received:", remoteMessage);
     callback(remoteMessage);
   });
@@ -210,7 +237,9 @@ export function setBackgroundMessageHandler(
     return;
   }
 
-  messaging().setBackgroundMessageHandler(handler);
+  const app = getApp();
+  const messaging = getMessaging(app);
+  firebaseSetBackgroundMessageHandler(messaging, handler);
 }
 
 /**
@@ -224,7 +253,9 @@ export async function getInitialNotification(): Promise<any | null> {
   }
 
   try {
-    const remoteMessage = await messaging().getInitialNotification();
+    const app = getApp();
+    const messaging = getMessaging(app);
+    const remoteMessage = await firebaseGetInitialNotification(messaging);
     if (remoteMessage) {
       console.log("🎯 App opened from notification:", remoteMessage);
       return remoteMessage;
@@ -249,7 +280,9 @@ export function onNotificationOpened(
     return () => {};
   }
 
-  return messaging().onNotificationOpenedApp((remoteMessage) => {
+  const app = getApp();
+  const messaging = getMessaging(app);
+  return firebaseOnNotificationOpenedApp(messaging, (remoteMessage) => {
     console.log("👆 Notification opened app from background:", remoteMessage);
     callback(remoteMessage);
   });
@@ -266,7 +299,9 @@ export async function subscribeToTopic(topic: string): Promise<void> {
   }
 
   try {
-    await messaging().subscribeToTopic(topic);
+    const app = getApp();
+    const messaging = getMessaging(app);
+    await firebaseSubscribeToTopic(messaging, topic);
     console.log(`✅ Subscribed to topic: ${topic}`);
   } catch (error) {
     console.error(`Error subscribing to topic ${topic}:`, error);
@@ -284,7 +319,9 @@ export async function unsubscribeFromTopic(topic: string): Promise<void> {
   }
 
   try {
-    await messaging().unsubscribeFromTopic(topic);
+    const app = getApp();
+    const messaging = getMessaging(app);
+    await firebaseUnsubscribeFromTopic(messaging, topic);
     console.log(`✅ Unsubscribed from topic: ${topic}`);
   } catch (error) {
     console.error(`Error unsubscribing from topic ${topic}:`, error);

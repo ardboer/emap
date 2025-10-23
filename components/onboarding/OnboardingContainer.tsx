@@ -27,18 +27,21 @@ export function OnboardingContainer({ onComplete }: OnboardingContainerProps) {
   const getSteps = (): OnboardingStep[] => {
     const baseSteps: OnboardingStep[] = [
       "welcome",
-      "notification-alert",
+      // "notification-alert",
       "notification-permission",
-      "topic-selection",
+      // "topic-selection",
     ];
 
     // Add iOS-specific steps
     if (Platform.OS === "ios") {
-      baseSteps.push("tracking-alert", "tracking-permission");
+      baseSteps.push(
+        // "tracking-alert",
+        "tracking-permission"
+      );
     }
 
     // Add login as final step
-    baseSteps.push("login");
+    // baseSteps.push("login");
 
     return baseSteps;
   };
@@ -149,12 +152,12 @@ export function OnboardingContainer({ onComplete }: OnboardingContainerProps) {
               </ThemedView>
             </ThemedView>
 
-            {currentStepIndex < steps.length - 1 && (
+            {currentStepIndex && (
               <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
                 <ThemedText
                   style={[styles.skipButtonText, { color: primaryColor }]}
                 >
-                  Skip
+                  {/* Skip */}
                 </ThemedText>
               </TouchableOpacity>
             )}

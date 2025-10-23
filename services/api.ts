@@ -6,6 +6,7 @@ import {
   MagazineEditionsResponse,
   StructuredContentNode,
 } from "@/types";
+import { getAnonymousId } from "./anonymousId";
 
 // Get API configuration from active brand
 function getApiConfig() {
@@ -419,11 +420,11 @@ export async function fetchArticleContent(articleId: string): Promise<string> {
   }
 }
 
-// Get featured articles (first 5 with valid highlight images)
+// Get featured articles (limited by maxNbOfItems with valid highlight images)
 export async function fetchFeaturedArticles(): Promise<Article[]> {
   const { cacheService } = await import("./cache");
   const cacheKey = "featured_articles";
-  const { hash } = getApiConfig();
+  const { hash, maxNbOfItems = 10 } = getApiConfig();
 
   // Try to get from cache first
   const cached = await cacheService.get<Article[]>(cacheKey, { hash });
@@ -450,11 +451,12 @@ export async function fetchFeaturedArticles(): Promise<Article[]> {
         item.post_highlights_image && item.post_highlights_image.trim() !== ""
     );
 
-    // Transform and return first 5
+    // Transform and return limited by maxNbOfItems
     console.log("itemsWithHighlightImages", itemsWithHighlightImages.length);
+    console.log("maxNbOfItems", maxNbOfItems);
     const featuredArticles = await Promise.all(
       itemsWithHighlightImages
-        // .slice(0, 5)
+        .slice(0, maxNbOfItems)
         .map(transformHighlightsItemToArticle)
     );
 
@@ -819,19 +821,32 @@ export async function fetchRelatedArticles(
     const endpoint =
       "https://api.askmiso.com/v1/recommendation/product_to_products";
 
-    // Generate a consistent anonymous ID
-    const anonymousId = "app-user-" + Math.random().toString(36).substring(7);
+    // Get persistent anonymous ID for tracking
+    // Format: "1658570109.1761120937" (Google Analytics style)
+    const anonymousId = await getAnonymousId();
 
-    // Construct product_id with brand prefix (e.g., "NT-339716")
-    const productId = `${brandFilter}-${articleId}`;
+    // Construct product_id with brand shortcode prefix (e.g., "NT-339716")
+    // Use uppercase shortcode for consistency with Miso data
+    const brandPrefix = brandConfig.shortcode.toUpperCase();
+    const productId = `${brandPrefix}-${articleId}`;
 
-    // Prepare request body
+    // Prepare request body for anonymous users
+    // For authenticated users, this would use:
+    // - user_id: "sub:user_id" + user_hash for subscribers
+    // - user_id: "reg:user_id" + user_hash for registered users
+    // Since we don't have authentication yet, use anonymous_id
     const requestBody = {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId, // Use persistent anonymous ID (Google Analytics style)
       product_id: productId,
       rows: limit,
       fl: ["*"],
       fq: `brand:"${brandFilter}"`, // Filter by brand
+      // Add date boosting to prefer recent articles (last year)
+      boost_fq: `published_at:[${
+        new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0]
+      } TO *]`,
     };
 
     console.log("Fetching related articles from Miso:", {
@@ -840,7 +855,18 @@ export async function fetchRelatedArticles(
       articleId,
       productId,
       limit,
+      requestBody,
     });
+
+    // Generate curl command for debugging
+    const curlCommand = `curl -X POST '${endpoint}' \\
+  -H 'Content-Type: application/json' \\
+  -H 'x-api-key: ${apiKey}' \\
+  -d '${JSON.stringify(requestBody)}'`;
+
+    console.log("\n=== DEBUG: Copy this curl command to test the API ===");
+    console.log(curlCommand);
+    console.log("===================================================\n");
 
     const response = await fetch(endpoint, {
       method: "POST",
@@ -851,8 +877,14 @@ export async function fetchRelatedArticles(
       body: JSON.stringify(requestBody),
     });
 
+    console.log("Miso API response status:", response.status);
+
     if (!response.ok) {
-      throw new Error(`Miso API request failed: ${response.status}`);
+      const errorText = await response.text();
+      console.error("Miso API error response:", errorText);
+      throw new Error(
+        `Miso API request failed: ${response.status} - ${errorText}`
+      );
     }
 
     const data = await response.json();
@@ -953,17 +985,21 @@ export async function fetchTrendingArticles(
 
     const { apiKey, brandFilter, endpoint } = brandConfig.misoConfig;
 
-    // Generate a consistent anonymous ID (you could also use a random UUID)
-    const anonymousId = "app-user-" + Math.random().toString(36).substring(7);
+    // Get persistent anonymous ID for tracking
+    // Format: "1658570109.1761120937" (Google Analytics style)
+    const anonymousId = await getAnonymousId();
 
     // Calculate date one year ago for boost_fq
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     const oneYearAgoISO = oneYearAgo.toISOString().split("T")[0] + "T00:00:00Z";
 
-    // Prepare request body
+    // Prepare request body for anonymous users
+    // For authenticated users, this would use:
+    // - user_id: "sub:user_id" for subscribers
+    // - user_id: "reg:user_id" for registered users
     const requestBody = {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId, // Use persistent anonymous ID
       fl: ["*"],
       rows: limit,
       // Date filter to get articles from the last year
@@ -976,7 +1012,22 @@ export async function fetchTrendingArticles(
       endpoint,
       brand: brandConfig.name,
       limit,
+      requestBody,
     });
+
+    // Generate curl command for debugging
+    const curlCommand = `curl -X POST '${endpoint}' \\
+  -H 'Content-Type: application/json' \\
+  -H 'x-api-key: ${apiKey}' \\
+  -d '${JSON.stringify(requestBody)}'`;
+
+    console.log(
+      "\n=== DEBUG: Copy this curl command to test Trending Articles API ==="
+    );
+    console.log(curlCommand);
+    console.log(
+      "====================================================================\n"
+    );
 
     const response = await fetch(endpoint, {
       method: "POST",

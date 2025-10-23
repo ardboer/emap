@@ -59,16 +59,14 @@ export function TrackingPermissionScreen({
           style={[styles.primaryButton, { backgroundColor: primaryColor }]}
           onPress={handleRequestPermission}
         >
-          <ThemedText style={styles.primaryButtonText}>
-            Request Permission
-          </ThemedText>
+          <ThemedText style={styles.primaryButtonText}>Continue</ThemedText>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryButton} onPress={onSkip}>
+        {/* <TouchableOpacity style={styles.secondaryButton} onPress={onSkip}>
           <ThemedText style={styles.secondaryButtonText}>
             Ask Me Later
           </ThemedText>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </ThemedView>
     </ThemedView>
   );
@@ -112,6 +110,7 @@ const styles = StyleSheet.create({
   infoTextContainer: {
     flex: 1,
     gap: 4,
+    padding: 8,
   },
   infoTitle: {
     fontSize: 16,
@@ -124,6 +123,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     gap: 12,
+    paddingBottom: 32,
   },
   primaryButton: {
     paddingVertical: 16,

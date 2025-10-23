@@ -17,6 +17,8 @@ export interface BrandConfig {
   apiConfig: {
     baseUrl: string;
     hash: string;
+    menuId?: number;
+    maxNbOfItems?: number;
   };
   theme: {
     colors: {

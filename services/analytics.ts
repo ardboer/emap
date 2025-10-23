@@ -1,6 +1,14 @@
 import { brandManager } from "@/config/BrandManager";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import analytics from "@react-native-firebase/analytics";
+import {
+  getAnalytics,
+  logEvent,
+  logScreenView,
+  logSearch,
+  setAnalyticsCollectionEnabled,
+  setUserProperty,
+} from "@react-native-firebase/analytics";
+import { getApp } from "@react-native-firebase/app";
 
 const ANALYTICS_ENABLED_KEY = "analytics_enabled";
 
@@ -13,6 +21,7 @@ class AnalyticsService {
   private screenStartTime: number | null = null;
   private currentScreen: string | null = null;
   private isInitialized: boolean = false;
+  private analytics: ReturnType<typeof getAnalytics> | null = null;
 
   /**
    * Initialize Firebase Analytics
@@ -22,6 +31,10 @@ class AnalyticsService {
     console.log("🔥 Initializing Firebase Analytics...");
 
     try {
+      // Initialize Firebase Analytics instance
+      const app = getApp();
+      this.analytics = getAnalytics(app);
+
       // Check if analytics is enabled
       const enabled = await this.isAnalyticsEnabled();
       if (!enabled) {
@@ -31,7 +44,7 @@ class AnalyticsService {
 
       // Set brand as user property
       const brandConfig = brandManager.getCurrentBrand();
-      await analytics().setUserProperty("brand", brandConfig.shortcode);
+      await setUserProperty(this.analytics, "brand", brandConfig.shortcode);
 
       // Set enabled features as user properties (shortened to fit 36 char limit)
       const features = brandConfig.features;
@@ -52,21 +65,24 @@ class AnalyticsService {
 
       // Join with comma, ensuring total length stays under 36 chars
       const featuresString = enabledFeatures.join(",");
-      await analytics().setUserProperty(
+      await setUserProperty(
+        this.analytics,
         "features_enabled",
         featuresString.substring(0, 36)
       );
 
       // Get brand config for additional properties
-      await analytics().setUserProperty("brand_name", brandConfig.name);
-      await analytics().setUserProperty(
+      await setUserProperty(this.analytics, "brand_name", brandConfig.name);
+      await setUserProperty(
+        this.analytics,
         "bundle_id",
         brandConfig.bundleId || ""
       );
 
       // Start session tracking
+      // Note: Using 'app_session_start' instead of 'session_start' because 'session_start' is a reserved Firebase event
       this.sessionStartTime = Date.now();
-      await this.logEvent("session_start", {
+      await this.logEvent("app_session_start", {
         brand: brandConfig.shortcode,
         brand_name: brandConfig.name,
         timestamp: new Date().toISOString(),
@@ -99,7 +115,11 @@ class AnalyticsService {
    */
   async setAnalyticsEnabled(enabled: boolean): Promise<void> {
     try {
-      await analytics().setAnalyticsCollectionEnabled(enabled);
+      if (!this.analytics) {
+        const app = getApp();
+        this.analytics = getAnalytics(app);
+      }
+      await setAnalyticsCollectionEnabled(this.analytics, enabled);
       await AsyncStorage.setItem(ANALYTICS_ENABLED_KEY, enabled.toString());
       console.log(`📊 Analytics ${enabled ? "enabled" : "disabled"}`);
     } catch (error) {
@@ -125,7 +145,8 @@ class AnalyticsService {
       }
 
       // Log new screen view
-      await analytics().logScreenView({
+      if (!this.analytics) return;
+      await logScreenView(this.analytics, {
         screen_name: screenName,
         screen_class: screenClass || screenName,
       });
@@ -145,7 +166,8 @@ class AnalyticsService {
 
     try {
       const sessionDuration = Date.now() - this.sessionStartTime;
-      await this.logEvent("session_end", {
+      // Note: Using 'app_session_end' instead of 'session_end' because 'session_end' is a reserved Firebase event
+      await this.logEvent("app_session_end", {
         duration_ms: sessionDuration,
         duration_seconds: Math.round(sessionDuration / 1000),
         duration_minutes: Math.round(sessionDuration / 60000),
@@ -212,7 +234,8 @@ class AnalyticsService {
         brand: brandConfig.shortcode,
       });
 
-      await analytics().logEvent(eventName, eventData);
+      if (!this.analytics) return;
+      await logEvent(this.analytics, eventName, eventData);
     } catch (error) {
       console.error(`❌ Error logging event ${eventName}:`, error);
     }
@@ -285,7 +308,7 @@ class AnalyticsService {
    * Log app background event
    */
   async logAppBackground(nextState: string): Promise<void> {
-    await this.logEvent("app_background", {
+    await this.logEvent("app_went_background", {
       next_state: nextState,
     });
   }
@@ -324,7 +347,8 @@ class AnalyticsService {
    * Log search event
    */
   async logSearch(searchTerm: string, resultsCount: number): Promise<void> {
-    await analytics().logSearch({
+    if (!this.analytics) return;
+    await logSearch(this.analytics, {
       search_term: searchTerm,
     });
     await this.logEvent("search_performed", {

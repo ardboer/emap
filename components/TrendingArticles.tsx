@@ -6,18 +6,18 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import ArticleTeaser from "./ArticleTeaser";
 
-export default function RelatedArticles() {
-  const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
+export default function TrendingArticles() {
+  const [trendingArticles, setTrendingArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadRelatedArticles = async () => {
+    const loadTrendingArticles = async () => {
       try {
         setLoading(true);
         setError(null);
         const articles = await fetchTrendingArticles(5);
-        setRelatedArticles(articles);
+        setTrendingArticles(articles);
       } catch (err) {
         setError("Failed to load trending articles");
         console.error("Error loading trending articles:", err);
@@ -26,7 +26,7 @@ export default function RelatedArticles() {
       }
     };
 
-    loadRelatedArticles();
+    loadTrendingArticles();
   }, []);
 
   if (loading) {
@@ -45,7 +45,7 @@ export default function RelatedArticles() {
     );
   }
 
-  if (error || relatedArticles.length === 0) {
+  if (error || trendingArticles.length === 0) {
     return null; // Don't show the section if there's an error or no articles
   }
 
@@ -56,7 +56,7 @@ export default function RelatedArticles() {
         Trending Articles
       </ThemedText>
       <ThemedView style={styles.articlesContainer}>
-        {relatedArticles.map((article) => (
+        {trendingArticles.map((article) => (
           <ArticleTeaser key={article.id} article={article} />
         ))}
       </ThemedView>
