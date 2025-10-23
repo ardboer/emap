@@ -133,4 +133,39 @@ export const brandApi = {
   },
 };
 
+// Notification API
+export const notificationApi = {
+  // Get available brands for notifications
+  getBrands: async () => {
+    const response = await api.get("/notifications/brands");
+    return response.data.brands || [];
+  },
+
+  // Get articles for a brand
+  getArticles: async (brand, limit = 20, search = "") => {
+    const params = { brand, limit };
+    if (search) params.search = search;
+    const response = await api.get("/notifications/articles", { params });
+    return response.data.articles || [];
+  },
+
+  // Send notification
+  sendNotification: async (payload) => {
+    const response = await api.post("/notifications/send", payload);
+    return response.data;
+  },
+
+  // Test Firebase connection
+  testConnection: async () => {
+    const response = await api.get("/notifications/test");
+    return response.data;
+  },
+
+  // Get notification status
+  getStatus: async () => {
+    const response = await api.get("/notifications/status");
+    return response.data;
+  },
+};
+
 export default api;

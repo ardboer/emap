@@ -1,0 +1,2 @@
+# This file ensures the firebase directory is tracked in git
+# Place your Firebase service account JSON file here (e.g., service-account.json)

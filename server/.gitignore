@@ -33,3 +33,9 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Firebase service account keys (sensitive)
+config/firebase/*.json
+
+# Keep the directory structure
+!config/firebase/.gitkeep

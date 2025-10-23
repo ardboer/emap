@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import BrandForm from "./components/BrandForm";
 import BrandList from "./components/BrandList";
 import BrandSwitcher from "./components/BrandSwitcher";
+import NotificationManager from "./components/NotificationManager";
 import { brandApi } from "./services/api";
 import "./styles.css";
 
@@ -14,6 +15,7 @@ function App() {
   const [showBrandForm, setShowBrandForm] = useState(false);
   const [showBrandSwitcher, setShowBrandSwitcher] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
+  const [activeTab, setActiveTab] = useState("brands"); // 'brands' or 'notifications'
 
   const fetchBrands = async () => {
     try {
@@ -107,49 +109,72 @@ function App() {
         </div>
       </header>
 
+      <div className="tab-navigation">
+        <button
+          className={`tab-button ${activeTab === "brands" ? "active" : ""}`}
+          onClick={() => setActiveTab("brands")}
+        >
+          🏢 Brand Management
+        </button>
+        <button
+          className={`tab-button ${
+            activeTab === "notifications" ? "active" : ""
+          }`}
+          onClick={() => setActiveTab("notifications")}
+        >
+          📱 Push Notifications
+        </button>
+      </div>
+
       <div className="container">
-        <div className="actions-bar">
-          <div>
-            <h2 style={{ margin: 0, color: "#2c3e50" }}>
-              All Brands ({brands.length})
-            </h2>
-          </div>
-          <button className="btn btn-primary" onClick={handleCreateBrand}>
-            + Add New Brand
-          </button>
-        </div>
+        {activeTab === "brands" ? (
+          <>
+            <div className="actions-bar">
+              <div>
+                <h2 style={{ margin: 0, color: "#2c3e50" }}>
+                  All Brands ({brands.length})
+                </h2>
+              </div>
+              <button className="btn btn-primary" onClick={handleCreateBrand}>
+                + Add New Brand
+              </button>
+            </div>
 
-        <BrandList
-          brands={brands}
-          activeBrand={activeBrand}
-          onEdit={handleEditBrand}
-          onDelete={fetchBrands}
-          onSwitch={handleSwitchBrand}
-          onRefresh={fetchBrands}
-        />
+            <BrandList
+              brands={brands}
+              activeBrand={activeBrand}
+              onEdit={handleEditBrand}
+              onDelete={fetchBrands}
+              onSwitch={handleSwitchBrand}
+              onRefresh={fetchBrands}
+            />
 
-        {brands.length === 0 && (
-          <div
-            style={{
-              marginTop: "3rem",
-              padding: "2rem",
-              background: "white",
-              borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            }}
-          >
-            <h3 style={{ marginBottom: "1rem", color: "#2c3e50" }}>
-              Getting Started
-            </h3>
-            <ul style={{ lineHeight: "1.8", color: "#6c757d" }}>
-              <li>Click on a brand card to view its details</li>
-              <li>Use the "Edit" button to modify brand configuration</li>
-              <li>Use the "Switch" button to make a brand active</li>
-              <li>The active brand is highlighted with a blue border</li>
-              <li>Upload assets (logo, icons) in the brand form</li>
-              <li>Edit JSON configuration for advanced settings</li>
-            </ul>
-          </div>
+            {brands.length === 0 && (
+              <div
+                style={{
+                  marginTop: "3rem",
+                  padding: "2rem",
+                  background: "white",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                }}
+              >
+                <h3 style={{ marginBottom: "1rem", color: "#2c3e50" }}>
+                  Getting Started
+                </h3>
+                <ul style={{ lineHeight: "1.8", color: "#6c757d" }}>
+                  <li>Click on a brand card to view its details</li>
+                  <li>Use the "Edit" button to modify brand configuration</li>
+                  <li>Use the "Switch" button to make a brand active</li>
+                  <li>The active brand is highlighted with a blue border</li>
+                  <li>Upload assets (logo, icons) in the brand form</li>
+                  <li>Edit JSON configuration for advanced settings</li>
+                </ul>
+              </div>
+            )}
+          </>
+        ) : (
+          <NotificationManager />
         )}
       </div>
 

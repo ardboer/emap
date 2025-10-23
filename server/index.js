@@ -3,6 +3,8 @@
  * Backend API for brand CRUD operations and brand switching
  */
 
+/* global __dirname */
+
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -11,6 +13,7 @@ const path = require("path");
 // Import routes
 const brandsRouter = require("./routes/brands");
 const systemRouter = require("./routes/system");
+const notificationsRouter = require("./routes/notifications");
 
 // Initialize Express app
 const app = express();
@@ -41,6 +44,7 @@ app.use((req, res, next) => {
 // API Routes
 app.use("/api/brands", brandsRouter);
 app.use("/api/system", systemRouter);
+app.use("/api/notifications", notificationsRouter);
 
 // Root endpoint
 app.get("/", (req, res) => {
@@ -68,6 +72,13 @@ app.get("/", (req, res) => {
         keystoreStatus: "GET /api/system/keystore-status/:shortcode",
         keystoreCheck: "POST /api/system/keystore-status/:shortcode/check",
         health: "GET /api/system/health",
+      },
+      notifications: {
+        brands: "GET /api/notifications/brands",
+        articles: "GET /api/notifications/articles",
+        send: "POST /api/notifications/send",
+        test: "GET /api/notifications/test",
+        status: "GET /api/notifications/status",
       },
     },
   });
