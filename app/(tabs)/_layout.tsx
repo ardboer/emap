@@ -192,28 +192,29 @@ export default function TabLayout() {
           options={{
             title: "Ask",
             headerTitle: "",
+            headerShown: false,
             headerShadowVisible: false,
             headerStyle: {
               borderBottomWidth: 0,
               backgroundColor: headerBackgroundColor,
             },
-            headerLeft: () => (
-              <BrandLogo
-                width={100}
-                height={32}
-                style={{ marginLeft: 16, marginBottom: 8 }}
-                variant="header"
-              />
-            ),
-            headerRight: () => (
-              <TouchableOpacity
-                style={{ marginRight: 16, padding: 8 }}
-                onPress={handleSearchPress}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="search" size={24} color={searchIconColor} />
-              </TouchableOpacity>
-            ),
+            // headerLeft: () => (
+            //   <BrandLogo
+            //     width={100}
+            //     height={32}
+            //     style={{ marginLeft: 16, marginBottom: 8 }}
+            //     variant="header"
+            //   />
+            // ),
+            // headerRight: () => (
+            //   <TouchableOpacity
+            //     style={{ marginRight: 16, padding: 8 }}
+            //     onPress={handleSearchPress}
+            //     activeOpacity={0.7}
+            //   >
+            //     <Ionicons name="search" size={24} color={searchIconColor} />
+            //   </TouchableOpacity>
+            // ),
             href: features?.enableAsk ? "/(tabs)/ask" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol

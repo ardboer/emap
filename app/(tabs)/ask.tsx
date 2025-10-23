@@ -149,6 +149,8 @@ export default function AskScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 20,
+    paddingHorizontal: 8,
   },
   webView: {
     flex: 1,
