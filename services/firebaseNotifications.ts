@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import messaging from "@react-native-firebase/messaging";
+import { PermissionsAndroid, Platform } from "react-native";
 import { isFirebaseInitialized, isMessagingAvailable } from "./firebaseInit";
 
 // Set up background message handler immediately
@@ -23,6 +24,34 @@ export async function requestNotificationPermission(): Promise<boolean> {
   }
 
   try {
+    // Android 13+ (API 33+) requires runtime permission request
+    if (Platform.OS === "android" && Platform.Version >= 33) {
+      console.log(
+        "📱 Android 13+ detected - requesting POST_NOTIFICATIONS permission"
+      );
+
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+        {
+          title: "Enable Notifications",
+          message: "Allow this app to send you notifications?",
+          buttonPositive: "Allow",
+          buttonNegative: "Don't Allow",
+        }
+      );
+
+      const permissionGranted = granted === PermissionsAndroid.RESULTS.GRANTED;
+
+      if (permissionGranted) {
+        console.log("✅ Android notification permission granted");
+        return true;
+      } else {
+        console.log("❌ Android notification permission denied:", granted);
+        return false;
+      }
+    }
+
+    // iOS or older Android versions - use Firebase messaging API
     const authStatus = await messaging().requestPermission();
     const enabled =
       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
@@ -52,6 +81,15 @@ export async function checkNotificationPermission(): Promise<boolean> {
   }
 
   try {
+    // Android 13+ (API 33+) - check runtime permission
+    if (Platform.OS === "android" && Platform.Version >= 33) {
+      const granted = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+      );
+      return granted;
+    }
+
+    // iOS or older Android versions
     const authStatus = await messaging().hasPermission();
     return (
       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
