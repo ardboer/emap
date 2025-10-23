@@ -48,6 +48,8 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
     }
   );
   const [logoFile, setLogoFile] = useState(null);
+  const [logoHeaderFile, setLogoHeaderFile] = useState(null);
+  const [logoHeaderDarkFile, setLogoHeaderDarkFile] = useState(null);
   const [assetFiles, setAssetFiles] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -176,6 +178,26 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
         toast.success("Logo uploaded successfully");
       }
 
+      // Upload header logo if provided
+      if (logoHeaderFile) {
+        await brandApi.uploadAsset(
+          formData.shortcode,
+          "logo-header.svg",
+          logoHeaderFile
+        );
+        toast.success("Header logo uploaded successfully");
+      }
+
+      // Upload header dark logo if provided
+      if (logoHeaderDarkFile) {
+        await brandApi.uploadAsset(
+          formData.shortcode,
+          "logo-header-dark.svg",
+          logoHeaderDarkFile
+        );
+        toast.success("Header dark logo uploaded successfully");
+      }
+
       // Upload assets if provided
       for (const [assetName, file] of Object.entries(assetFiles)) {
         if (file) {
@@ -205,6 +227,28 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
         return;
       }
       setLogoFile(file);
+    }
+  };
+
+  const handleLogoHeaderChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.name.endsWith(".svg")) {
+        toast.error("Header logo must be an SVG file");
+        return;
+      }
+      setLogoHeaderFile(file);
+    }
+  };
+
+  const handleLogoHeaderDarkChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.name.endsWith(".svg")) {
+        toast.error("Header dark logo must be an SVG file");
+        return;
+      }
+      setLogoHeaderDarkFile(file);
     }
   };
 
@@ -664,6 +708,126 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                       />
                       <div className="asset-preview-info">
                         <div className="asset-preview-name">Current Logo</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    Header Logo (SVG) - Optional
+                  </label>
+                  <div
+                    className="form-help"
+                    style={{ marginBottom: "0.75rem" }}
+                  >
+                    <strong>Usage:</strong> Alternative logo for tab headers and
+                    navigation
+                    <br />
+                    <strong>Format:</strong> SVG (Scalable Vector Graphics)
+                    <br />
+                    <strong>Recommended:</strong> Horizontal layout optimized
+                    for headers
+                    <br />
+                    <strong>Fallback:</strong> Uses main logo if not provided
+                  </div>
+                  <div
+                    className="file-upload"
+                    onClick={() =>
+                      document.getElementById("logo-header-input").click()
+                    }
+                  >
+                    <input
+                      id="logo-header-input"
+                      type="file"
+                      accept=".svg"
+                      onChange={handleLogoHeaderChange}
+                    />
+                    <div className="file-upload-icon">📁</div>
+                    <div className="file-upload-text">
+                      {logoHeaderFile
+                        ? logoHeaderFile.name
+                        : "Click to upload logo-header.svg"}
+                    </div>
+                  </div>
+                  {brand && (
+                    <div className="asset-preview">
+                      <img
+                        src={`${brandApi
+                          .getLogoUrl(brand.shortcode)
+                          .replace(
+                            "logo.svg",
+                            "logo-header.svg"
+                          )}?t=${Date.now()}`}
+                        alt="Current header logo"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                      <div className="asset-preview-info">
+                        <div className="asset-preview-name">
+                          Current Header Logo
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    Header Logo Dark Mode (SVG) - Optional
+                  </label>
+                  <div
+                    className="form-help"
+                    style={{ marginBottom: "0.75rem" }}
+                  >
+                    <strong>Usage:</strong> Header logo for dark mode
+                    <br />
+                    <strong>Format:</strong> SVG (Scalable Vector Graphics)
+                    <br />
+                    <strong>Recommended:</strong> Light-colored version for dark
+                    backgrounds
+                    <br />
+                    <strong>Fallback:</strong> Uses header logo or main logo if
+                    not provided
+                  </div>
+                  <div
+                    className="file-upload"
+                    onClick={() =>
+                      document.getElementById("logo-header-dark-input").click()
+                    }
+                  >
+                    <input
+                      id="logo-header-dark-input"
+                      type="file"
+                      accept=".svg"
+                      onChange={handleLogoHeaderDarkChange}
+                    />
+                    <div className="file-upload-icon">📁</div>
+                    <div className="file-upload-text">
+                      {logoHeaderDarkFile
+                        ? logoHeaderDarkFile.name
+                        : "Click to upload logo-header-dark.svg"}
+                    </div>
+                  </div>
+                  {brand && (
+                    <div className="asset-preview">
+                      <img
+                        src={`${brandApi
+                          .getLogoUrl(brand.shortcode)
+                          .replace(
+                            "logo.svg",
+                            "logo-header-dark.svg"
+                          )}?t=${Date.now()}`}
+                        alt="Current header dark logo"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                      <div className="asset-preview-info">
+                        <div className="asset-preview-name">
+                          Current Header Dark Logo
+                        </div>
                       </div>
                     </div>
                   )}

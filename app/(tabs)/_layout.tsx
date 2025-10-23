@@ -100,6 +100,7 @@ export default function TabLayout() {
                 width={100}
                 height={32}
                 style={{ marginLeft: 16, marginBottom: 8 }}
+                variant="header"
               />
             ),
             headerRight: () => (
@@ -131,6 +132,7 @@ export default function TabLayout() {
                 width={100}
                 height={32}
                 style={{ marginLeft: 16, marginBottom: 8 }}
+                variant="header"
               />
             ),
             headerRight: () => (
@@ -167,6 +169,7 @@ export default function TabLayout() {
                 width={100}
                 height={32}
                 style={{ marginLeft: 16, marginBottom: 8 }}
+                variant="header"
               />
             ),
             headerRight: () => (
@@ -199,6 +202,7 @@ export default function TabLayout() {
                 width={100}
                 height={32}
                 style={{ marginLeft: 16, marginBottom: 8 }}
+                variant="header"
               />
             ),
             headerRight: () => (
@@ -235,6 +239,7 @@ export default function TabLayout() {
                 width={100}
                 height={32}
                 style={{ marginLeft: 16, marginBottom: 8 }}
+                variant="header"
               />
             ),
             headerRight: () => (

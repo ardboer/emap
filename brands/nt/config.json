@@ -18,10 +18,10 @@
         "icon": "#687076",
         "tabIconDefault": "#687076",
         "tabIconSelected": "#00AECA",
-        "tabBarBackground": "#fff",
+        "tabBarBackground": "#ffffff",
         "progressIndicator": "#00AECA",
-        "headerBackground": "#00334c",
-        "searchIcon": "#FFFFFF"
+        "headerBackground": "#ffffff",
+        "searchIcon": "#687076"
       },
       "dark": {
         "primary": "#fff",
@@ -29,7 +29,7 @@
         "text": "#ECEDEE",
         "icon": "#9BA1A6",
         "tabIconDefault": "#9BA1A6",
-        "tabIconSelected": "#fff",
+        "tabIconSelected": "#ffffff",
         "tabBarBackground": "#151718",
         "progressIndicator": "#fff",
         "headerBackground": "#000000",

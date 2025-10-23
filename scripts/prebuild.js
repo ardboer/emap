@@ -1030,13 +1030,34 @@ const generateLogoRegistry = () => {
   try {
     // Discover all brands with logo.svg files
     const brandLogos = [];
+    const brandHeaderLogos = [];
+    const brandHeaderDarkLogos = [];
 
     validBrands.forEach((brandShortcode) => {
       const logoPath = path.join(brandsDir, brandShortcode, "logo.svg");
+      const headerLogoPath = path.join(
+        brandsDir,
+        brandShortcode,
+        "logo-header.svg"
+      );
+      const headerDarkLogoPath = path.join(
+        brandsDir,
+        brandShortcode,
+        "logo-header-dark.svg"
+      );
+
       if (fs.existsSync(logoPath)) {
         brandLogos.push(brandShortcode);
       } else {
         console.warn(`⚠️  Logo not found for brand: ${brandShortcode}`);
+      }
+
+      if (fs.existsSync(headerLogoPath)) {
+        brandHeaderLogos.push(brandShortcode);
+      }
+
+      if (fs.existsSync(headerDarkLogoPath)) {
+        brandHeaderDarkLogos.push(brandShortcode);
       }
     });
 
@@ -1052,10 +1073,52 @@ import React from "react";
 ${brandLogos
   .map((b) => `import ${b.toUpperCase()}Logo from "@/brands/${b}/logo.svg";`)
   .join("\n")}
+${
+  brandHeaderLogos.length > 0
+    ? brandHeaderLogos
+        .map(
+          (b) =>
+            `import ${b.toUpperCase()}HeaderLogo from "@/brands/${b}/logo-header.svg";`
+        )
+        .join("\n")
+    : ""
+}
+${
+  brandHeaderDarkLogos.length > 0
+    ? brandHeaderDarkLogos
+        .map(
+          (b) =>
+            `import ${b.toUpperCase()}HeaderDarkLogo from "@/brands/${b}/logo-header-dark.svg";`
+        )
+        .join("\n")
+    : ""
+}
 
 // Logo registry - maps brand shortcodes to their logo components
 export const BRAND_LOGOS: Record<string, React.ComponentType<any>> = {
 ${brandLogos.map((b) => `  ${b}: ${b.toUpperCase()}Logo,`).join("\n")}
+};
+
+// Header logo registry - maps brand shortcodes to their header logo components
+export const BRAND_HEADER_LOGOS: Record<string, React.ComponentType<any>> = {
+${
+  brandHeaderLogos.length > 0
+    ? brandHeaderLogos
+        .map((b) => `  ${b}: ${b.toUpperCase()}HeaderLogo,`)
+        .join("\n")
+    : ""
+}
+};
+
+// Header dark logo registry - maps brand shortcodes to their dark mode header logo components
+export const BRAND_HEADER_DARK_LOGOS: Record<string, React.ComponentType<any>> = {
+${
+  brandHeaderDarkLogos.length > 0
+    ? brandHeaderDarkLogos
+        .map((b) => `  ${b}: ${b.toUpperCase()}HeaderDarkLogo,`)
+        .join("\n")
+    : ""
+}
 };
 
 // Available brand shortcodes with logos
@@ -1070,6 +1133,16 @@ export type BrandLogoShortcode = typeof AVAILABLE_LOGO_BRANDS[number];
 export function hasBrandLogo(shortcode: string): shortcode is BrandLogoShortcode {
   return shortcode in BRAND_LOGOS;
 }
+
+// Check if a brand has a header logo in the registry
+export function hasBrandHeaderLogo(shortcode: string): boolean {
+  return shortcode in BRAND_HEADER_LOGOS;
+}
+
+// Check if a brand has a dark header logo in the registry
+export function hasBrandHeaderDarkLogo(shortcode: string): boolean {
+  return shortcode in BRAND_HEADER_DARK_LOGOS;
+}
 `;
 
     const registryPath = path.join(projectRoot, "brands", "logoRegistry.ts");
@@ -1077,6 +1150,12 @@ export function hasBrandLogo(shortcode: string): shortcode is BrandLogoShortcode
 
     console.log(`✅ Generated logo registry with ${brandLogos.length} brands`);
     console.log(`   Brands: ${brandLogos.join(", ")}`);
+    if (brandHeaderLogos.length > 0) {
+      console.log(`   Header logos: ${brandHeaderLogos.join(", ")}`);
+    }
+    if (brandHeaderDarkLogos.length > 0) {
+      console.log(`   Header dark logos: ${brandHeaderDarkLogos.join(", ")}`);
+    }
     console.log(`   File: brands/logoRegistry.ts`);
   } catch (error) {
     console.error(`❌ Failed to generate logo registry: ${error.message}`);
