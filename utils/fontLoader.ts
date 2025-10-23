@@ -14,6 +14,7 @@
 const fontFiles = {
   'Klavika-Regular-Regular': require('../assets/fonts/Klavika-Regular-Regular.otf'),
   'SpaceMono-Regular': require('../assets/fonts/SpaceMono-Regular.ttf'),
+  'antenna-cond': require('../assets/fonts/antenna-cond.ttf'),
 };
 
 /**

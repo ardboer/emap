@@ -37,8 +37,8 @@
       }
     },
     "fonts": {
-      "primary": "System",
-      "secondary": "System"
+      "primary": "antenna-cond",
+      "secondary": "antenna-cond"
     }
   },
   "branding": {
