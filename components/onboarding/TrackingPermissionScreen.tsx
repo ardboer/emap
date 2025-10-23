@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   infoBox: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    backgroundColor: "rgba(10, 126, 164, 0.1)",
     padding: 16,
     borderRadius: 12,
     gap: 12,

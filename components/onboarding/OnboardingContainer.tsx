@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   progressBarSegment: {
     flex: 1,
     height: 4,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    backgroundColor: "#ccc",
     borderRadius: 2,
   },
   progressBarSegmentActive: {

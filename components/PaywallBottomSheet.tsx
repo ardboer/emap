@@ -73,7 +73,6 @@ export function PaywallBottomSheet({
   const backgroundColor = Colors[colorScheme ?? "light"].background;
   const textColor = Colors[colorScheme ?? "light"].text;
   const primaryColor = colors?.[colorScheme ?? "light"].primary || "#007AFF";
-
   const benefits = [
     "Full access to all premium articles",
     "Ad-free reading experience",
@@ -159,7 +158,7 @@ export function PaywallBottomSheet({
                     <IconSymbol
                       name="checkmark"
                       size={16}
-                      color="#FFFFFF"
+                      color={isDark ? "#666" : "#ffffff"}
                       weight="bold"
                     />
                   </View>
