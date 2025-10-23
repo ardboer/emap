@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>metropolis.co.uk.constructionnews</string>
+	<string>metropolis.net.nursingtimes</string>
 	<key>PROJECT_ID</key>
 	<string>mobileapps-cone-fab-reactnativ</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:429649960983:ios:61d9dc1d7cb44b5d6fbc52</string>
+	<string>1:429649960983:ios:6d5d76f26ebec2986fbc52</string>
 </dict>
 </plist>
