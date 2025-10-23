@@ -56,13 +56,15 @@ export default function SwipeableTabBar({
   useEffect(() => {
     if (tabLayouts.length > 0 && tabLayouts[activeTabIndex]) {
       const activeTab = tabLayouts[activeTabIndex];
+
+      // Indicator is now inside ScrollView, so use x directly without adjustment
       indicatorX.value = withSpring(activeTab.x, {
-        damping: 20,
-        stiffness: 90,
+        damping: 100,
+        stiffness: 180,
       });
       indicatorWidth.value = withSpring(activeTab.width, {
-        damping: 20,
-        stiffness: 90,
+        damping: 100,
+        stiffness: 180,
       });
 
       // Auto-scroll to keep active tab visible
@@ -107,37 +109,40 @@ export default function SwipeableTabBar({
           contentContainerStyle={styles.scrollContent}
           style={styles.scrollView}
         >
-          {tabs.map((tab, index) => (
-            <TouchableOpacity
-              key={tab.id}
-              style={styles.tab}
-              onPress={() => handleTabPress(index)}
-              onLayout={(event) => handleTabLayout(index, event)}
-              activeOpacity={0.7}
-            >
-              <ThemedText
-                style={[
-                  styles.tabText,
-                  {
-                    color: index === activeTabIndex ? primaryColor : textColor,
-                    opacity: index === activeTabIndex ? 1 : 0.6,
-                  },
-                ]}
+          <View style={styles.tabsWrapper}>
+            {tabs.map((tab, index) => (
+              <TouchableOpacity
+                key={tab.id}
+                style={styles.tab}
+                onPress={() => handleTabPress(index)}
+                onLayout={(event) => handleTabLayout(index, event)}
+                activeOpacity={0.7}
               >
-                {tab.title}
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <ThemedText
+                  style={[
+                    styles.tabText,
+                    {
+                      color:
+                        index === activeTabIndex ? primaryColor : textColor,
+                      opacity: index === activeTabIndex ? 1 : 0.6,
+                    },
+                  ]}
+                >
+                  {tab.title}
+                </ThemedText>
+              </TouchableOpacity>
+            ))}
 
-        {/* Animated indicator */}
-        <Animated.View
-          style={[
-            styles.indicator,
-            { backgroundColor: primaryColor },
-            indicatorStyle,
-          ]}
-        />
+            {/* Animated indicator - now inside ScrollView */}
+            <Animated.View
+              style={[
+                styles.indicator,
+                { backgroundColor: primaryColor },
+                indicatorStyle,
+              ]}
+            />
+          </View>
+        </ScrollView>
       </View>
 
       {/* Swipeable Content */}
@@ -169,6 +174,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: "center",
     minWidth: screenWidth,
+  },
+  tabsWrapper: {
+    flexDirection: "row",
+    position: "relative",
+    height: "100%",
   },
   tab: {
     paddingHorizontal: 20,

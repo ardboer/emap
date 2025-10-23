@@ -88,7 +88,7 @@ class BrandManager {
     // Check brand key file first (set by prebuild script)
     console.log("🔍 Brand key file brand:", ACTIVE_BRAND);
     if (ACTIVE_BRAND && validateShortcode(ACTIVE_BRAND)) {
-      console.log("✅ Using brand key file brand:", ACTIVE_BRAND);
+      // console.log("✅ Using brand key file brand:", ACTIVE_BRAND);
       return ACTIVE_BRAND;
     }
 
