@@ -105,41 +105,62 @@ async function verifyAndroidConfig(shortcode, expectedPackageName) {
     const jsonContent = await fs.readFile(jsonPath, "utf8");
     const parsedJson = JSON.parse(jsonContent);
 
-    // Extract package name from first client
-    const packageNameFound =
-      parsedJson.client?.[0]?.client_info?.android_client_info?.package_name;
+    // Search through all clients to find matching package name
+    // This handles shared Firebase projects with multiple brands
+    const clients = parsedJson.client || [];
 
-    if (!packageNameFound) {
+    if (clients.length === 0) {
       return {
         configured: false,
         fileExists: true,
         filePath: relativePath,
         packageNameMatch: false,
         packageNameFound: null,
-        error: "package_name not found in google-services.json",
+        error: "No clients found in google-services.json",
       };
     }
 
-    // Check if package name matches
-    const packageNameMatch = packageNameFound === expectedPackageName;
+    // Find the client with matching package name
+    let matchingClient = null;
+    let allPackageNames = [];
 
-    if (!packageNameMatch) {
+    for (const client of clients) {
+      const packageName =
+        client?.client_info?.android_client_info?.package_name;
+      if (packageName) {
+        allPackageNames.push(packageName);
+        if (packageName === expectedPackageName) {
+          matchingClient = client;
+          break;
+        }
+      }
+    }
+
+    // If no matching client found
+    if (!matchingClient) {
+      const foundPackages =
+        allPackageNames.length > 0 ? allPackageNames.join(", ") : "none";
+
       return {
         configured: false,
         fileExists: true,
         filePath: relativePath,
         packageNameMatch: false,
-        packageNameFound,
-        error: `Package name mismatch: expected '${expectedPackageName}', found '${packageNameFound}'`,
+        packageNameFound: allPackageNames[0] || null,
+        allPackageNames,
+        error: `Package name mismatch: expected '${expectedPackageName}', found: ${foundPackages}`,
       };
     }
 
+    // Matching client found
     return {
       configured: true,
       fileExists: true,
       filePath: relativePath,
       packageNameMatch: true,
-      packageNameFound,
+      packageNameFound: expectedPackageName,
+      allPackageNames,
+      clientIndex: clients.indexOf(matchingClient),
       error: null,
     };
   } catch (error) {
