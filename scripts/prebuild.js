@@ -620,8 +620,8 @@ const updateKeystoreAlias = () => {
 
   let gradleContent = fs.readFileSync(gradlePropertiesPath, "utf8");
 
-  // Generate key alias dynamically using brand name
-  const keyAlias = `${brand}-key`;
+  // Generate key alias dynamically using full brand name (kebab-case)
+  const keyAlias = brandConfig.name.toLowerCase().replace(/\s+/g, "-") + "-key";
 
   // Update the key alias in gradle.properties
   gradleContent = gradleContent.replace(
