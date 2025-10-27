@@ -1,14 +1,33 @@
+import { getBrandEditorImage } from "@/brands/editorImageRegistry";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
-import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { OnboardingStepProps } from "./types";
 
 export function WelcomeScreen({ onNext, onSkip }: OnboardingStepProps) {
   const { brandConfig, colors } = useBrandConfig();
   const primaryColor = colors?.light.primary || "#0a7ea4";
+  const [imageError, setImageError] = useState(false);
+
+  // Determine editor image source using auto-generated registry
+  let editorImageSource = null;
+  if (
+    brandConfig?.onboarding?.editorImage &&
+    !imageError &&
+    brandConfig.shortcode
+  ) {
+    editorImageSource = getBrandEditorImage(brandConfig.shortcode);
+  }
+
+  // Get editor quote or use default
+  const editorQuote =
+    brandConfig?.onboarding?.editorQuote &&
+    brandConfig.onboarding.editorQuote.trim() !== ""
+      ? brandConfig.onboarding.editorQuote
+      : "Stay informed with the latest news, in-depth analysis, and exclusive content from our editorial team.";
 
   return (
     <ThemedView style={styles.container}>
@@ -18,19 +37,40 @@ export function WelcomeScreen({ onNext, onSkip }: OnboardingStepProps) {
           <BrandLogo width={200} height={80} variant="header" />
         </View>
 
-        {/* Placeholder for editor image */}
-        <View style={styles.imagePlaceholder}>
-          <ThemedText style={styles.imagePlaceholderText}>👤</ThemedText>
+        {/* Editor image or placeholder */}
+        <View style={styles.editorSection}>
+          {editorImageSource ? (
+            <Image
+              source={editorImageSource}
+              style={styles.editorImage}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <ThemedText style={styles.imagePlaceholderText}>👤</ThemedText>
+            </View>
+          )}
+
+          {/* Editor name and title */}
+          {brandConfig?.onboarding?.editorName && (
+            <View style={styles.editorInfo}>
+              <ThemedText style={styles.editorName}>
+                {brandConfig.onboarding.editorName}
+              </ThemedText>
+              {brandConfig.onboarding.editorJobTitle && (
+                <ThemedText style={styles.editorJobTitle}>
+                  - {brandConfig.onboarding.editorJobTitle}
+                </ThemedText>
+              )}
+            </View>
+          )}
         </View>
 
         <ThemedText type="title" style={styles.title}>
           Welcome to {brandConfig?.displayName || "Our App"}
         </ThemedText>
 
-        <ThemedText style={styles.description}>
-          Stay informed with the latest news, in-depth analysis, and exclusive
-          content from our editorial team.
-        </ThemedText>
+        <ThemedText style={styles.description}>{editorQuote}</ThemedText>
       </ThemedView>
 
       <ThemedView style={styles.buttonContainer}>
@@ -59,6 +99,16 @@ const styles = StyleSheet.create({
   logoContainer: {
     marginBottom: 32,
   },
+  editorSection: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  editorImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 12,
+  },
   imagePlaceholder: {
     width: 120,
     height: 120,
@@ -66,7 +116,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#e0e0e0",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 12,
+  },
+  editorInfo: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
+  },
+  editorName: {
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  editorJobTitle: {
+    fontSize: 14,
+    opacity: 0.7,
+    textAlign: "center",
   },
   imagePlaceholderText: {
     fontSize: 40,

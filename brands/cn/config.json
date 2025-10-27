@@ -48,6 +48,9 @@
     "splash": "./assets/splash.png",
     "iconBackgroundColor": "#ffffff"
   },
+  "onboarding": {
+    "editorQuote": ""
+  },
   "features": {
     "enablePodcasts": true,
     "enableClinical": false,

@@ -69,6 +69,12 @@ export interface BrandConfig {
     enableAsk: boolean;
     enableMagazine: boolean;
   };
+  onboarding?: {
+    editorQuote: string;
+    editorImage?: string;
+    editorName?: string;
+    editorJobTitle?: string;
+  };
   misoConfig?: MisoConfig;
   testArticleId?: string;
 }

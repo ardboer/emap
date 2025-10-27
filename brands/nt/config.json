@@ -51,6 +51,12 @@
     "splash": "./assets/splash.png",
     "iconBackgroundColor": "#00334c"
   },
+  "onboarding": {
+    "editorQuote": "Welcome to the Nursing Times app, allowing you to take our content with you wherever you go.",
+    "editorImage": "editor.jpg",
+    "editorName": "Steve Ford",
+    "editorJobTitle": "Editor-in-Chief"
+  },
   "features": {
     "enablePodcasts": false,
     "enableClinical": true,
