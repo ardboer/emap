@@ -4,6 +4,9 @@ import { RichContentRenderer } from "@/components/RichContentRenderer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TrendingArticles from "@/components/TrendingArticles";
+import { useAuth } from "@/contexts/AuthContext";
+import { getAnonymousId } from "@/services/anonymousId";
+import { trackArticleView } from "@/services/miso";
 import { Article, StructuredContentNode } from "@/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
@@ -31,6 +34,7 @@ const HEADER_HEIGHT = screenHeight * 0.4;
 
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>(); // const id = 345162; //
+  const { user, isAuthenticated } = useAuth();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +99,14 @@ export default function ArticleScreen() {
         const fullArticle = await fetchSingleArticle(id);
 
         setArticle(fullArticle);
+
+        // Track article view with Miso
+        const anonymousId = await getAnonymousId();
+        trackArticleView({
+          articleId: id,
+          userId: isAuthenticated ? user?.userId : undefined,
+          anonymousId,
+        });
       } catch (err) {
         setError("Failed to load article");
         console.error("Error loading article:", err);
@@ -104,7 +116,7 @@ export default function ArticleScreen() {
     };
 
     loadArticle();
-  }, [id]);
+  }, [id, isAuthenticated, user?.userId]);
 
   // Fetch related articles for swipe navigation
   useEffect(() => {

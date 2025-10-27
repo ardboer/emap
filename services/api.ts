@@ -8,6 +8,9 @@ import {
 } from "@/types";
 import { getAnonymousId } from "./anonymousId";
 
+// Re-export brandManager for use in other services
+export { brandManager };
+
 // Get API configuration from active brand
 function getApiConfig() {
   const config = brandManager.getApiConfig();
