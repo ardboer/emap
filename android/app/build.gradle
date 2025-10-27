@@ -103,7 +103,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.emap.app'
+    namespace 'metropolis.net.nursingtimes'
     defaultConfig {
         applicationId 'metropolis.net.nursingtimes'
         minSdkVersion rootProject.ext.minSdkVersion

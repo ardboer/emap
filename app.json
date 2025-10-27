@@ -6,15 +6,19 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./brands/nt/assets/icon.png",
-    "scheme": "emap",
+    "scheme": "nt",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.emap.app",
+      "bundleIdentifier": "metropolis.net.nursingtimes",
       "config": {
         "usesNonExemptEncryption": false
-      }
+      },
+      "associatedDomains": [
+        "applinks:www.nursingtimes.net",
+        "applinks:nursingtimes.net"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +26,479 @@
         "backgroundColor": "#00334c"
       },
       "edgeToEdgeEnabled": true,
-      "package": "metropolis.net.nursingtimes"
+      "package": "metropolis.net.nursingtimes",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/event"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.constructionnews.co.uk",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "www.constructionnews.co.uk",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "www.constructionnews.co.uk",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "constructionnews.co.uk",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "constructionnews.co.uk",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "constructionnews.co.uk",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.constructionnews.co.uk",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "www.constructionnews.co.uk",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "www.constructionnews.co.uk",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "constructionnews.co.uk",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "constructionnews.co.uk",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "constructionnews.co.uk",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "updates": {
       "url": "https://u.expo.dev/17cbc49f-0d9b-4eb4-a9ff-4b3981b607bb"

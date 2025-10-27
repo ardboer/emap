@@ -4833,6 +4833,11 @@ expo-system-ui@~6.0.7:
     "@react-native/normalize-colors" "0.81.4"
     debug "^4.3.2"
 
+expo-tracking-transparency@~6.0.7:
+  version "6.0.7"
+  resolved "https://registry.npmjs.org/expo-tracking-transparency/-/expo-tracking-transparency-6.0.7.tgz"
+  integrity sha512-GOMgrVYVWLuC70F/BnH3lNfRiiiO7RWAXEIEz1gIEHZ4ki5aOzcBIe2QmqEqOuVafrZnhTUwcfFWMZ1IYCGL7Q==
+
 expo-updates-interface@~2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/expo-updates-interface/-/expo-updates-interface-2.0.0.tgz"

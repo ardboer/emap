@@ -1249,6 +1249,39 @@ export async function fetchSearchResults(query: string): Promise<any[]> {
 }
 
 // Magazine API Base URL
+// Fetch post ID by slug for deep linking
+export async function getPostBySlug(slug: string): Promise<{ id: number }> {
+  try {
+    const { baseUrl, hash } = getApiConfig();
+    const endpoint = `/wp-json/mbm-apps/v1/get-post-by-slug/?slug=${encodeURIComponent(
+      slug
+    )}&hash=${hash}&_fields=id`;
+
+    console.log(`🔗 Resolving slug to ID: ${slug}`);
+    console.log(`🔗 API call: ${baseUrl}${endpoint}`);
+
+    const response = await fetch(`${baseUrl}${endpoint}`);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch post by slug: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const data = await response.json();
+
+    if (!data || !data.id) {
+      throw new Error("Invalid response: missing id field");
+    }
+
+    console.log(`✅ Resolved slug "${slug}" to ID: ${data.id}`);
+    return { id: data.id };
+  } catch (error) {
+    console.error("❌ Error fetching post by slug:", error);
+    throw error;
+  }
+}
+
 const MAGAZINE_API_BASE_URL = "https://emap-epaper-development.gdkzr.com";
 
 // Magazine API Functions

@@ -1,8 +1,18 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import React from "react";
-import { Platform, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  isTrackingAvailable,
+  requestTrackingPermission,
+} from "@/services/tracking";
+import React, { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { OnboardingStepProps } from "./types";
 import { useBrandColors } from "./useBrandColors";
 
@@ -11,6 +21,7 @@ export function TrackingPermissionScreen({
   onSkip,
 }: OnboardingStepProps) {
   const { primaryColor } = useBrandColors();
+  const [isLoading, setIsLoading] = useState(false);
 
   // This screen should only be shown on iOS
   if (Platform.OS !== "ios") {
@@ -18,10 +29,42 @@ export function TrackingPermissionScreen({
     return null;
   }
 
-  const handleRequestPermission = () => {
-    // TODO: Implement actual tracking permission request using AppTrackingTransparency
-    // For now, just proceed to next step
+  // Check if tracking is available (iOS 14+)
+  if (!isTrackingAvailable()) {
+    // If ATT is not available, skip this step
     onNext();
+    return null;
+  }
+
+  const handleRequestPermission = async () => {
+    setIsLoading(true);
+
+    try {
+      const result = await requestTrackingPermission();
+
+      // Log the result for debugging
+      console.log("Tracking permission result:", result);
+
+      // Proceed to next step regardless of the user's choice
+      // The permission status is already stored in AsyncStorage by the service
+      onNext();
+    } catch (error) {
+      console.error("Error requesting tracking permission:", error);
+
+      // Show error feedback to user
+      Alert.alert(
+        "Permission Error",
+        "There was an error requesting tracking permission. Please try again later.",
+        [
+          {
+            text: "Continue",
+            onPress: () => onNext(),
+          },
+        ]
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,10 +99,19 @@ export function TrackingPermissionScreen({
 
       <ThemedView style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.primaryButton, { backgroundColor: primaryColor }]}
+          style={[
+            styles.primaryButton,
+            { backgroundColor: primaryColor },
+            isLoading && styles.buttonDisabled,
+          ]}
           onPress={handleRequestPermission}
+          disabled={isLoading}
         >
-          <ThemedText style={styles.primaryButtonText}>Continue</ThemedText>
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <ThemedText style={styles.primaryButtonText}>Continue</ThemedText>
+          )}
         </TouchableOpacity>
 
         {/* <TouchableOpacity style={styles.secondaryButton} onPress={onSkip}>
@@ -135,6 +187,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   secondaryButton: {
     paddingVertical: 16,

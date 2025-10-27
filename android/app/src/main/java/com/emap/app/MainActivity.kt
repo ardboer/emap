@@ -1,4 +1,6 @@
 package com.emap.app
+
+import metropolis.net.nursingtimes.BuildConfig
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

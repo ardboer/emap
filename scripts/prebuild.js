@@ -92,6 +92,96 @@ appJson.expo.name = "emap";
 // Keep slug as "emap" for EAS project consistency
 appJson.expo.slug = "emap";
 
+// Configure deep linking for the brand
+console.log(`🔗 Configuring deep linking for ${brand}...`);
+
+// Set brand-specific URL scheme
+appJson.expo.scheme = brand;
+console.log(`✅ Set URL scheme: ${brand}`);
+
+// Extract domain from brand config
+const extractDomain = (brandConfig) => {
+  // Prefer apiConfig.baseUrl as it includes the full domain (e.g., www.nursingtimes.net)
+  // Fall back to domain field if baseUrl is not available
+  let domain = brandConfig.apiConfig?.baseUrl || brandConfig.domain || "";
+
+  // Remove protocol (https://, http://)
+  domain = domain.replace(/^https?:\/\//, "");
+
+  // Remove trailing slashes and paths
+  domain = domain.replace(/\/+.*$/, "");
+
+  return domain;
+};
+
+const domain = extractDomain(brandConfig);
+console.log(`✅ Extracted domain: ${domain}`);
+
+// Generate domain variants (with and without www)
+const domainVariants = [];
+if (domain.startsWith("www.")) {
+  domainVariants.push(domain); // www version
+  domainVariants.push(domain.replace("www.", "")); // non-www version
+} else {
+  domainVariants.push(domain); // non-www version
+  domainVariants.push(`www.${domain}`); // www version
+}
+
+console.log(`✅ Domain variants: ${domainVariants.join(", ")}`);
+
+// Configure iOS associated domains for Universal Links
+if (!appJson.expo.ios) {
+  appJson.expo.ios = {};
+}
+appJson.expo.ios.associatedDomains = domainVariants.map((d) => `applinks:${d}`);
+console.log(
+  `✅ Configured iOS associated domains: ${appJson.expo.ios.associatedDomains.join(
+    ", "
+  )}`
+);
+
+// Configure Android intent filters for App Links
+if (!appJson.expo.android) {
+  appJson.expo.android = {};
+}
+if (!appJson.expo.android.intentFilters) {
+  appJson.expo.android.intentFilters = [];
+}
+
+// Add intent filters for article and event paths for each domain variant
+domainVariants.forEach((domainVariant) => {
+  const intentFilter = {
+    action: "VIEW",
+    autoVerify: true,
+    data: [
+      {
+        scheme: "https",
+        host: domainVariant,
+        pathPrefix: "/article",
+      },
+      {
+        scheme: "https",
+        host: domainVariant,
+        pathPrefix: "/event",
+      },
+      {
+        scheme: "https",
+        host: domainVariant,
+        pathPrefix: "/",
+      },
+    ],
+    category: ["BROWSABLE", "DEFAULT"],
+  };
+
+  appJson.expo.android.intentFilters.push(intentFilter);
+});
+
+console.log(
+  `✅ Configured Android App Links for ${domainVariants.length} domain variants`
+);
+console.log(`   Domains: ${domainVariants.join(", ")}`);
+console.log(`   Paths: /article/*, /event/*, /*`);
+
 // Get bundle identifier from brand config
 const bundleId = brandConfig.bundleId;
 
@@ -102,17 +192,11 @@ if (!bundleId) {
 
 console.log(`📱 Using bundle ID: ${bundleId}`);
 
-// Use generic bundle identifier for iOS project structure (avoids pod rebuilds)
-const genericIOSBundleId = "com.emap.app";
-
-// Set generic iOS bundle identifier for project structure
-appJson.expo.ios.bundleIdentifier = genericIOSBundleId;
+// Set brand-specific bundle identifiers for both platforms
+appJson.expo.ios.bundleIdentifier = bundleId;
 appJson.expo.android.package = bundleId;
 
-// Use generic package structure for Android source files
-const genericPackageId = "com.emap.app";
-
-// Store the actual brand-specific bundle ID for iOS build configuration
+// Store the bundle ID in brandConfig for reference
 appJson.expo.extra.brandConfig.actualIOSBundleId = bundleId;
 
 // Update assets paths to use brand-specific assets
@@ -651,10 +735,10 @@ const updateAndroidBuildGradle = () => {
 
   let buildGradleContent = fs.readFileSync(buildGradlePath, "utf8");
 
-  // Update namespace to use generic package (stays consistent)
+  // Update namespace to use brand-specific bundle identifier
   buildGradleContent = buildGradleContent.replace(
     /namespace\s+['"][^'"]*['"]/,
-    `namespace '${genericPackageId}'`
+    `namespace '${bundleId}'`
   );
 
   // Update applicationId with the brand-specific bundle identifier
@@ -665,14 +749,84 @@ const updateAndroidBuildGradle = () => {
 
   fs.writeFileSync(buildGradlePath, buildGradleContent);
   console.log(`✅ Updated Android build.gradle:`);
-  console.log(`   - namespace: ${genericPackageId} (generic)`);
-  console.log(`   - applicationId: ${bundleId} (brand-specific)`);
+  console.log(`   - namespace: ${bundleId}`);
+  console.log(`   - applicationId: ${bundleId}`);
 };
 
 updateAndroidBuildGradle();
 
-// Setup generic Android source structure (one-time migration)
-const setupGenericAndroidStructure = () => {
+// Update BuildConfig imports in Kotlin files to match current brand namespace
+const updateKotlinBuildConfigImports = () => {
+  const kotlinFiles = [
+    path.join(
+      projectRoot,
+      "android",
+      "app",
+      "src",
+      "main",
+      "java",
+      "com",
+      "emap",
+      "app",
+      "MainActivity.kt"
+    ),
+    path.join(
+      projectRoot,
+      "android",
+      "app",
+      "src",
+      "main",
+      "java",
+      "com",
+      "emap",
+      "app",
+      "MainApplication.kt"
+    ),
+  ];
+
+  kotlinFiles.forEach((filePath) => {
+    if (!fs.existsSync(filePath)) {
+      console.log(`ℹ️  Kotlin file not found: ${path.basename(filePath)}`);
+      return;
+    }
+
+    try {
+      let content = fs.readFileSync(filePath, "utf8");
+
+      // Replace any existing BuildConfig import with the current brand's namespace
+      const buildConfigImportRegex = /import\s+[a-z.]+\.BuildConfig/g;
+      const newImport = `import ${bundleId}.BuildConfig`;
+
+      if (buildConfigImportRegex.test(content)) {
+        // Replace existing import
+        content = content.replace(buildConfigImportRegex, newImport);
+      } else {
+        // Add import after package declaration
+        const packageRegex = /(package\s+com\.emap\.app\s*\n)/;
+        if (packageRegex.test(content)) {
+          content = content.replace(
+            packageRegex,
+            `$1\nimport ${bundleId}.BuildConfig`
+          );
+        }
+      }
+
+      fs.writeFileSync(filePath, content);
+      console.log(
+        `✅ Updated BuildConfig import in ${path.basename(filePath)}`
+      );
+    } catch (error) {
+      console.error(
+        `❌ Failed to update ${path.basename(filePath)}: ${error.message}`
+      );
+    }
+  });
+};
+
+updateKotlinBuildConfigImports();
+
+// Setup brand-specific Android source structure
+const setupBrandAndroidStructure = () => {
   const androidSrcPath = path.join(
     projectRoot,
     "android",
@@ -682,107 +836,21 @@ const setupGenericAndroidStructure = () => {
     "java"
   );
 
-  const genericPackagePath = path.join(androidSrcPath, "com", "emap", "app");
+  // Create brand-specific package path
+  const packageParts = bundleId.split(".");
+  const brandPackagePath = path.join(androidSrcPath, ...packageParts);
 
-  // Check if generic structure already exists
-  if (fs.existsSync(genericPackagePath)) {
-    console.log(
-      `✅ Generic package structure already exists: ${genericPackageId}`
-    );
+  // Check if brand structure already exists
+  if (fs.existsSync(brandPackagePath)) {
+    console.log(`✅ Brand package structure already exists: ${bundleId}`);
     return;
   }
 
-  // Find existing brand-specific package directories
-  const possibleOldPaths = [
-    {
-      path: path.join(androidSrcPath, "metropolis", "net", "nursingtimes"),
-      packageId: "metropolis.net.nursingtimes",
-    },
-    {
-      path: path.join(
-        androidSrcPath,
-        "metropolis",
-        "co",
-        "uk",
-        "constructionnews"
-      ),
-      packageId: "metropolis.co.uk.constructionnews",
-    },
-  ];
-
-  let sourcePackageInfo = null;
-  for (const possibleOld of possibleOldPaths) {
-    if (fs.existsSync(possibleOld.path)) {
-      sourcePackageInfo = possibleOld;
-      break;
-    }
-  }
-
-  if (!sourcePackageInfo) {
-    console.log(
-      `ℹ️  No existing package structure found, creating generic structure`
-    );
-    fs.mkdirSync(genericPackagePath, { recursive: true });
-    return;
-  }
-
-  // Create generic package directory
-  fs.mkdirSync(genericPackagePath, { recursive: true });
-
-  // Move Kotlin files to generic package directory
-  const kotlinFiles = ["MainActivity.kt", "MainApplication.kt"];
-  kotlinFiles.forEach((file) => {
-    const oldFilePath = path.join(sourcePackageInfo.path, file);
-    const newFilePath = path.join(genericPackagePath, file);
-
-    if (fs.existsSync(oldFilePath)) {
-      // Read file content and update package declaration to generic
-      let fileContent = fs.readFileSync(oldFilePath, "utf8");
-
-      // Replace old package declaration with generic one
-      const oldPackageRegex = new RegExp(
-        `package\\s+${sourcePackageInfo.packageId.replace(/\./g, "\\.")}`
-      );
-      fileContent = fileContent.replace(
-        oldPackageRegex,
-        `package ${genericPackageId}`
-      );
-
-      // Write to new generic location
-      fs.writeFileSync(newFilePath, fileContent);
-      console.log(
-        `✅ Migrated ${file} from ${sourcePackageInfo.packageId} to ${genericPackageId}`
-      );
-
-      // Remove old file
-      fs.unlinkSync(oldFilePath);
-    }
-  });
-
-  // Clean up old directory structure
-  try {
-    fs.rmdirSync(sourcePackageInfo.path);
-
-    // Clean up parent directories if empty
-    const pathParts = sourcePackageInfo.path
-      .replace(androidSrcPath + path.sep, "")
-      .split(path.sep);
-    for (let i = pathParts.length - 1; i > 0; i--) {
-      const parentPath = path.join(androidSrcPath, ...pathParts.slice(0, i));
-      try {
-        fs.rmdirSync(parentPath);
-      } catch (error) {
-        break; // Directory not empty
-      }
-    }
-
-    console.log(`✅ Cleaned up old brand-specific package structure`);
-  } catch (error) {
-    // Directory not empty or doesn't exist, ignore
-  }
+  console.log(`ℹ️  Creating brand-specific package structure: ${bundleId}`);
+  fs.mkdirSync(brandPackagePath, { recursive: true });
 };
 
-setupGenericAndroidStructure();
+setupBrandAndroidStructure();
 
 // Setup generic iOS structure (when iOS project exists)
 const setupGenericIOSStructure = () => {
@@ -821,16 +889,8 @@ const setupGenericIOSStructure = () => {
 
   // This would require renaming Xcode project files and updating references
   // For now, we'll log the recommendation
-  console.log(`ℹ️  To complete iOS generic setup:`);
-  console.log(
-    `   1. Rename ${currentProjectName}.xcodeproj to ${genericProjectName}.xcodeproj`
-  );
-  console.log(
-    `   2. Update bundle identifier in Xcode to: ${genericIOSBundleId}`
-  );
-  console.log(
-    `   3. Use EAS build configuration to set final bundle ID at build time`
-  );
+  console.log(`✅ iOS project found: ${currentProjectName}`);
+  console.log(`📱 Bundle identifier will be set to: ${bundleId}`);
 };
 
 setupGenericIOSStructure();
@@ -954,6 +1014,169 @@ const updateAndroidDisplayName = () => {
 };
 
 updateAndroidDisplayName();
+
+// Update iOS URL schemes in Info.plist
+const updateIOSURLSchemes = () => {
+  const infoPlistPath = path.join(projectRoot, "ios", "emap", "Info.plist");
+
+  if (!fs.existsSync(infoPlistPath)) {
+    console.log(`ℹ️  iOS Info.plist not found, skipping URL scheme update`);
+    return;
+  }
+
+  try {
+    let plistContent = fs.readFileSync(infoPlistPath, "utf8");
+
+    // Check if CFBundleURLTypes exists
+    if (!plistContent.includes("<key>CFBundleURLTypes</key>")) {
+      console.log(`⚠️  CFBundleURLTypes not found in Info.plist`);
+      return;
+    }
+
+    // Build new URL schemes array with brand scheme first
+    const newSchemes = [brand, "emap", "com.emap.app"];
+    const uniqueSchemes = [...new Set(newSchemes)]; // Remove duplicates
+
+    const schemesXml = uniqueSchemes
+      .map((scheme) => `          <string>${scheme}</string>`)
+      .join("\n");
+
+    const newUrlTypes = `<key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+${schemesXml}
+        </array>
+      </dict>
+    </array>`;
+
+    // More precise regex that matches the complete CFBundleURLTypes block including nested arrays
+    const urlTypesRegex =
+      /<key>CFBundleURLTypes<\/key>\s*<array>\s*<dict>\s*<key>CFBundleURLSchemes<\/key>\s*<array>[\s\S]*?<\/array>\s*<\/dict>\s*<\/array>/;
+
+    if (!urlTypesRegex.test(plistContent)) {
+      console.log(`⚠️  Could not find properly formatted CFBundleURLTypes`);
+      return;
+    }
+
+    // Replace the CFBundleURLTypes section
+    const updatedContent = plistContent.replace(urlTypesRegex, newUrlTypes);
+
+    if (plistContent !== updatedContent) {
+      fs.writeFileSync(infoPlistPath, updatedContent);
+      console.log(`✅ Updated iOS URL schemes: ${uniqueSchemes.join(", ")}`);
+    } else {
+      console.log(`ℹ️  iOS URL schemes already correct`);
+    }
+  } catch (error) {
+    console.error(`❌ Failed to update iOS URL schemes: ${error.message}`);
+  }
+};
+
+updateIOSURLSchemes();
+// Update Android URL schemes and App Links in AndroidManifest.xml
+const updateAndroidURLSchemes = () => {
+  const manifestPath = path.join(
+    projectRoot,
+    "android",
+    "app",
+    "src",
+    "main",
+    "AndroidManifest.xml"
+  );
+
+  if (!fs.existsSync(manifestPath)) {
+    console.log(
+      `ℹ️  AndroidManifest.xml not found, skipping URL scheme update`
+    );
+    return;
+  }
+
+  try {
+    let manifestContent = fs.readFileSync(manifestPath, "utf8");
+
+    // Build URL schemes intent filter
+    const allSchemes = ["emap", brand]; // Always include emap + current brand
+    const uniqueSchemes = [...new Set(allSchemes)];
+
+    const schemeDataElements = uniqueSchemes
+      .map((scheme) => `        <data android:scheme="${scheme}"/>`)
+      .join("\n");
+
+    const customSchemeFilter = `      <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+${schemeDataElements}
+      </intent-filter>`;
+
+    // Build App Links intent filters for the current brand
+    let appLinksFilters = "";
+
+    if (domain) {
+      const appLinksFilter = `      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="https" android:host="${domain}"/>
+      </intent-filter>`;
+
+      appLinksFilters = appLinksFilter;
+
+      // Add variant without www if domain has www
+      if (domain.startsWith("www.")) {
+        const domainWithoutWww = domain.replace("www.", "");
+        appLinksFilters += `\n      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="https" android:host="${domainWithoutWww}"/>
+      </intent-filter>`;
+      }
+    }
+
+    // Find and replace all intent-filters within MainActivity
+    // Match from the LAUNCHER intent-filter to the closing </activity> tag
+    const activityRegex =
+      /(android:name="com\.emap\.app\.MainActivity"[\s\S]*?<intent-filter>\s*<action android:name="android\.intent\.action\.MAIN"\/>\s*<category android:name="android\.intent\.category\.LAUNCHER"\/>\s*<\/intent-filter>)([\s\S]*?)(<\/activity>)/;
+
+    const match = manifestContent.match(activityRegex);
+
+    if (!match) {
+      console.log(`⚠️  Could not find MainActivity in AndroidManifest.xml`);
+      return;
+    }
+
+    // Build the new intent filters section
+    const newIntentFilters = `\n${customSchemeFilter}${
+      appLinksFilters ? "\n" + appLinksFilters : ""
+    }\n    `;
+
+    // Replace everything between LAUNCHER filter and </activity>
+    const updatedContent = manifestContent.replace(
+      activityRegex,
+      `$1${newIntentFilters}$3`
+    );
+
+    if (manifestContent !== updatedContent) {
+      fs.writeFileSync(manifestPath, updatedContent);
+      console.log(
+        `✅ Updated Android URL schemes: ${uniqueSchemes.join(", ")}`
+      );
+      if (domain) {
+        console.log(`✅ Updated Android App Links for: ${domain}`);
+      }
+    } else {
+      console.log(`ℹ️  Android URL schemes already correct`);
+    }
+  } catch (error) {
+    console.error(`❌ Failed to update Android URL schemes: ${error.message}`);
+    console.error(error.stack);
+  }
+};
+
+updateAndroidURLSchemes();
 
 // Update iOS splash screen background color
 const updateIOSSplashBackgroundColor = () => {
@@ -1169,17 +1392,13 @@ console.log(
   `\n🎉 Pre-build process completed successfully for ${brandConfig.displayName}`
 );
 console.log(`📱 Android Bundle ID: ${bundleId}`);
-console.log(
-  `📱 iOS Bundle ID: ${genericIOSBundleId} → ${bundleId} (at build time)`
-);
+console.log(`📱 iOS Bundle ID: ${bundleId}`);
 console.log(`🎨 Brand: ${brand}`);
-console.log(`📁 Generic Android Package: ${genericPackageId}`);
-console.log(`📁 Generic iOS Bundle: ${genericIOSBundleId}`);
-console.log(`\n💡 Benefits of generic structure:`);
-console.log(`   • No cache clearing needed when switching brands`);
-console.log(`   • No pod rebuilds required for iOS`);
-console.log(`   • Faster brand switching`);
-console.log(`   • Consistent build artifacts`);
+console.log(`🌐 Domain: ${domain}`);
+console.log(`🔗 Deep Linking:`);
+console.log(`   • iOS Universal Links: applinks:${domain}`);
+console.log(`   • Android App Links: https://${domain}`);
+console.log(`   • Custom Scheme: ${brand}://`);
 console.log(`\n🚀 Next steps:`);
 console.log(`   1. Configure: node scripts/prebuild.js ${brand}`);
 console.log(`   2. Android: cd android && ./gradlew bundleRelease`);

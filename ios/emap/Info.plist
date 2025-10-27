@@ -27,6 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
+          <string>nt</string>
           <string>emap</string>
           <string>com.emap.app</string>
         </array>
@@ -53,6 +54,8 @@
     </dict>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <key>NSUserTrackingUsageDescription</key>
+    <string>We use tracking to provide personalized content and measure ad effectiveness while respecting your privacy.</string>
     <key>UIBackgroundModes</key>
     <array>
     	<string>remote-notification</string>

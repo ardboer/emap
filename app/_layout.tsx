@@ -218,6 +218,8 @@ export default function RootLayout() {
       console.error("❌ Error setting up notification handlers:", error);
     }
   };
+  // Deep linking is now handled by the catch-all route: app/[...slug].tsx
+  // Expo Router automatically routes URLs to the appropriate screen
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
