@@ -152,7 +152,15 @@ async function saveBrandAsset(shortcode, filename, fileBuffer) {
     }
 
     let filePath;
-    if (filename === "logo.svg") {
+    // Special files that live in the brand root directory
+    const rootFiles = [
+      "logo.svg",
+      "logo-header.svg",
+      "logo-header-dark.svg",
+      "editor.jpg",
+    ];
+
+    if (rootFiles.includes(filename)) {
       filePath = path.join(brandDir, filename);
     } else {
       // Other assets go in assets folder
@@ -174,7 +182,15 @@ async function saveBrandAsset(shortcode, filename, fileBuffer) {
 async function getBrandAsset(shortcode, filename) {
   try {
     let filePath;
-    if (filename === "logo.svg") {
+    // Special files that live in the brand root directory
+    const rootFiles = [
+      "logo.svg",
+      "logo-header.svg",
+      "logo-header-dark.svg",
+      "editor.jpg",
+    ];
+
+    if (rootFiles.includes(filename)) {
       filePath = path.join(BRANDS_DIR, shortcode, filename);
     } else {
       filePath = path.join(BRANDS_DIR, shortcode, "assets", filename);

@@ -38,6 +38,12 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
         icon: "./assets/icon.png",
         iconBackgroundColor: "#ffffff",
       },
+      onboarding: {
+        editorQuote: "",
+        editorImage: "",
+        editorName: "",
+        editorJobTitle: "",
+      },
       features: {
         enablePodcasts: false,
         enableClinical: false,
@@ -50,6 +56,7 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
   const [logoFile, setLogoFile] = useState(null);
   const [logoHeaderFile, setLogoHeaderFile] = useState(null);
   const [logoHeaderDarkFile, setLogoHeaderDarkFile] = useState(null);
+  const [editorImageFile, setEditorImageFile] = useState(null);
   const [assetFiles, setAssetFiles] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -150,6 +157,17 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
     }));
   };
 
+  // Update onboarding fields
+  const updateOnboarding = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      onboarding: {
+        ...prev.onboarding,
+        [field]: value,
+      },
+    }));
+  };
+
   const onSubmit = async (formData) => {
     setSubmitting(true);
     try {
@@ -196,6 +214,16 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
           logoHeaderDarkFile
         );
         toast.success("Header dark logo uploaded successfully");
+      }
+
+      // Upload editor image if provided
+      if (editorImageFile) {
+        await brandApi.uploadAsset(
+          formData.shortcode,
+          "editor.jpg",
+          editorImageFile
+        );
+        toast.success("Editor image uploaded successfully");
       }
 
       // Upload assets if provided
@@ -252,6 +280,18 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
     }
   };
 
+  const handleEditorImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validTypes = ["image/jpeg", "image/jpg", "image/png"];
+      if (!validTypes.includes(file.type)) {
+        toast.error("Editor image must be a JPG or PNG file");
+        return;
+      }
+      setEditorImageFile(file);
+    }
+  };
+
   const handleAssetChange = (assetName, e) => {
     const file = e.target.files[0];
     if (file) {
@@ -290,6 +330,12 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
             onClick={() => setActiveTab("fonts")}
           >
             Fonts
+          </button>
+          <button
+            className={`tab ${activeTab === "onboarding" ? "active" : ""}`}
+            onClick={() => setActiveTab("onboarding")}
+          >
+            Onboarding
           </button>
           <button
             className={`tab ${activeTab === "features" ? "active" : ""}`}
@@ -674,6 +720,143 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                     To add more fonts, place .ttf or .otf files in the{" "}
                     <code>assets/fonts/</code> directory and restart the server.
                   </div>
+                </div>
+              </>
+            )}
+            {activeTab === "onboarding" && (
+              <>
+                <div className="form-help" style={{ marginBottom: "1.5rem" }}>
+                  Configure the onboarding experience for new users. This
+                  includes the welcome screen with editor information.
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Editor Quote</label>
+                  <textarea
+                    className="form-input"
+                    value={config.onboarding?.editorQuote || ""}
+                    onChange={(e) =>
+                      updateOnboarding("editorQuote", e.target.value)
+                    }
+                    placeholder="e.g., Welcome to the app, allowing you to take our content with you wherever you go."
+                    rows={4}
+                    style={{ resize: "vertical", minHeight: "100px" }}
+                  />
+                  <div className="form-help">
+                    Welcome message shown on the first onboarding screen
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Editor Image</label>
+                  <div
+                    className="form-help"
+                    style={{ marginBottom: "0.75rem" }}
+                  >
+                    <strong>Usage:</strong> Photo of the editor shown on welcome
+                    screen
+                    <br />
+                    <strong>Format:</strong> JPG or PNG
+                    <br />
+                    <strong>Recommended:</strong> Square image, at least
+                    400×400px
+                    <br />
+                    <strong>File name:</strong> Will be saved as editor.jpg
+                  </div>
+                  <div
+                    className="file-upload"
+                    onClick={() =>
+                      document.getElementById("editor-image-input").click()
+                    }
+                  >
+                    <input
+                      id="editor-image-input"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={handleEditorImageChange}
+                    />
+                    <div className="file-upload-icon">📷</div>
+                    <div className="file-upload-text">
+                      {editorImageFile
+                        ? editorImageFile.name
+                        : "Click to upload editor image"}
+                    </div>
+                  </div>
+                  {brand && (
+                    <div className="asset-preview">
+                      <img
+                        src={`${brandApi.getAssetUrl(
+                          brand.shortcode,
+                          "editor.jpg"
+                        )}?t=${Date.now()}`}
+                        alt="Current editor"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                      <div className="asset-preview-info">
+                        <div className="asset-preview-name">
+                          Current Editor Image
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Editor Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={config.onboarding?.editorName || ""}
+                    onChange={(e) =>
+                      updateOnboarding("editorName", e.target.value)
+                    }
+                    placeholder="e.g., John Smith"
+                  />
+                  <div className="form-help">
+                    Name of the editor displayed on the welcome screen
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Editor Job Title</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={config.onboarding?.editorJobTitle || ""}
+                    onChange={(e) =>
+                      updateOnboarding("editorJobTitle", e.target.value)
+                    }
+                    placeholder="e.g., Editor-in-Chief"
+                  />
+                  <div className="form-help">
+                    Job title of the editor displayed on the welcome screen
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: "2rem",
+                    padding: "1rem",
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "6px",
+                    border: "1px solid #dee2e6",
+                  }}
+                >
+                  <h4 style={{ marginTop: 0, marginBottom: "0.5rem" }}>
+                    Preview Information
+                  </h4>
+                  <p style={{ marginBottom: "0.5rem", color: "#6c757d" }}>
+                    These settings control the welcome screen shown to new users
+                    during their first app launch. The editor image and
+                    information help personalize the onboarding experience.
+                  </p>
+                  <p style={{ marginBottom: 0, color: "#6c757d" }}>
+                    <strong>Note:</strong> After uploading an editor image, you
+                    may need to run the prebuild script to regenerate the editor
+                    image registry for the mobile app.
+                  </p>
                 </div>
               </>
             )}
