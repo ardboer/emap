@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { brandManager } from "@/config/BrandManager";
+import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import {
   checkNotificationPermission,
@@ -14,6 +15,7 @@ import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import React from "react";
 import {
+  ActivityIndicator,
   Alert,
   AppState,
   Linking,
@@ -35,6 +37,7 @@ interface TopicSubscription {
 }
 
 export function SettingsContent({ onClose }: SettingsContentProps) {
+  const { user, isAuthenticated, isLoading, error, login, logout } = useAuth();
   const [notificationStatus, setNotificationStatus] = React.useState<{
     enabled: boolean;
     loading: boolean;
@@ -412,6 +415,59 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
+      {/* Account Section */}
+      <ThemedView style={styles.section}>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          Account
+        </ThemedText>
+        {!isAuthenticated ? (
+          <>
+            <SettingsItem
+              title="Login"
+              subtitle="Sign in to access your account"
+              icon="person.circle.fill"
+              onPress={login}
+              rightElement={
+                isLoading ? (
+                  <ActivityIndicator size="small" color="#007AFF" />
+                ) : (
+                  <IconSymbol name="chevron.right" size={20} color="#666" />
+                )
+              }
+            />
+            {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}
+          </>
+        ) : (
+          <>
+            <ThemedView style={styles.userInfoContainer}>
+              <IconSymbol name="person.circle.fill" size={48} color="#007AFF" />
+              <ThemedView style={styles.userInfoText}>
+                <ThemedText style={styles.userEmail}>{user?.email}</ThemedText>
+                {user?.firstName && (
+                  <ThemedText style={styles.userName}>
+                    {user.firstName} {user.lastName}
+                  </ThemedText>
+                )}
+              </ThemedView>
+            </ThemedView>
+            <SettingsItem
+              title="Logout"
+              subtitle="Sign out of your account"
+              icon="rectangle.portrait.and.arrow.right"
+              onPress={logout}
+              rightElement={
+                isLoading ? (
+                  <ActivityIndicator size="small" color="#007AFF" />
+                ) : (
+                  <IconSymbol name="chevron.right" size={20} color="#666" />
+                )
+              }
+            />
+            {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}
+          </>
+        )}
+      </ThemedView>
+
       {/* Notifications Section */}
       <ThemedView style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -503,24 +559,6 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           }
           icon="trash.fill"
           onPress={handleClearCache}
-        />
-      </ThemedView>
-
-      <ThemedView style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>
-          Account
-        </ThemedText>
-        <SettingsItem
-          title="Profile"
-          subtitle="Manage your account settings"
-          icon="person.fill"
-          onPress={() => {}}
-        />
-        <SettingsItem
-          title="Privacy"
-          subtitle="Privacy and data settings"
-          icon="lock.fill"
-          onPress={() => {}}
         />
       </ThemedView>
 
@@ -679,5 +717,32 @@ const styles = StyleSheet.create({
   },
   settingsItemRight: {
     marginLeft: 16,
+  },
+  userInfoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  userInfoText: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  userEmail: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  userName: {
+    fontSize: 14,
+    opacity: 0.7,
+  },
+  errorText: {
+    color: "#FF3B30",
+    fontSize: 14,
+    marginTop: 8,
+    marginLeft: 20,
   },
 });

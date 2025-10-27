@@ -16,7 +16,10 @@ export interface BrandConfig {
   bundleId?: string;
   apiConfig: {
     baseUrl: string;
+    authUrl?: string;
+    jwtSecret?: string;
     hash: string;
+    authHash?: string;
     menuId?: number;
     maxNbOfItems?: number;
   };

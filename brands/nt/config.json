@@ -6,7 +6,10 @@
   "bundleId": "metropolis.net.nursingtimes",
   "apiConfig": {
     "baseUrl": "https://www.nursingtimes.net",
+    "authUrl": "https://staging-www.nursingtimes.net",
+    "jwtSecret": "4d428b80a95267746a0cb7a55e16955fbr5a09d3985e378aabdfc5179bf04vg5",
     "hash": "5506c4c9af9349c87a364b3b0b1988",
+    "authHash": "9cdd5fcf366d76e1a7b69b33129a73",
     "menuId": 162196,
     "maxNbOfItems": 10
   },

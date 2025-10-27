@@ -1,8 +1,15 @@
+import { brandManager } from "@/config/BrandManager";
 import { getPostBySlug } from "@/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Linking,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 /**
  * Catch-all route for deep linking
@@ -37,6 +44,31 @@ export default function DeepLinkHandler() {
         console.log("🔗 Deep link catch-all route activated");
         console.log("🔗 Current slug from URL:", slug);
         console.log("🔗 ========================================");
+
+        // Check if this is an authentication-related path
+        const authPaths = [
+          "auth",
+          "login",
+          "register",
+          "account",
+          "callback",
+          "oauth",
+          "signin",
+          "signup",
+          "mobile-app-login",
+        ];
+        const firstSegment = slug.split("/")[0].toLowerCase();
+
+        if (authPaths.includes(firstSegment)) {
+          console.log("🔗 Auth path detected, opening in browser:", slug);
+          const brandConfig = brandManager.getCurrentBrand();
+          await Linking.openURL(`https://${brandConfig.domain}/${slug}`);
+          console.log(
+            "🔗 Redirecting back to home after opening auth URL in browser"
+          );
+          router.replace("/");
+          return;
+        }
 
         // Check if this specific slug was recently processed (within last 3 seconds)
         const deepLinkKey = `deeplink_${slug}`;

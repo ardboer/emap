@@ -13,6 +13,7 @@ import "react-native-reanimated";
 
 import { OnboardingContainer } from "@/components/onboarding";
 import { AudioProvider } from "@/contexts/AudioContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { analyticsService } from "@/services/analytics";
 import { initializeFirebase } from "@/services/firebaseInit";
@@ -232,32 +233,37 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AudioProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="article/[id]"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen name="event/[id]" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="search"
-              options={{
-                presentation: "modal",
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-          {showOnboarding && (
-            <OnboardingContainer onComplete={handleOnboardingComplete} />
-          )}
-        </ThemeProvider>
-      </AudioProvider>
+      <AuthProvider>
+        <AudioProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="article/[id]"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="event/[id]"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="search"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="auto" />
+            {showOnboarding && (
+              <OnboardingContainer onComplete={handleOnboardingComplete} />
+            )}
+          </ThemeProvider>
+        </AudioProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }
