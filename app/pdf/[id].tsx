@@ -1,12 +1,21 @@
 import PDFViewer from "@/components/PDFViewer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { MagazineEdition } from "@/types";
-import { router, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function PDFScreen() {
+  const { brandName } = useBrandConfig();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [magazine, setMagazine] = useState<MagazineEdition | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,9 +68,30 @@ export default function PDFScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <PDFViewer magazine={magazine} onBack={handleBack} />
-    </View>
+    <>
+      <Stack.Screen
+        options={{
+          title: brandName || "Magazine",
+          headerShown: true,
+          headerBackTitle: "",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={handleBack}
+              style={{ marginLeft: Platform.OS === "ios" ? 0 : 8 }}
+            >
+              <Ionicons
+                name={Platform.OS === "ios" ? "chevron-back" : "arrow-back"}
+                size={28}
+                color="#007AFF"
+              />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <View style={styles.container}>
+        <PDFViewer magazine={magazine} onBack={handleBack} />
+      </View>
+    </>
   );
 }
 

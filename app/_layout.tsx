@@ -239,7 +239,10 @@ export default function RootLayout() {
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
             <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(tabs)"
+                options={{ headerShown: false, title: "" }}
+              />
               <Stack.Screen
                 name="article/[id]"
                 options={{ headerShown: false }}
@@ -247,6 +250,12 @@ export default function RootLayout() {
               <Stack.Screen
                 name="event/[id]"
                 options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="pdf/[id]"
+                options={{
+                  headerBackTitle: " ",
+                }}
               />
               <Stack.Screen
                 name="search"

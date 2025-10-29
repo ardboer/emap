@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { fetchMagazinePDF } from "@/services/api";
 import { MagazineEdition } from "@/types";
 import { parsePDFArticleUri } from "@/utils/pdfUriParser";
@@ -21,6 +22,7 @@ interface PDFViewerProps {
 }
 
 export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
+  const { brandName } = useBrandConfig();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,7 +161,7 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
     <ThemedView style={styles.header}>
       <ThemedView style={styles.headerContent}>
         <ThemedText type="defaultSemiBold" style={styles.headerTitle}>
-          {magazine.title || formatMagazineTitle(magazine.id)}
+          {brandName || "Magazine"}
         </ThemedText>
       </ThemedView>
       {/* <TouchableOpacity

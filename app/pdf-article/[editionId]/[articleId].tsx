@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { fetchPDFArticleDetail } from "@/services/api";
 import { PDFArticleDetail } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -106,40 +106,51 @@ export default function PDFArticleScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Scrollable Content */}
-      <Animated.ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        bounces={true}
-        alwaysBounceVertical={true}
-      >
-        {/* Article Content */}
-        <ThemedView style={styles.contentContainer}>
-          <ThemedView style={styles.metaContainer}>
-            <ThemedText style={styles.metaText}>Page {article.page}</ThemedText>
-            <ThemedText style={styles.metaSeparator}>•</ThemedText>
-            <ThemedText style={styles.metaText}>
-              {article.blocks.length} block
-              {article.blocks.length !== 1 ? "s" : ""}
+    <>
+      <Stack.Screen
+        options={{
+          title: "",
+          headerShown: true,
+          headerBackTitle: "",
+        }}
+      />
+      <View style={styles.container}>
+        {/* Scrollable Content */}
+        <Animated.ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          bounces={true}
+          alwaysBounceVertical={true}
+        >
+          {/* Article Content */}
+          <ThemedView style={styles.contentContainer}>
+            <ThemedView style={styles.metaContainer}>
+              <ThemedText style={styles.metaText}>
+                Page {article.page}
+              </ThemedText>
+              <ThemedText style={styles.metaSeparator}>•</ThemedText>
+              <ThemedText style={styles.metaText}>
+                {article.blocks.length} block
+                {article.blocks.length !== 1 ? "s" : ""}
+              </ThemedText>
+            </ThemedView>
+
+            <ThemedText type="title" style={styles.title}>
+              {article.title}
+            </ThemedText>
+
+            <ThemedView style={styles.divider} />
+
+            <ThemedText style={styles.articleText}>
+              {article.content.plain}
             </ThemedText>
           </ThemedView>
-
-          <ThemedText type="title" style={styles.title}>
-            {article.title}
-          </ThemedText>
-
-          <ThemedView style={styles.divider} />
-
-          <ThemedText style={styles.articleText}>
-            {article.content.plain}
-          </ThemedText>
-        </ThemedView>
-      </Animated.ScrollView>
-    </View>
+        </Animated.ScrollView>
+      </View>
+    </>
   );
 }
 

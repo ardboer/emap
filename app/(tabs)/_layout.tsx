@@ -45,6 +45,7 @@ export default function TabLayout() {
           tabBarActiveTintColor,
           tabBarInactiveTintColor,
           headerShown: true, // Enable headers by default
+          headerBackTitle: "", // Remove back button text
           tabBarButton: HapticTab,
           tabBarBackground: Platform.select({
             ios: route.name === "index" ? undefined : TabBarBackgroundIOS,
