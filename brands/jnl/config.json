@@ -60,7 +60,9 @@
       "Over 40 topics from anatomy to workforce"
     ],
     "primaryButtonText": "Subscribe Now",
-    "secondaryButtonText": "Sign In"
+    "primaryButtonUrl": "https://jnl.nursingtimes.net/subscribe",
+    "secondaryButtonText": "Sign In",
+    "secondaryButtonUrl": "https://jnl.nursingtimes.net/login"
   },
   "features": {
     "enablePodcasts": false,

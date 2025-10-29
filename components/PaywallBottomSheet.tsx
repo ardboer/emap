@@ -8,6 +8,7 @@ import React from "react";
 import {
   Animated,
   Dimensions,
+  Linking,
   Modal,
   StyleSheet,
   TouchableOpacity,
@@ -49,6 +50,28 @@ export function PaywallBottomSheet({
     primaryButtonText: "Subscribe Now",
     secondaryButtonText: "Sign In",
   };
+
+  // Handle primary button press - use URL if configured, otherwise callback
+  const handlePrimaryButtonPress = React.useCallback(() => {
+    if (paywallConfig.primaryButtonUrl) {
+      Linking.openURL(paywallConfig.primaryButtonUrl).catch((err) =>
+        console.error("Failed to open subscription URL:", err)
+      );
+    } else {
+      onSubscribe();
+    }
+  }, [paywallConfig.primaryButtonUrl, onSubscribe]);
+
+  // Handle secondary button press - use URL if configured, otherwise callback
+  const handleSecondaryButtonPress = React.useCallback(() => {
+    if (paywallConfig.secondaryButtonUrl) {
+      Linking.openURL(paywallConfig.secondaryButtonUrl).catch((err) =>
+        console.error("Failed to open sign in URL:", err)
+      );
+    } else {
+      onSignIn();
+    }
+  }, [paywallConfig.secondaryButtonUrl, onSignIn]);
 
   React.useEffect(() => {
     if (visible) {
@@ -189,7 +212,7 @@ export function PaywallBottomSheet({
                   styles.primaryButton,
                   { backgroundColor: primaryColor },
                 ]}
-                onPress={onSubscribe}
+                onPress={handlePrimaryButtonPress}
                 activeOpacity={0.8}
               >
                 <ThemedText
@@ -210,7 +233,7 @@ export function PaywallBottomSheet({
                       : "transparent",
                   },
                 ]}
-                onPress={onSignIn}
+                onPress={handleSecondaryButtonPress}
                 activeOpacity={0.8}
               >
                 <ThemedText

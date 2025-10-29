@@ -20,7 +20,9 @@ Add a `paywall` object to your brand's `config.json` file:
       "Over 40 topics from anatomy to workforce"
     ],
     "primaryButtonText": "Subscribe Now",
-    "secondaryButtonText": "Sign In"
+    "primaryButtonUrl": "https://www.nursingtimes.net/subscribe",
+    "secondaryButtonText": "Sign In",
+    "secondaryButtonUrl": "https://www.nursingtimes.net/login"
   }
 }
 ```
@@ -73,6 +75,7 @@ If no `paywall` configuration is provided in the brand config, the component wil
   ],
   primaryButtonText: "Subscribe Now",
   secondaryButtonText: "Sign In"
+  // Note: No URLs by default - will use callback props
 }
 ```
 
@@ -101,7 +104,9 @@ The benefits list is conditionally rendered:
       "Weekly digital magazine"
     ],
     "primaryButtonText": "Start Subscription",
-    "secondaryButtonText": "Already a member? Sign In"
+    "primaryButtonUrl": "https://www.constructionnews.co.uk/subscribe",
+    "secondaryButtonText": "Already a member? Sign In",
+    "secondaryButtonUrl": "https://www.constructionnews.co.uk/login"
   }
 }
 ```
@@ -114,7 +119,9 @@ The benefits list is conditionally rendered:
     "headline": "Premium Content",
     "subheadline": "Subscribe for full access",
     "primaryButtonText": "Subscribe",
-    "secondaryButtonText": "Sign In"
+    "primaryButtonUrl": "https://example.com/subscribe",
+    "secondaryButtonText": "Sign In",
+    "secondaryButtonUrl": "https://example.com/login"
   }
 }
 ```
@@ -135,7 +142,9 @@ interface BrandConfig {
     subheadline: string;
     benefits?: string[];
     primaryButtonText: string;
+    primaryButtonUrl?: string;
     secondaryButtonText: string;
+    secondaryButtonUrl?: string;
   };
 }
 ```
@@ -179,6 +188,7 @@ To test different paywall configurations:
 2. Rebuild the app or restart the development server
 3. Trigger the paywall by accessing premium content
 4. Verify all text and benefits display correctly
+5. Test button functionality (URLs or callbacks)
 
 ### Test Cases
 
@@ -188,6 +198,9 @@ To test different paywall configurations:
 - ✅ Without paywall configuration (should use defaults)
 - ✅ With custom button text
 - ✅ With long headlines/subheadlines (test text wrapping)
+- ✅ With button URLs configured (should open in browser)
+- ✅ Without button URLs (should call callback props)
+- ✅ Test URL opening on both iOS and Android
 
 ## Migration Notes
 
@@ -201,6 +214,8 @@ Previously, all paywall text was hardcoded in the component. The migration:
 4. ✅ Added `paywall` accessor to `useBrandConfig()` hook
 5. ✅ Implemented conditional rendering for benefits
 6. ✅ Fixed typo: "Subsribe" → "Subscribe"
+7. ✅ Added URL configuration for buttons
+8. ✅ Implemented smart button handlers (URL or callback)
 
 ### Backward Compatibility
 
@@ -209,6 +224,34 @@ The implementation is fully backward compatible:
 - Brands without `paywall` configuration will use sensible defaults
 - No breaking changes to existing functionality
 - All existing paywall behavior is preserved
+
+## URL Configuration Best Practices
+
+### When to Use URLs
+
+Use `primaryButtonUrl` and `secondaryButtonUrl` when:
+
+- You have a web-based subscription flow
+- You want to direct users to an external payment provider
+- Your authentication is handled via web interface
+- You need to track conversions through web analytics
+
+### When to Use Callbacks
+
+Use the callback props (`onSubscribe`, `onSignIn`) when:
+
+- You have in-app subscription handling (e.g., Apple In-App Purchase)
+- You want to show a native authentication flow
+- You need to perform actions before navigation
+- You want to keep users within the app
+
+### Hybrid Approach
+
+You can mix both approaches:
+
+- Use URL for primary button (web subscription)
+- Use callback for secondary button (in-app sign in)
+- Or vice versa, depending on your needs
 
 ## Future Enhancements
 
@@ -220,6 +263,8 @@ Potential future additions to the paywall configuration:
 - A/B testing variants
 - Localization support for multiple languages
 - Custom images or icons for benefits
+- Deep linking support for post-authentication return
+- Trial period messaging
 
 ## Related Files
 

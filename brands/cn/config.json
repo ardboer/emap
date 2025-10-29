@@ -61,7 +61,9 @@
       "Over 40 topics from anatomy to workforce"
     ],
     "primaryButtonText": "Subscribe Now",
-    "secondaryButtonText": "Sign In"
+    "primaryButtonUrl": "https://www.constructionnews.co.uk/subscribe",
+    "secondaryButtonText": "Sign In",
+    "secondaryButtonUrl": "https://www.constructionnews.co.uk/login"
   },
   "features": {
     "enablePodcasts": true,

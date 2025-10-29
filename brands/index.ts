@@ -80,7 +80,9 @@ export interface BrandConfig {
     subheadline: string;
     benefits?: string[];
     primaryButtonText: string;
+    primaryButtonUrl?: string;
     secondaryButtonText: string;
+    secondaryButtonUrl?: string;
   };
   misoConfig?: MisoConfig;
   testArticleId?: string;

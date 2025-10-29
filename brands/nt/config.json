@@ -67,7 +67,9 @@
       "Over 40 topics from anatomy to workforce"
     ],
     "primaryButtonText": "Subscribe Now",
-    "secondaryButtonText": "Sign In"
+    "primaryButtonUrl": "https://www.nursingtimes.net/subscribe",
+    "secondaryButtonText": "Sign In",
+    "secondaryButtonUrl": "https://www.nursingtimes.net/login"
   },
   "features": {
     "enablePodcasts": false,
