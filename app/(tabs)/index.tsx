@@ -39,6 +39,7 @@ export default function HighlightedScreen() {
   const [imageColors, setImageColors] = useState<{ [key: string]: string[] }>(
     {}
   );
+  const [isCarouselVisible, setIsCarouselVisible] = useState(true);
   const flatListRef = useRef<FlatList>(null);
   const { state: audioState } = useAudio();
 
@@ -163,7 +164,7 @@ export default function HighlightedScreen() {
   };
 
   const handleProgressComplete = () => {
-    if (!isUserInteracting) {
+    if (!isUserInteracting && isCarouselVisible) {
       analyticsService.logEvent("carousel_auto_advance", {
         from_position: currentIndex,
         to_position: (currentIndex + 1) % articles.length,
@@ -209,9 +210,11 @@ export default function HighlightedScreen() {
       ),
     });
 
-    // Resume playing after a short delay
+    // Resume playing after a short delay, but only if carousel is visible
     setTimeout(() => {
-      setIsPlaying(true);
+      if (isCarouselVisible) {
+        setIsPlaying(true);
+      }
     }, 500);
   };
 
@@ -222,8 +225,8 @@ export default function HighlightedScreen() {
     const index = Math.round(scrollPosition / screenWidth);
     setCurrentIndex(index);
 
-    // Ensure we resume playing after manual scroll
-    if (!isUserInteracting) {
+    // Ensure we resume playing after manual scroll, but only if carousel is visible
+    if (!isUserInteracting && isCarouselVisible) {
       setIsPlaying(true);
     }
   };
@@ -463,14 +466,21 @@ export default function HighlightedScreen() {
     previousIndexRef.current = currentIndex;
   }, [currentIndex, articles]);
 
-  // Log screen view when carousel is focused
+  // Log screen view when carousel is focused and handle visibility
   useFocusEffect(
     useCallback(() => {
       analyticsService.logScreenView("Highlights", "HighlightedScreen");
+      setIsCarouselVisible(true);
+      if (!isUserInteracting) {
+        setIsPlaying(true);
+      }
+
       return () => {
-        // Cleanup if needed
+        // Pause carousel when screen loses focus
+        setIsCarouselVisible(false);
+        setIsPlaying(false);
       };
-    }, [])
+    }, [isUserInteracting])
   );
 
   // Handle focus/blur events to pause/resume when screen is not active
@@ -680,7 +690,7 @@ export default function HighlightedScreen() {
         totalItems={articles.length}
         currentIndex={currentIndex}
         duration={SLIDE_DURATION}
-        isPlaying={isPlaying}
+        isPlaying={isPlaying && isCarouselVisible}
         onProgressComplete={handleProgressComplete}
       />
       <BrandLogo style={styles.brandLogo} width={100} height={35} />

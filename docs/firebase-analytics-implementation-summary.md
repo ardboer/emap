@@ -1,6 +1,5 @@
 # Firebase Analytics Implementation Summary
 
-**Date:** January 2025  
 **Status:** ✅ Complete  
 **Version:** 1.0
 
@@ -147,6 +146,22 @@ Firebase Analytics has been successfully integrated into the multi-brand news ap
 
 - `brand` parameter
 - `timestamp` parameter
+
+### 5. Paywall Tracking
+
+**What's Tracked:**
+
+- Paywall impressions
+- Configuration details (benefits, URLs)
+- Subscribe button clicks
+- Sign-in button clicks
+- Button text and destinations
+
+**Key Events:**
+
+- `paywall_shown`
+- `paywall_subscribe_clicked`
+- `paywall_signin_clicked`
 
 ---
 
@@ -317,6 +332,16 @@ Expected Events:
 ---
 
 ## Key Metrics to Monitor
+
+### Paywall Conversion
+
+| Metric                | Target | How to Measure                                       |
+| --------------------- | ------ | ---------------------------------------------------- |
+| Paywall Impression    | -      | Count of `paywall_shown` events                      |
+| Subscribe CTR         | > 10%  | `paywall_subscribe_clicked` / `paywall_shown`        |
+| Sign-in CTR           | > 5%   | `paywall_signin_clicked` / `paywall_shown`           |
+| Total Engagement Rate | > 15%  | (subscribe clicks + signin clicks) / impressions     |
+| URL vs Callback Split | -      | % of clicks with `has_url: true` vs `has_url: false` |
 
 ### Carousel Engagement
 

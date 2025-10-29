@@ -478,8 +478,99 @@ carousel_milestone_100 (W%)
 | `article_id`        | string | Article ID scrolled to           | Content interest    |
 | `timestamp`         | number | Unix timestamp                   | Time analysis       |
 
-**Analysis Insight:**  
+**Analysis Insight:**
 Backward scrolling indicates high engagement - users want to revisit content.
+
+---
+
+## Paywall Analytics
+
+The paywall tracking captures subscription prompt interactions to measure conversion funnel effectiveness.
+
+### Paywall Events
+
+#### `paywall_shown`
+
+**Trigger:** Paywall modal is displayed to user
+**Purpose:** Track paywall impressions and configuration
+
+| Parameter           | Type    | Description                      | Analysis Use         |
+| ------------------- | ------- | -------------------------------- | -------------------- |
+| `brand`             | string  | Brand shortcode                  | Segmentation         |
+| `headline`          | string  | Paywall headline text            | A/B testing          |
+| `has_benefits`      | boolean | Whether benefits list is shown   | Configuration impact |
+| `benefits_count`    | number  | Number of benefits displayed     | Content analysis     |
+| `has_primary_url`   | boolean | Whether primary button has URL   | Flow type            |
+| `has_secondary_url` | boolean | Whether secondary button has URL | Flow type            |
+| `timestamp`         | number  | Unix timestamp                   | Time analysis        |
+
+**Analysis Use Cases:**
+
+- Paywall impression rate
+- Configuration impact on conversion
+- A/B testing different headlines
+- Benefits list effectiveness
+
+#### `paywall_subscribe_clicked`
+
+**Trigger:** User clicks primary subscription button
+**Purpose:** Track subscription intent and button effectiveness
+
+| Parameter     | Type    | Description                          | Analysis Use      |
+| ------------- | ------- | ------------------------------------ | ----------------- |
+| `brand`       | string  | Brand shortcode                      | Segmentation      |
+| `button_text` | string  | Text on button clicked               | Button copy test  |
+| `has_url`     | boolean | Whether button opens URL or callback | Flow type         |
+| `url`         | string  | URL opened or "callback"             | Destination track |
+| `headline`    | string  | Paywall headline shown               | Context           |
+| `timestamp`   | number  | Unix timestamp                       | Time analysis     |
+
+**Key Metrics:**
+
+- Click-through rate (CTR): `paywall_subscribe_clicked` / `paywall_shown`
+- Conversion by button text
+- URL vs callback performance
+
+#### `paywall_signin_clicked`
+
+**Trigger:** User clicks secondary sign-in button
+**Purpose:** Track existing subscriber engagement
+
+| Parameter     | Type    | Description                          | Analysis Use      |
+| ------------- | ------- | ------------------------------------ | ----------------- |
+| `brand`       | string  | Brand shortcode                      | Segmentation      |
+| `button_text` | string  | Text on button clicked               | Button copy test  |
+| `has_url`     | boolean | Whether button opens URL or callback | Flow type         |
+| `url`         | string  | URL opened or "callback"             | Destination track |
+| `headline`    | string  | Paywall headline shown               | Context           |
+| `timestamp`   | number  | Unix timestamp                       | Time analysis     |
+
+**Key Metrics:**
+
+- Sign-in rate: `paywall_signin_clicked` / `paywall_shown`
+- Existing subscriber identification
+- Authentication flow effectiveness
+
+### Paywall Funnel Analysis
+
+```
+paywall_shown (100%)
+  ↓
+  ├─→ paywall_subscribe_clicked (X%)
+  │     ↓
+  │   [Subscription Flow]
+  │
+  └─→ paywall_signin_clicked (Y%)
+        ↓
+      [Authentication Flow]
+```
+
+**Key Conversion Metrics:**
+
+- **Subscription CTR:** % of impressions leading to subscribe click
+- **Sign-in CTR:** % of impressions leading to sign-in click
+- **Total Engagement:** Combined CTR of both buttons
+- **Button Preference:** Ratio of subscribe vs sign-in clicks
 
 ---
 

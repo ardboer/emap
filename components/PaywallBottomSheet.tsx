@@ -4,6 +4,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { analyticsService } from "@/services/analytics";
 import React from "react";
 import {
   Animated,
@@ -53,6 +54,14 @@ export function PaywallBottomSheet({
 
   // Handle primary button press - use URL if configured, otherwise callback
   const handlePrimaryButtonPress = React.useCallback(() => {
+    // Log analytics event
+    analyticsService.logEvent("paywall_subscribe_clicked", {
+      button_text: paywallConfig.primaryButtonText,
+      has_url: !!paywallConfig.primaryButtonUrl,
+      url: paywallConfig.primaryButtonUrl || "callback",
+      headline: paywallConfig.headline,
+    });
+
     if (paywallConfig.primaryButtonUrl) {
       Linking.openURL(paywallConfig.primaryButtonUrl).catch((err) =>
         console.error("Failed to open subscription URL:", err)
@@ -60,10 +69,18 @@ export function PaywallBottomSheet({
     } else {
       onSubscribe();
     }
-  }, [paywallConfig.primaryButtonUrl, onSubscribe]);
+  }, [paywallConfig, onSubscribe]);
 
   // Handle secondary button press - use URL if configured, otherwise callback
   const handleSecondaryButtonPress = React.useCallback(() => {
+    // Log analytics event
+    analyticsService.logEvent("paywall_signin_clicked", {
+      button_text: paywallConfig.secondaryButtonText,
+      has_url: !!paywallConfig.secondaryButtonUrl,
+      url: paywallConfig.secondaryButtonUrl || "callback",
+      headline: paywallConfig.headline,
+    });
+
     if (paywallConfig.secondaryButtonUrl) {
       Linking.openURL(paywallConfig.secondaryButtonUrl).catch((err) =>
         console.error("Failed to open sign in URL:", err)
@@ -71,10 +88,21 @@ export function PaywallBottomSheet({
     } else {
       onSignIn();
     }
-  }, [paywallConfig.secondaryButtonUrl, onSignIn]);
+  }, [paywallConfig, onSignIn]);
 
   React.useEffect(() => {
     if (visible) {
+      // Log paywall shown event
+      analyticsService.logEvent("paywall_shown", {
+        headline: paywallConfig.headline,
+        has_benefits: !!(
+          paywallConfig.benefits && paywallConfig.benefits.length > 0
+        ),
+        benefits_count: paywallConfig.benefits?.length || 0,
+        has_primary_url: !!paywallConfig.primaryButtonUrl,
+        has_secondary_url: !!paywallConfig.secondaryButtonUrl,
+      });
+
       // Animate sheet up with spring animation
       Animated.parallel([
         Animated.spring(translateY, {
@@ -104,7 +132,7 @@ export function PaywallBottomSheet({
         }),
       ]).start();
     }
-  }, [visible]);
+  }, [visible, paywallConfig]);
 
   const isDark = colorScheme === "dark";
   const backgroundColor = Colors[colorScheme ?? "light"].background;
