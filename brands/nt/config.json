@@ -41,8 +41,8 @@
       }
     },
     "fonts": {
-      "primary": "Klavika-Regular-Regular",
-      "secondary": "Klavika-Regular-Regular"
+      "primary": "OpenSans-Regular",
+      "secondary": "OpenSans-Regular"
     }
   },
   "branding": {

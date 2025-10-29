@@ -373,7 +373,7 @@ function runPrebuildScript(shortcode) {
 
 /**
  * GET /api/system/available-fonts
- * Get list of available fonts from assets/fonts directory
+ * Get list of available fonts from assets/fonts directory (including subdirectories)
  */
 router.get("/available-fonts", (req, res) => {
   try {
@@ -389,14 +389,28 @@ router.get("/available-fonts", (req, res) => {
       });
     }
 
-    // Read font files
-    const files = fs.readdirSync(fontsDir);
-    const fontFiles = files.filter((file) => /\.(ttf|otf)$/i.test(file));
+    // Recursively scan for font files
+    const fontNames = [];
 
-    // Extract font names (remove extension)
-    const fontNames = fontFiles.map((file) =>
-      file.replace(/\.(ttf|otf)$/i, "")
-    );
+    function scanDirectory(dir) {
+      const items = fs.readdirSync(dir);
+
+      items.forEach((item) => {
+        const fullPath = path.join(dir, item);
+        const stat = fs.statSync(fullPath);
+
+        if (stat.isDirectory()) {
+          // Recursively scan subdirectories
+          scanDirectory(fullPath);
+        } else if (/\.(ttf|otf)$/i.test(item)) {
+          // Extract font name (remove extension)
+          const fontName = item.replace(/\.(ttf|otf)$/i, "");
+          fontNames.push(fontName);
+        }
+      });
+    }
+
+    scanDirectory(fontsDir);
 
     // Always include System font as an option
     const availableFonts = ["System", ...fontNames];

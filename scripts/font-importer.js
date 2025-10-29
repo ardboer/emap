@@ -75,7 +75,7 @@ function getFontStyle(filename) {
 }
 
 /**
- * Scan fonts directory
+ * Scan fonts directory recursively
  */
 function scanFonts() {
   if (!fs.existsSync(FONTS_DIR)) {
@@ -85,17 +85,40 @@ function scanFonts() {
     return [];
   }
 
-  const files = fs.readdirSync(FONTS_DIR);
-  const fontFiles = files.filter((file) => /\.(ttf|otf)$/i.test(file));
+  const allFonts = [];
 
-  return fontFiles.map((file) => ({
-    filename: file,
-    fontName: extractFontName(file),
-    path: `../assets/fonts/${file}`,
-    weight: getFontWeight(file),
-    style: getFontStyle(file),
-    extension: path.extname(file).toLowerCase(),
-  }));
+  /**
+   * Recursively scan a directory for font files
+   */
+  function scanDirectory(dir, relativePath = "") {
+    const items = fs.readdirSync(dir);
+
+    items.forEach((item) => {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+
+      if (stat.isDirectory()) {
+        // Recursively scan subdirectories
+        const newRelativePath = relativePath ? `${relativePath}/${item}` : item;
+        scanDirectory(fullPath, newRelativePath);
+      } else if (/\.(ttf|otf)$/i.test(item)) {
+        // Found a font file
+        const fontPath = relativePath ? `${relativePath}/${item}` : item;
+        allFonts.push({
+          filename: item,
+          fontName: extractFontName(item),
+          path: `../assets/fonts/${fontPath}`,
+          weight: getFontWeight(item),
+          style: getFontStyle(item),
+          extension: path.extname(item).toLowerCase(),
+          folder: relativePath || "(root)",
+        });
+      }
+    });
+  }
+
+  scanDirectory(FONTS_DIR);
+  return allFonts;
 }
 
 /**
@@ -296,6 +319,7 @@ function main() {
     familyFonts.forEach((font) => {
       console.log(`  ${colors.cyan}├─${colors.reset} ${font.fontName}`);
       console.log(`  ${colors.cyan}│${colors.reset}  File: ${font.filename}`);
+      console.log(`  ${colors.cyan}│${colors.reset}  Folder: ${font.folder}`);
       console.log(
         `  ${colors.cyan}│${colors.reset}  Weight: ${font.weight}, Style: ${font.style}`
       );
