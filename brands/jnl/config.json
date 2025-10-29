@@ -50,6 +50,18 @@
   "onboarding": {
     "editorQuote": ""
   },
+  "paywall": {
+    "headline": "Subscribe Today",
+    "subheadline": "Get unlimited access to all articles",
+    "benefits": [
+      "6,000 peer reviewed clinical articles",
+      "Latest news and expert analysis",
+      "AI powered ASK Nursing Times tool",
+      "Over 40 topics from anatomy to workforce"
+    ],
+    "primaryButtonText": "Subscribe Now",
+    "secondaryButtonText": "Sign In"
+  },
   "features": {
     "enablePodcasts": false,
     "enableClinical": false,

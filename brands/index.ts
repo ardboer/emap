@@ -75,6 +75,13 @@ export interface BrandConfig {
     editorName?: string;
     editorJobTitle?: string;
   };
+  paywall?: {
+    headline: string;
+    subheadline: string;
+    benefits?: string[];
+    primaryButtonText: string;
+    secondaryButtonText: string;
+  };
   misoConfig?: MisoConfig;
   testArticleId?: string;
 }

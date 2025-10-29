@@ -68,6 +68,7 @@ export function useBrandConfig() {
     branding: brandConfig?.branding,
     apiConfig: brandConfig?.apiConfig,
     features: brandConfig?.features,
+    paywall: brandConfig?.paywall,
     brandName: brandConfig?.displayName,
     shortcode: brandConfig?.shortcode,
   };

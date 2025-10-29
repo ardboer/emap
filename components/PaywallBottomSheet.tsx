@@ -32,9 +32,23 @@ export function PaywallBottomSheet({
   onSignIn,
 }: PaywallBottomSheetProps) {
   const colorScheme = useColorScheme();
-  const { colors } = useBrandConfig();
+  const { colors, paywall } = useBrandConfig();
   const translateY = React.useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
+
+  // Get paywall configuration from brand config with fallbacks
+  const paywallConfig = paywall || {
+    headline: "Subscribe Today",
+    subheadline: "Get unlimited access to all articles",
+    benefits: [
+      "6,000 peer reviewed clinical articles",
+      "Latest news and expert analysis",
+      "AI powered ASK Nursing Times tool",
+      "Over 40 topics from anatomy to workforce",
+    ],
+    primaryButtonText: "Subscribe Now",
+    secondaryButtonText: "Sign In",
+  };
 
   React.useEffect(() => {
     if (visible) {
@@ -73,12 +87,6 @@ export function PaywallBottomSheet({
   const backgroundColor = Colors[colorScheme ?? "light"].background;
   const textColor = Colors[colorScheme ?? "light"].text;
   const primaryColor = colors?.[colorScheme ?? "light"].primary || "#007AFF";
-  const benefits = [
-    "Full access to all premium articles",
-    "Ad-free reading experience",
-    "Exclusive content and insights",
-    "Support quality journalism",
-  ];
 
   return (
     <Modal
@@ -132,40 +140,46 @@ export function PaywallBottomSheet({
           <View style={styles.content}>
             {/* Logo */}
             <View style={styles.logoContainer}>
-              <BrandLogo width={140} height={50} />
+              <BrandLogo width={140} height={50} variant="header" />
             </View>
 
             {/* Headline */}
             <ThemedText type="title" style={styles.headline}>
-              Unlock Premium Content
+              {paywallConfig.headline}
             </ThemedText>
 
             {/* Subheadline */}
             <ThemedText style={styles.subheadline}>
-              Get unlimited access to all articles
+              {paywallConfig.subheadline}
             </ThemedText>
 
-            {/* Benefits List */}
-            <View style={styles.benefitsList}>
-              {benefits.map((benefit, index) => (
-                <View key={index} style={styles.benefitItem}>
-                  <View
-                    style={[
-                      styles.checkmarkContainer,
-                      { backgroundColor: primaryColor },
-                    ]}
-                  >
-                    <IconSymbol
-                      name="checkmark"
-                      size={16}
-                      color={isDark ? "#666" : "#ffffff"}
-                      weight="bold"
-                    />
-                  </View>
-                  <ThemedText style={styles.benefitText}>{benefit}</ThemedText>
-                </View>
-              ))}
-            </View>
+            {/* Benefits List - Only show if benefits are configured */}
+            {paywallConfig.benefits && paywallConfig.benefits.length > 0 && (
+              <View style={styles.benefitsList}>
+                {paywallConfig.benefits.map(
+                  (benefit: string, index: number) => (
+                    <View key={index} style={styles.benefitItem}>
+                      <View
+                        style={[
+                          styles.checkmarkContainer,
+                          { backgroundColor: primaryColor },
+                        ]}
+                      >
+                        <IconSymbol
+                          name="checkmark"
+                          size={16}
+                          color={isDark ? "#666" : "#ffffff"}
+                          weight="bold"
+                        />
+                      </View>
+                      <ThemedText style={styles.benefitText}>
+                        {benefit}
+                      </ThemedText>
+                    </View>
+                  )
+                )}
+              </View>
+            )}
 
             {/* CTA Buttons */}
             <View style={styles.buttonContainer}>
@@ -181,7 +195,7 @@ export function PaywallBottomSheet({
                 <ThemedText
                   style={[styles.primaryButtonText, { color: "#000" }]}
                 >
-                  Subscribe Now
+                  {paywallConfig.primaryButtonText}
                 </ThemedText>
               </TouchableOpacity>
 
@@ -202,7 +216,7 @@ export function PaywallBottomSheet({
                 <ThemedText
                   style={[styles.secondaryButtonText, { color: primaryColor }]}
                 >
-                  Sign In
+                  {paywallConfig.secondaryButtonText}
                 </ThemedText>
               </TouchableOpacity>
             </View>

@@ -232,8 +232,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Generate redirect URI using app's custom scheme
       // The server must redirect to this scheme for the app to intercept it
-      const redirectUri = `${shortcode}://auth/callback`;
-
+      // const redirectUri = `${shortcode}://auth/callback`;
+      const redirectUri = authBaseUrl.endsWith("/")
+        ? authBaseUrl
+        : `${authBaseUrl}/`;
       // Get login page URL from brand config
       const loginPageUrl = `${authBaseUrl}/mobile-app-login/`;
 
@@ -250,6 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log("📱 Login configuration:", {
+        secret,
         redirectUri,
         loginPageUrl,
         brand: shortcode,
