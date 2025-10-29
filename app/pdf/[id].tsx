@@ -1,145 +1,83 @@
+import PDFViewer from "@/components/PDFViewer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useBrandConfig } from "@/hooks/useBrandConfig";
-import { fetchMagazinePDF } from "@/services/api";
+import { MagazineEdition } from "@/types";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Linking, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
-export default function PDFViewerScreen() {
-  const { features } = useBrandConfig();
+export default function PDFScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [magazine, setMagazine] = useState<MagazineEdition | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!features?.enableMagazine) {
-      router.replace("/(tabs)/news");
+    if (!id) {
+      router.back();
       return;
     }
 
-    if (id) {
-      loadPDF();
-    }
-  }, [features?.enableMagazine, id]);
+    // Create magazine object from ID
+    setMagazine({
+      id: id,
+      title: formatMagazineTitle(id),
+    });
+    setLoading(false);
+  }, [id]);
 
-  if (!features?.enableMagazine) {
-    return null;
-  }
-
-  const loadPDF = async () => {
+  const formatMagazineTitle = (id: string): string => {
     try {
-      setError(null);
-      const url = await fetchMagazinePDF(id!);
-      console.log("Fetched PDF URL:", url);
-
-      // For testing, if the remote URL fails, try local PDF
-      if (!url || url.includes("undefined") || url.includes("null")) {
-        console.log("Using fallback local PDF");
-        // Use local PDF as fallback for testing
-        const localPdfUrl = `http://localhost:8081/pdf/${
-          id === "cn" ? "cn.pdf" : "nt.pdf"
-        }`;
-        setPdfUrl(localPdfUrl);
-      } else {
-        setPdfUrl(url);
+      if (id.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const date = new Date(id);
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
       }
-    } catch (err) {
-      console.error("Error loading PDF:", err);
-      // Fallback to local PDF for testing
-      console.log("Using local PDF as fallback due to error");
-      const localPdfUrl = `http://localhost:8081/pdf/${
-        id === "cn" ? "cn.pdf" : "nt.pdf"
-      }`;
-      setPdfUrl(localPdfUrl);
-    } finally {
-      setLoading(false);
+      return id.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    } catch {
+      return id;
     }
   };
 
-  if (loading) {
-    return (
-      <ThemedView style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" />
-        <ThemedText style={styles.loadingText}>Loading PDF...</ThemedText>
-      </ThemedView>
-    );
-  }
+  const handleBack = () => {
+    router.back();
+  };
 
-  if (error) {
+  if (loading || !magazine) {
     return (
-      <ThemedView style={[styles.container, styles.centerContent]}>
-        <ThemedText style={styles.errorText}>{error}</ThemedText>
-      </ThemedView>
-    );
-  }
-
-  if (!pdfUrl) {
-    return (
-      <ThemedView style={[styles.container, styles.centerContent]}>
-        <ThemedText style={styles.errorText}>No PDF URL available</ThemedText>
-      </ThemedView>
+      <View style={styles.container}>
+        <ThemedView style={styles.centerContent}>
+          <ActivityIndicator size="large" />
+          <ThemedText style={styles.loadingText}>
+            Loading magazine...
+          </ThemedText>
+        </ThemedView>
+      </View>
     );
   }
 
   return (
-    <ThemedView style={[styles.container, styles.centerContent]}>
-      <ThemedText style={styles.title}>Magazine PDF</ThemedText>
-      <ThemedText style={styles.message}>
-        Opening PDF in external viewer...
-      </ThemedText>
-      <ThemedText style={styles.urlText}>{pdfUrl}</ThemedText>
-      {(() => {
-        Linking.openURL(pdfUrl).catch((err: any) => {
-          console.error("Failed to open PDF:", err);
-          setError("Failed to open PDF");
-        });
-        return null;
-      })()}
-    </ThemedView>
+    <View style={styles.container}>
+      <PDFViewer magazine={magazine} onBack={handleBack} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#fff",
   },
   centerContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  message: {
-    fontSize: 18,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  subMessage: {
-    fontSize: 16,
-    textAlign: "center",
-    opacity: 0.7,
-    marginBottom: 16,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-  },
-  errorText: {
-    fontSize: 16,
-    textAlign: "center",
-  },
-  urlText: {
-    fontSize: 12,
-    textAlign: "center",
-    opacity: 0.6,
-    fontFamily: "monospace",
+    opacity: 0.7,
   },
 });

@@ -1668,3 +1668,74 @@ export async function fetchMagazineEditionData(
     throw error;
   }
 }
+
+/**
+ * Fetch PDF article detail from emap-epaper API
+ * Used when user clicks on article annotation in PDF viewer
+ */
+export async function fetchPDFArticleDetail(
+  editionId: string,
+  articleId: string
+): Promise<import("@/types").PDFArticleDetail> {
+  const { cacheService } = await import("./cache");
+  const cacheKey = "pdf_article_detail";
+
+  // Try to get from cache first
+  const cached = await cacheService.get<import("@/types").PDFArticleDetail>(
+    cacheKey,
+    {
+      editionId,
+      articleId,
+    }
+  );
+  if (cached) {
+    console.log(`✅ Returning cached PDF article ${editionId}/${articleId}`);
+    return cached;
+  }
+
+  try {
+    const EPAPER_BASE_URL = "https://emap-epaper-development.gdkzr.com";
+    const url = `${EPAPER_BASE_URL}/articles/${editionId}/${articleId}`;
+    console.log(`🔄 Fetching PDF article from: ${url}`);
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch PDF article: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const articleData: import("@/types").PDFArticleDetail =
+      await response.json();
+    console.log(`✅ PDF article fetched successfully:`, articleData.title);
+
+    // Cache the result
+    await cacheService.set(cacheKey, articleData, {
+      editionId,
+      articleId,
+    });
+
+    return articleData;
+  } catch (error) {
+    console.error(
+      `❌ Error fetching PDF article ${editionId}/${articleId}:`,
+      error
+    );
+
+    // Try to return stale cached data if available
+    const staleCache = await cacheService.get<
+      import("@/types").PDFArticleDetail
+    >(cacheKey, {
+      editionId,
+      articleId,
+    });
+    if (staleCache) {
+      console.log(
+        `⚠️ Returning stale cached PDF article for ${editionId}/${articleId} due to API error`
+      );
+      return staleCache;
+    }
+
+    throw error;
+  }
+}

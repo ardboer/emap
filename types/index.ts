@@ -202,3 +202,38 @@ export interface MagazineEdition {
   coverUrl?: string;
   pdfUrl?: string;
 }
+
+// PDF Article Detail types for emap-epaper API
+export interface PDFArticleBlock {
+  bbox: number[];
+  text: string;
+  type: string;
+  avg_size: number;
+  bg_rgb: number[];
+}
+
+export interface PDFArticleInfobox {
+  bbox: number[];
+  text: string;
+  type: string;
+  avg_size: number;
+  bg_rgb: number[];
+}
+
+export interface PDFArticleContent {
+  plain: string;
+  paragraphs: string[];
+}
+
+export interface PDFArticleDetail {
+  article_id: string;
+  page: number;
+  title: string;
+  bbox: number[];
+  blocks: PDFArticleBlock[];
+  infoboxes: PDFArticleInfobox[];
+  content: PDFArticleContent;
+  endpoints: {
+    self: string;
+  };
+}

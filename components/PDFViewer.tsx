@@ -2,8 +2,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { fetchMagazinePDF } from "@/services/api";
 import { MagazineEdition } from "@/types";
+import { parsePDFArticleUri } from "@/utils/pdfUriParser";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useState } from "react";
+import { router } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -23,6 +25,9 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pdfProgress, setPdfProgress] = useState(0);
+  const currentPageRef = useRef(1);
+  const currentScaleRef = useRef(1.0);
+  const lastScaleChangeRef = useRef(0);
 
   const loadPDF = useCallback(async () => {
     try {
@@ -88,21 +93,29 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
   );
 
   const handlePdfPressLink = useCallback((uri: string) => {
-    console.log("🔗 PDF annotation clicked:", uri);
-    console.log("🔗 URI type:", typeof uri);
-    console.log("🔗 URI length:", uri?.length);
-    console.log("🔗 Full URI object:", JSON.stringify(uri));
+    const now = Date.now();
+    const timeSinceScaleChange = now - lastScaleChangeRef.current;
 
-    Alert.alert("Link Found", `URL: ${uri}`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Copy URL",
-        onPress: () => {
-          // TODO: Add clipboard functionality if needed
-          console.log("📋 URL copied:", uri);
-        },
-      },
-    ]);
+    // Ignore link press if PDF is zoomed in OR if scale changed recently (within 500ms)
+    if (currentScaleRef.current > 1.0 || timeSinceScaleChange < 500) {
+      console.log(
+        "🔗 PDF is zoomed or scale changed recently, ignoring link press"
+      );
+      return;
+    }
+
+    console.log("🔗 PDF annotation clicked:", uri);
+
+    const parsed = parsePDFArticleUri(uri);
+    if (parsed) {
+      console.log("📄 Opening article:", parsed);
+      router.push(`/pdf-article/${parsed.editionId}/${parsed.articleId}`);
+    } else {
+      console.warn("⚠️ Could not parse article URI:", uri);
+      Alert.alert("Invalid Link", "This link format is not supported.", [
+        { text: "OK" },
+      ]);
+    }
   }, []);
 
   // Test function to verify alert system works
@@ -195,16 +208,6 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
 
   return (
     <>
-      {/* Floating Back Button */}
-      <TouchableOpacity
-        style={styles.backButtonFloating}
-        onPress={onBack}
-        accessibilityRole="button"
-        accessibilityLabel="Go back to magazine list"
-      >
-        <ThemedText style={styles.backButtonText}>← Back</ThemedText>
-      </TouchableOpacity>
-
       {loading && renderLoadingState()}
 
       {error && !loading && renderErrorState()}
@@ -223,14 +226,18 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
             style={styles.pdf}
             onLoadProgress={handlePdfLoadProgress}
             onLoadComplete={handlePdfLoadComplete}
-            onPageChanged={(page, numberOfPages) =>
-              console.log(`📖 Page ${page} of ${numberOfPages}`)
-            }
+            onPageChanged={(page, numberOfPages) => {
+              console.log(`📖 Page ${page} of ${numberOfPages}`);
+              currentPageRef.current = page;
+            }}
+            onScaleChanged={(scale) => {
+              console.log(`🔍 Scale changed: ${scale}`);
+              currentScaleRef.current = scale;
+              lastScaleChangeRef.current = Date.now();
+            }}
             onError={handlePdfError}
             enableDoubleTapZoom={true}
-            onPressLink={async (uri) => {
-              console.log("onPressLink", uri);
-            }}
+            onPressLink={handlePdfPressLink}
             renderActivityIndicator={() => <ActivityIndicator size="large" />}
             trustAllCerts={false}
             enablePaging={true}

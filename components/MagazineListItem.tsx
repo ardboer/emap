@@ -69,7 +69,7 @@ export default function MagazineListItem({
                 "https://picsum.photos/300/400?random=magazine",
           }}
           style={styles.coverImage}
-          contentFit="cover"
+          contentFit="contain"
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
