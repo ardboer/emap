@@ -76,7 +76,7 @@
     "enableClinical": true,
     "enableEvents": true,
     "enableAsk": true,
-    "enableMagazine": false
+    "enableMagazine": true
   },
   "misoConfig": {
     "apiKey": "FcakM2bTHy0Sf0uaM6mYpwI9vnXWKdu4E9jO6Bx2",

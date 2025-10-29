@@ -1,6 +1,8 @@
 import { brandManager } from "@/config/BrandManager";
 import {
   Article,
+  ClinicalArticlesResponse,
+  ClinicalPost,
   MagazineArticleResponse,
   MagazineEdition,
   MagazineEditionsResponse,
@@ -27,6 +29,7 @@ const HIGHLIGHTS_ENDPOINT = "/wp-json/mbm-apps/v1/highlights";
 const INDIVIDUAL_POST_ENDPOINT = "/wp-json/mbm-apps/v1/posts";
 const MENU_ENDPOINT = "/wp-json/mbm-apps/v1/menu";
 const CATEGORY_ENDPOINT = "/wp-json/mbm-apps/v1/categories";
+const CLINICAL_ENDPOINT = "/wp-json/mbm-apps/v1/get-post-by-filter";
 const EVENTS_ENDPOINT = "/wp-json/wp/v2/mec-events";
 const SEARCH_ENDPOINT = "/wp-json/wp/v2/search";
 
@@ -1243,6 +1246,96 @@ export async function fetchSearchResults(query: string): Promise<any[]> {
     if (staleCache) {
       console.log(
         `Returning stale cached search results for "${query}" due to API error`
+      );
+      return staleCache;
+    }
+
+    throw error;
+  }
+}
+// Transform clinical post to Article interface
+function transformClinicalPostToArticle(post: ClinicalPost): Article {
+  return {
+    id: post.post_id.toString(),
+    title: decodeHtmlEntities(stripHtml(post.post_title)),
+    leadText: stripHtml(post.post_excerpt || ""),
+    content: "",
+    imageUrl: post.post_image || "https://picsum.photos/800/600?random=1",
+    timestamp: post.post_publish_date,
+    category: extractCategoryFromUrl(post.post_url),
+    isLandscape: post.post_image_width > post.post_image_height,
+  };
+}
+
+// Fetch clinical articles with pagination
+export async function fetchClinicalArticles(
+  page: number = 1
+): Promise<{ articles: Article[]; hasMore: boolean }> {
+  const { cacheService } = await import("./cache");
+  const cacheKey = "clinical_articles";
+  const { hash } = getApiConfig();
+
+  // Try to get from cache first
+  const cached = await cacheService.get<{
+    articles: Article[];
+    hasMore: boolean;
+  }>(cacheKey, { page, hash });
+  if (cached) {
+    console.log(`Returning cached clinical articles for page ${page}`);
+    return cached;
+  }
+
+  try {
+    const { baseUrl } = getApiConfig();
+
+    // Fixed parameters for clinical articles
+    const params = new URLSearchParams({
+      hash: hash,
+      include_taxonomy: "type",
+      include_term: "2404",
+      per_page: "40",
+      page: page.toString(),
+    });
+
+    const url = `${baseUrl}${CLINICAL_ENDPOINT}/?${params.toString()}`;
+    console.log("Fetching clinical articles:", url);
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch clinical articles: ${response.status}`);
+    }
+
+    const data: ClinicalArticlesResponse = await response.json();
+    console.log(`Clinical articles response for page ${page}:`, {
+      articlesCount: data.articles?.length,
+      currentPage: data.page,
+      totalPages: data.total_pages,
+      total: data.total,
+    });
+
+    // Transform posts to articles
+    const articles = (data.articles || []).map(transformClinicalPostToArticle);
+
+    // Determine if there are more pages based on API response
+    const hasMore = data.page < data.total_pages;
+
+    const result = { articles, hasMore };
+
+    // Cache the result
+    await cacheService.set(cacheKey, result, { page, hash });
+
+    return result;
+  } catch (error) {
+    console.error(`Error fetching clinical articles for page ${page}:`, error);
+
+    // Try to return stale cached data if available
+    const staleCache = await cacheService.get<{
+      articles: Article[];
+      hasMore: boolean;
+    }>(cacheKey, { page });
+    if (staleCache) {
+      console.log(
+        `Returning stale cached clinical articles for page ${page} due to API error`
       );
       return staleCache;
     }

@@ -1529,7 +1529,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - react-native-blob-util (0.22.2):
+  - react-native-blob-util (0.23.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1551,7 +1551,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-pdf (6.7.7):
+  - react-native-pdf (7.0.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2867,8 +2867,8 @@ SPEC CHECKSUMS:
   React-logger: 7b234de35acb469ce76d6bbb0457f664d6f32f62
   React-Mapbuffer: fbe1da882a187e5898bdf125e1cc6e603d27ecae
   React-microtasksnativemodule: 76905804171d8ccbe69329fc84c57eb7934add7f
-  react-native-blob-util: 94d306e67eeeb10cbb1702fad3abb3ae17726a09
-  react-native-pdf: 4713e2abf5c18c02cd6a54c00dcc1834fb7332ad
+  react-native-blob-util: ac2afa1164999a49560e76cee74d8fc3af27faf5
+  react-native-pdf: 70836b3b48595c7f85a3aa2b5d122b175c455733
   react-native-quick-base64: 6568199bb2ac8e72ecdfdc73a230fbc5c1d3aac4
   react-native-quick-crypto: 1a2467cf17acc57dce5bb076a953978b79e3fd11
   react-native-safe-area-context: 42a1b4f8774b577d03b53de7326e3d5757fe9513

@@ -7254,10 +7254,10 @@ react-is@^19.1.0:
   resolved "https://registry.npmjs.org/react-is/-/react-is-19.1.1.tgz"
   integrity sha512-tr41fA15Vn8p4X9ntI+yCyeGSf1TlYaY5vlTZfQmeLBrFo3psOPX6HhTDnFNL9uj3EhP0KAQ80cugCl4b4BERA==
 
-react-native-blob-util@>=0.13.7:
-  version "0.22.2"
-  resolved "https://registry.npmjs.org/react-native-blob-util/-/react-native-blob-util-0.22.2.tgz"
-  integrity sha512-Czx01QMg7aLsm/4F/7+eqoRAi1q/qjLY2Kao16g+n2SRnTH1+qkD8Qhx2q9okB+VNQvZKB1LbiXhktzYQV52xQ==
+react-native-blob-util@^0.23.1, react-native-blob-util@>=0.13.7:
+  version "0.23.1"
+  resolved "https://registry.npmjs.org/react-native-blob-util/-/react-native-blob-util-0.23.1.tgz"
+  integrity sha512-+vQKPxinYAVn7zRZ931WBdm5NXGUTssYNR5u0Z7bLJLK5a8vmcVJ3RZ4icfHDmMqn88Si3pAxU4RKmkKRoRuUA==
   dependencies:
     base-64 "0.1.0"
     glob "^10.3.10"
@@ -7291,10 +7291,10 @@ react-native-is-edge-to-edge@^1.1.6, react-native-is-edge-to-edge@^1.2.1:
   resolved "https://registry.npmjs.org/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.2.1.tgz"
   integrity sha512-FLbPWl/MyYQWz+KwqOZsSyj2JmLKglHatd3xLZWskXOpRaio4LfEDEz8E/A6uD8QoTHW6Aobw1jbEwK7KMgR7Q==
 
-react-native-pdf@^6.7.7:
-  version "6.7.7"
-  resolved "https://registry.npmjs.org/react-native-pdf/-/react-native-pdf-6.7.7.tgz"
-  integrity sha512-D0ga/eyPsVWSPEBm622sGVZLl3gibxPmfm2cxsLcUrZ4WDSGR5HyGmvvWaR/m9wXEyIbD4J6q9qzuG6yObcSXw==
+react-native-pdf@^7.0.3:
+  version "7.0.3"
+  resolved "https://registry.npmjs.org/react-native-pdf/-/react-native-pdf-7.0.3.tgz"
+  integrity sha512-zDtF6CGXPAfGptQZqX7LQK3CVQrIGsD+rYuBnMK0sVmd8mrq7ciwmWXINT+d92emMtZ7+PLnx1IQZIdsh0fphA==
   dependencies:
     crypto-js "4.2.0"
     deprecated-react-native-prop-types "^2.3.0"

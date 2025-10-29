@@ -147,6 +147,25 @@ export interface CategoryResponse {
   yoast_head_json: any;
   blocks: CategoryBlock[];
 }
+// Clinical articles API types
+export interface ClinicalPost {
+  post_id: number;
+  post_title: string;
+  post_excerpt: string;
+  post_url: string;
+  post_image: string;
+  post_image_width: number;
+  post_image_height: number;
+  post_publish_date: string;
+}
+
+export interface ClinicalArticlesResponse {
+  page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+  articles: ClinicalPost[];
+}
 
 // Magazine-related types for emap-epaper-development API
 export interface MagazineEditionsResponse {

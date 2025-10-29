@@ -1,97 +1,133 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
-import SwipeableTabView from "@/components/SwipeableTabView";
-import TabBar from "@/components/TabBar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { fetchMenuItems, fetchNewsArticles } from "@/services/api";
+import { fetchClinicalArticles } from "@/services/api";
 import { Article } from "@/types";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
   TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function ClinicalScreen() {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [menuItems, setMenuItems] = useState<any[]>([]);
-  const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async () => {
+  // Load initial data
+  const loadInitialData = async () => {
     try {
+      setLoading(true);
       setError(null);
-      const [fetchedArticles, fetchedMenuItems] = await Promise.all([
-        fetchNewsArticles(),
-        fetchMenuItems(),
-      ]);
+      const { articles: fetchedArticles, hasMore: more } =
+        await fetchClinicalArticles(1);
       setArticles(fetchedArticles);
-      setMenuItems(fetchedMenuItems);
+      setHasMore(more);
+      setCurrentPage(1);
     } catch (err) {
-      setError("Failed to load data");
-      console.error("Error loading data:", err);
+      setError("Failed to load articles");
+      console.error("Error loading clinical articles:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const onRefresh = React.useCallback(async () => {
+  // Load more articles for pagination
+  const loadMoreArticles = async () => {
+    if (loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = currentPage + 1;
+      const { articles: fetchedArticles, hasMore: more } =
+        await fetchClinicalArticles(nextPage);
+
+      // Append new articles to existing ones
+      setArticles((prev) => [...prev, ...fetchedArticles]);
+      setHasMore(more);
+      setCurrentPage(nextPage);
+    } catch (err) {
+      console.error("Error loading more clinical articles:", err);
+      // Don't show error for pagination failures, just stop loading
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Pull to refresh handler
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [fetchedArticles, fetchedMenuItems] = await Promise.all([
-        fetchNewsArticles(),
-        fetchMenuItems(),
-      ]);
-      setArticles(fetchedArticles);
-      setMenuItems(fetchedMenuItems);
       setError(null);
+      const { articles: fetchedArticles, hasMore: more } =
+        await fetchClinicalArticles(1);
+      setArticles(fetchedArticles);
+      setHasMore(more);
+      setCurrentPage(1);
     } catch (err) {
-      setError("Failed to refresh data");
-      console.error("Error refreshing data:", err);
+      setError("Failed to refresh articles");
+      console.error("Error refreshing clinical articles:", err);
     } finally {
       setRefreshing(false);
     }
   }, []);
 
+  // Handle end reached for infinite scroll
+  const handleEndReached = () => {
+    if (!loadingMore && hasMore) {
+      loadMoreArticles();
+    }
+  };
+
   useEffect(() => {
-    loadData();
+    loadInitialData();
   }, []);
 
   const handleArticlePress = (article: Article) => {
     router.push(`/article/${article.id}`);
   };
 
-  const handleTabChange = (index: number) => {
-    setActiveTabIndex(index);
-  };
-
   const renderArticle = ({ item }: { item: Article }) => (
     <ArticleTeaser article={item} onPress={() => handleArticlePress(item)} />
   );
 
-  const renderTabContent = () => (
-    <FlatList
-      data={articles}
-      renderItem={renderArticle}
-      keyExtractor={(item) => item.id}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      contentContainerStyle={styles.listContainer}
-    />
-  );
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" />
+        <ThemedText style={styles.footerText}>Loading more...</ThemedText>
+      </View>
+    );
+  };
+
+  const renderEmpty = () => {
+    if (loading) return null;
+    return (
+      <ThemedView style={styles.centerContent}>
+        <ThemedText style={styles.emptyText}>
+          No clinical articles available
+        </ThemedText>
+      </ThemedView>
+    );
+  };
 
   if (loading) {
     return (
       <ThemedView style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" />
-        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
+        <ThemedText style={styles.loadingText}>
+          Loading clinical articles...
+        </ThemedText>
       </ThemedView>
     );
   }
@@ -100,40 +136,28 @@ export default function ClinicalScreen() {
     return (
       <ThemedView style={[styles.container, styles.centerContent]}>
         <ThemedText style={styles.errorText}>{error}</ThemedText>
-        <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+        <TouchableOpacity style={styles.retryButton} onPress={loadInitialData}>
           <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
         </TouchableOpacity>
       </ThemedView>
     );
   }
 
-  // Create tabs from menu items
-  const tabs = menuItems.map((item) => ({
-    id: item.ID.toString(),
-    title: item.title,
-    content: renderTabContent(),
-  }));
-
-  // If no menu items, show default tab
-  if (tabs.length === 0) {
-    tabs.push({
-      id: "default",
-      title: "Clinical",
-      content: renderTabContent(),
-    });
-  }
-
   return (
     <ThemedView style={styles.container}>
-      <TabBar
-        tabs={tabs}
-        activeTabIndex={activeTabIndex}
-        onTabPress={handleTabChange}
-      />
-      <SwipeableTabView
-        tabs={tabs}
-        activeTabIndex={activeTabIndex}
-        onTabChange={handleTabChange}
+      <FlatList
+        data={articles}
+        renderItem={renderArticle}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        contentContainerStyle={styles.listContainer}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={renderEmpty}
       />
     </ThemedView>
   );
@@ -146,48 +170,11 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
   },
-  articleContainer: {
-    flexDirection: "row",
-    marginBottom: 16,
-    backgroundColor: "rgba(0,0,0,0.05)",
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  thumbnail: {
-    width: 120,
-    alignSelf: "stretch",
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 12,
-    justifyContent: "space-between",
-  },
-  title: {
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  leadText: {
-    fontSize: 14,
-    opacity: 0.8,
-    marginBottom: 8,
-  },
-  metaContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  category: {
-    fontSize: 12,
-    fontWeight: "600",
-    opacity: 0.7,
-  },
-  timestamp: {
-    fontSize: 12,
-    opacity: 0.6,
-  },
   centerContent: {
     justifyContent: "center",
     alignItems: "center",
+    flex: 1,
+    padding: 20,
   },
   loadingText: {
     marginTop: 16,
@@ -198,6 +185,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 16,
   },
+  emptyText: {
+    fontSize: 16,
+    textAlign: "center",
+    opacity: 0.6,
+  },
   retryButton: {
     backgroundColor: "rgba(0, 0, 0, 0.1)",
     paddingHorizontal: 24,
@@ -207,5 +199,14 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  footerText: {
+    marginTop: 8,
+    fontSize: 14,
+    opacity: 0.6,
   },
 });
