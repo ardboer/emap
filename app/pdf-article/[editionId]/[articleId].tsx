@@ -1,3 +1,4 @@
+import { HeaderBackButton } from "@/components/HeaderBackButton";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { fetchPDFArticleDetail } from "@/services/api";
@@ -112,6 +113,7 @@ export default function PDFArticleScreen() {
           title: "",
           headerShown: true,
           headerBackTitle: "",
+          headerLeft: () => <HeaderBackButton />,
         }}
       />
       <View style={styles.container}>

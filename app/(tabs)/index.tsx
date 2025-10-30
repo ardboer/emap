@@ -25,7 +25,7 @@ import { getColors } from "react-native-image-colors";
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 // Configurable slide duration (in milliseconds)
-const SLIDE_DURATION = 7000; // 7 seconds
+const SLIDE_DURATION = 5000; // 7 seconds
 
 export default function HighlightedScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);

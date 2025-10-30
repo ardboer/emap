@@ -1,18 +1,12 @@
+import { HeaderBackButton } from "@/components/HeaderBackButton";
 import PDFViewer from "@/components/PDFViewer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { MagazineEdition } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 export default function PDFScreen() {
   const { brandName } = useBrandConfig();
@@ -74,18 +68,7 @@ export default function PDFScreen() {
           title: brandName || "Magazine",
           headerShown: true,
           headerBackTitle: "",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={handleBack}
-              style={{ marginLeft: Platform.OS === "ios" ? 0 : 8 }}
-            >
-              <Ionicons
-                name={Platform.OS === "ios" ? "chevron-back" : "arrow-back"}
-                size={28}
-                color="#007AFF"
-              />
-            </TouchableOpacity>
-          ),
+          headerLeft: () => <HeaderBackButton onPress={handleBack} />,
         }}
       />
       <View style={styles.container}>
