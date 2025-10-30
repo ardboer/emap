@@ -17,6 +17,7 @@ import React, {
   useEffect,
   useReducer,
 } from "react";
+import { Alert } from "react-native";
 
 // Types
 interface User {
@@ -223,19 +224,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: null });
 
+      // Show alert before opening browser
+      const userConfirmed = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          "Sign In",
+          "You will be redirected to a secure login page in your browser. After signing in, you'll be automatically returned to the app.",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => resolve(false),
+            },
+            {
+              text: "Continue",
+              onPress: () => resolve(true),
+            },
+          ],
+          { cancelable: false }
+        );
+      });
+
+      // Check if user cancelled
+      if (!userConfirmed) {
+        console.log("ℹ️ User cancelled login");
+        dispatch({ type: "SET_LOADING", payload: false });
+        return;
+      }
+
       // Get brand configuration
       const brandConfig = brandManager.getCurrentBrand();
       const { shortcode, apiConfig } = brandConfig;
 
-      // Use authUrl for authentication if available, otherwise fall back to baseUrl
-      const authBaseUrl = apiConfig.authUrl || apiConfig.baseUrl;
+      const authBaseUrl = apiConfig.baseUrl;
 
       // Generate redirect URI using app's custom scheme
       // The server must redirect to this scheme for the app to intercept it
-      // const redirectUri = `${shortcode}://auth/callback`;
-      const redirectUri = authBaseUrl.endsWith("/")
-        ? authBaseUrl
-        : `${authBaseUrl}/`;
+      const redirectUri = `${shortcode}://auth/callback`;
+      // const redirectUri = authBaseUrl.endsWith("/")
+      //   ? authBaseUrl
+      //   : `${authBaseUrl}/`;
       // Get login page URL from brand config
       const loginPageUrl = `${authBaseUrl}/mobile-app-login/`;
 
@@ -267,11 +294,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       console.log("🌐 Opening authentication session...");
+      console.log("📋 Login URL being opened:", loginUrl);
+      console.log("📋 Redirect URI:", redirectUri);
+      console.log("📋 URL Length:", loginUrl.length);
 
-      // Open authentication session in browser
+      // Test if URL is accessible first
+      console.log("🧪 Testing URL accessibility...");
+      try {
+        const testResponse = await fetch(loginUrl, {
+          method: "HEAD",
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+          },
+        });
+        console.log("✅ URL is accessible, status:", testResponse.status);
+        console.log("📋 Response headers:", {
+          contentType: testResponse.headers.get("content-type"),
+          csp: testResponse.headers.get("content-security-policy"),
+          xFrameOptions: testResponse.headers.get("x-frame-options"),
+        });
+      } catch (testError) {
+        console.error("❌ URL accessibility test failed:", testError);
+      }
+
+      // Open authentication session in browser with explicit options
+      console.log("🌐 Opening WebBrowser with options...");
       const result = await WebBrowser.openAuthSessionAsync(
         loginUrl,
-        redirectUri
+        redirectUri,
+        {
+          // Try with ephemeral session to avoid caching issues
+          preferEphemeralSession: true,
+          // Show title for debugging
+          showTitle: true,
+          // Enable bar collapsing
+          enableBarCollapsing: false,
+          // Create new context
+          createTask: true,
+        }
       );
 
       console.log("📥 Browser session result:", result.type);
