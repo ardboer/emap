@@ -4,6 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TopicsTabBar from "@/components/TopicsTabBar";
 import { Colors } from "@/constants/Colors";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import {
   fetchCategoryContent,
   fetchMenuItems,
@@ -27,7 +28,7 @@ export default function NewsScreen() {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const contentBackground = useThemeColor({}, "contentBackground");
   // Store articles per tab
   const [tabArticles, setTabArticles] = useState<{ [key: string]: Article[] }>(
     {}
@@ -238,7 +239,13 @@ export default function NewsScreen() {
         onTabChange={handleTabChange}
       />
       {isCurrentTabLoading && currentArticles.length === 0 ? (
-        <ThemedView style={[styles.container, styles.centerContent]}>
+        <ThemedView
+          style={[
+            styles.container,
+            styles.centerContent,
+            { backgroundColor: contentBackground },
+          ]}
+        >
           <ActivityIndicator size="large" />
           <ThemedText style={styles.loadingText}>
             Loading {menuItems[activeTabIndex]?.title || "articles"}...

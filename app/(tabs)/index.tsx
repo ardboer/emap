@@ -47,6 +47,7 @@ export default function HighlightedScreen() {
   const { state: audioState } = useAudio();
   const { brandConfig } = useBrandConfig();
   const backgroundColor = useThemeColor({}, "background");
+  const contentBackground = useThemeColor({}, "contentBackground");
 
   // Analytics tracking state
   const [carouselStartTime, setCarouselStartTime] = useState<number | null>(
@@ -494,12 +495,11 @@ export default function HighlightedScreen() {
       setIsPlaying(false);
     };
   }, []);
-  console.log("backgroundColor", backgroundColor);
   const styles = {
     ...staticStyles,
     container: {
       flex: 1,
-      backgroundColor: backgroundColor,
+      backgroundColor: contentBackground,
     },
   };
   const renderCarouselItem = ({ item }: { item: Article }) => {

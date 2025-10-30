@@ -1,8 +1,6 @@
 import { Tabs, router } from "expo-router";
 import React from "react";
-import { TouchableOpacity } from "react-native";
 
-import { BrandLogo } from "@/components/BrandLogo";
 import { HapticTab } from "@/components/HapticTab";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { PodcastPlayer } from "@/components/PodcastPlayer";
@@ -10,7 +8,6 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -143,29 +140,7 @@ export default function TabLayout() {
           name="magazine"
           options={{
             title: "Magazine",
-            headerTitle: "",
-            headerShadowVisible: false,
-            headerStyle: {
-              borderBottomWidth: 0,
-              backgroundColor: headerBackgroundColor,
-            },
-            headerLeft: () => (
-              <BrandLogo
-                width={100}
-                height={32}
-                style={{ marginLeft: 16, marginBottom: 8 }}
-                variant="header"
-              />
-            ),
-            headerRight: () => (
-              <TouchableOpacity
-                style={{ marginRight: 16, padding: 8 }}
-                onPress={handleSearchPress}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="search" size={24} color={searchIconColor} />
-              </TouchableOpacity>
-            ),
+            headerShown: false, // Hide header - using custom GradientHeader in magazine.tsx
             href: features?.enableMagazine ? "/(tabs)/magazine" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="book.fill" color={color} />
@@ -176,12 +151,7 @@ export default function TabLayout() {
           name="podcasts"
           options={{
             title: "Podcasts",
-            headerTitle: "Podcasts",
-            headerShadowVisible: false,
-            headerStyle: {
-              borderBottomWidth: 0,
-              backgroundColor: headerBackgroundColor,
-            },
+            headerShown: false, // Hide header - using custom GradientHeader in podcasts.tsx
             href: features?.enablePodcasts ? "/(tabs)/podcasts" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="mic.fill" color={color} />

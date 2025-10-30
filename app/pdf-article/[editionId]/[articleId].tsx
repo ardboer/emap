@@ -1,6 +1,8 @@
-import { HeaderBackButton } from "@/components/HeaderBackButton";
+import GradientHeader from "@/components/GradientHeader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { fetchPDFArticleDetail } from "@/services/api";
 import { PDFArticleDetail } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,12 +13,9 @@ import {
   Dimensions,
   StyleSheet,
   TouchableOpacity,
-  View,
 } from "react-native";
 import Animated, {
-  interpolate,
   useAnimatedScrollHandler,
-  useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
 
@@ -24,6 +23,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const HEADER_HEIGHT = screenHeight * 0.4;
 
 export default function PDFArticleScreen() {
+  const colorScheme = useColorScheme() ?? "light";
   const { editionId, articleId } = useLocalSearchParams<{
     editionId: string;
     articleId: string;
@@ -39,12 +39,6 @@ export default function PDFArticleScreen() {
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
     },
-  });
-
-  // Back button animated style
-  const backButtonAnimatedStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(scrollY.value, [0, 100], [1, 0.8], "clamp");
-    return { opacity };
   });
 
   useEffect(() => {
@@ -76,33 +70,48 @@ export default function PDFArticleScreen() {
     loadArticle();
   }, [editionId, articleId]);
 
+  const handleBack = () => {
+    router.back();
+  };
+
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
+
   if (loading) {
     return (
-      <View style={styles.container}>
+      <ThemedView style={styles.container}>
+        <GradientHeader
+          onSearchPress={handleSearchPress}
+          showBackButton={true}
+          onBackPress={handleBack}
+        />
         <ThemedView style={styles.centerContent}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" />
           <ThemedText style={styles.loadingText}>Loading article...</ThemedText>
         </ThemedView>
-      </View>
+      </ThemedView>
     );
   }
 
   if (error || !article) {
     return (
-      <View style={styles.container}>
+      <ThemedView style={styles.container}>
+        <GradientHeader
+          onSearchPress={handleSearchPress}
+          showBackButton={true}
+          onBackPress={handleBack}
+        />
         <ThemedView style={styles.errorContainer}>
           <Ionicons name="alert-circle-outline" size={64} color="#999" />
           <ThemedText type="title" style={styles.errorTitle}>
             {error || "Article not found"}
           </ThemedText>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.retryButton} onPress={handleBack}>
             <ThemedText style={styles.retryButtonText}>Go Back</ThemedText>
           </TouchableOpacity>
         </ThemedView>
-      </View>
+      </ThemedView>
     );
   }
 
@@ -110,17 +119,22 @@ export default function PDFArticleScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "",
-          headerShown: true,
-          headerBackTitle: "",
-          headerLeft: () => <HeaderBackButton />,
+          headerShown: false,
         }}
       />
-      <View style={styles.container}>
+      <ThemedView style={styles.container}>
+        <GradientHeader
+          onSearchPress={handleSearchPress}
+          showBackButton={true}
+          onBackPress={handleBack}
+        />
         {/* Scrollable Content */}
         <Animated.ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          style={[
+            styles.scrollView,
+            { backgroundColor: Colors[colorScheme].contentBackground },
+          ]}
+          contentContainerStyle={[styles.scrollContent]}
           showsVerticalScrollIndicator={false}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
@@ -128,7 +142,12 @@ export default function PDFArticleScreen() {
           alwaysBounceVertical={true}
         >
           {/* Article Content */}
-          <ThemedView style={styles.contentContainer}>
+          <ThemedView
+            style={[
+              styles.contentContainer,
+              { backgroundColor: Colors[colorScheme].contentBackground },
+            ]}
+          >
             <ThemedView style={styles.metaContainer}>
               <ThemedText style={styles.metaText}>
                 Page {article.page}
@@ -151,7 +170,7 @@ export default function PDFArticleScreen() {
             </ThemedText>
           </ThemedView>
         </Animated.ScrollView>
-      </View>
+      </ThemedView>
     </>
   );
 }
@@ -186,6 +205,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 0,
     padding: 20,
     minHeight: screenHeight - 100,
+    flex: 1,
   },
   metaContainer: {
     flexDirection: "row",

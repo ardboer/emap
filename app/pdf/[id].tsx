@@ -1,4 +1,4 @@
-import { HeaderBackButton } from "@/components/HeaderBackButton";
+import GradientHeader from "@/components/GradientHeader";
 import PDFViewer from "@/components/PDFViewer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -6,7 +6,7 @@ import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { MagazineEdition } from "@/types";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet } from "react-native";
 
 export default function PDFScreen() {
   const { brandName } = useBrandConfig();
@@ -48,16 +48,20 @@ export default function PDFScreen() {
     router.back();
   };
 
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
+
   if (loading || !magazine) {
     return (
-      <View style={styles.container}>
+      <ThemedView style={styles.container}>
         <ThemedView style={styles.centerContent}>
           <ActivityIndicator size="large" />
           <ThemedText style={styles.loadingText}>
             Loading magazine...
           </ThemedText>
         </ThemedView>
-      </View>
+      </ThemedView>
     );
   }
 
@@ -65,15 +69,17 @@ export default function PDFScreen() {
     <>
       <Stack.Screen
         options={{
-          title: brandName || "Magazine",
-          headerShown: true,
-          headerBackTitle: "",
-          headerLeft: () => <HeaderBackButton onPress={handleBack} />,
+          headerShown: false,
         }}
       />
-      <View style={styles.container}>
+      <ThemedView style={styles.container}>
+        <GradientHeader
+          onSearchPress={handleSearchPress}
+          showBackButton={true}
+          onBackPress={handleBack}
+        />
         <PDFViewer magazine={magazine} onBack={handleBack} />
-      </View>
+      </ThemedView>
     </>
   );
 }
@@ -81,7 +87,6 @@ export default function PDFScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   centerContent: {
     flex: 1,

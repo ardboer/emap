@@ -1,8 +1,11 @@
+import GradientHeader from "@/components/GradientHeader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
 import { useAudio } from "@/contexts/AudioContext";
 import { podcastCategories } from "@/data/mockData";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { PodcastEpisode } from "@/types";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -15,6 +18,7 @@ import {
 } from "react-native";
 
 export default function PodcastsScreen() {
+  const colorScheme = useColorScheme() ?? "light";
   const { playEpisode } = useAudio();
   const { features } = useBrandConfig();
 
@@ -32,13 +36,19 @@ export default function PodcastsScreen() {
     playEpisode(episode);
   };
 
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
+
   const renderPodcastCard = ({ item }: { item: PodcastEpisode }) => (
     <TouchableOpacity
-      style={styles.podcastCard}
+      style={[styles.podcastCard, { backgroundColor: "transparent" }]}
       onPress={() => handlePodcastPress(item)}
     >
       <Image source={{ uri: item.coverUrl }} style={styles.podcastCover} />
-      <ThemedView style={styles.podcastInfo}>
+      <ThemedView
+        style={[styles.podcastInfo, { backgroundColor: "transparent" }]}
+      >
         <ThemedText style={styles.podcastTitle} numberOfLines={2}>
           {item.title}
         </ThemedText>
@@ -49,7 +59,13 @@ export default function PodcastsScreen() {
   );
 
   const renderCategory = (category: any) => (
-    <ThemedView key={category.id} style={styles.categoryContainer}>
+    <ThemedView
+      key={category.id}
+      style={[
+        styles.categoryContainer,
+        { backgroundColor: Colors[colorScheme].articleListBackground },
+      ]}
+    >
       <ThemedText type="subtitle" style={styles.categoryTitle}>
         {category.name}
       </ThemedText>
@@ -66,9 +82,14 @@ export default function PodcastsScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <GradientHeader onSearchPress={handleSearchPress} />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { backgroundColor: Colors[colorScheme].articleListBackground },
+        ]}
+        style={{ backgroundColor: Colors[colorScheme].articleListBackground }}
       >
         {podcastCategories.map(renderCategory)}
       </ScrollView>
@@ -111,7 +132,6 @@ const styles = StyleSheet.create({
   },
   podcastTitle: {
     fontSize: 14,
-    fontWeight: "600",
     marginBottom: 4,
     lineHeight: 18,
   },

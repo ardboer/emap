@@ -10,12 +10,16 @@ interface GradientHeaderProps {
   showLogo?: boolean;
   showSearch?: boolean;
   onSearchPress?: () => void;
+  showBackButton?: boolean;
+  onBackPress?: () => void;
 }
 
 export default function GradientHeader({
   showLogo = true,
   showSearch = true,
   onSearchPress,
+  showBackButton = false,
+  onBackPress,
 }: GradientHeaderProps) {
   const insets = useSafeAreaInsets();
 
@@ -32,13 +36,23 @@ export default function GradientHeader({
       style={[styles.container, { paddingTop: insets.top }]}
     >
       <View style={styles.content}>
-        {showLogo && (
+        {showBackButton ? (
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onBackPress}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={24} color={searchIconColor} />
+          </TouchableOpacity>
+        ) : showLogo ? (
           <BrandLogo
             width={100}
             height={32}
             style={styles.logo}
             variant="default"
           />
+        ) : (
+          <View />
         )}
         {showSearch && (
           <TouchableOpacity
@@ -66,6 +80,9 @@ const styles = StyleSheet.create({
   },
   logo: {
     // Logo styling handled by BrandLogo component
+  },
+  backButton: {
+    padding: 8,
   },
   searchButton: {
     padding: 8,

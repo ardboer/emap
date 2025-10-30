@@ -54,7 +54,7 @@ export function MiniPlayer() {
       style={[
         styles.container,
         {
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[colorScheme ?? "light"].contentBackground,
           borderTopColor: Colors[colorScheme ?? "light"].tabIconDefault,
         },
       ]}

@@ -1,5 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { fetchMagazineCover, fetchMagazineEditions } from "@/services/api";
 import { MagazineEdition } from "@/types";
 import React, { useCallback, useEffect, useState } from "react";
@@ -19,6 +21,7 @@ interface MagazineListViewProps {
 export default function MagazineListView({
   onMagazineSelect,
 }: MagazineListViewProps) {
+  const colorScheme = useColorScheme() ?? "light";
   const [magazines, setMagazines] = useState<MagazineEdition[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -157,9 +160,11 @@ export default function MagazineListView({
             tintColor="#666"
           />
         }
-        contentContainerStyle={
-          magazines.length === 0 ? styles.emptyContainer : styles.listContainer
-        }
+        contentContainerStyle={[
+          magazines.length === 0 ? styles.emptyContainer : styles.listContainer,
+          { backgroundColor: Colors[colorScheme].articleListBackground },
+        ]}
+        style={{ backgroundColor: Colors[colorScheme].articleListBackground }}
         showsVerticalScrollIndicator={false}
         numColumns={2}
         columnWrapperStyle={magazines.length > 1 ? styles.row : undefined}

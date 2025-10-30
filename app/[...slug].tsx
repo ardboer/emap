@@ -1,15 +1,11 @@
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
 import { brandManager } from "@/config/BrandManager";
 import { getPostBySlug } from "@/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Linking,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Linking, StyleSheet } from "react-native";
 
 /**
  * Catch-all route for deep linking
@@ -126,18 +122,18 @@ export default function DeepLinkHandler() {
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>{error}</Text>
-        <Text style={styles.subText}>Redirecting to home...</Text>
-      </View>
+      <ThemedView style={styles.container}>
+        <ThemedText style={styles.errorText}>{error}</ThemedText>
+        <ThemedText style={styles.subText}>Redirecting to home...</ThemedText>
+      </ThemedView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       <ActivityIndicator size="large" color="#00AECA" />
-      <Text style={styles.loadingText}>Loading article...</Text>
-    </View>
+      <ThemedText style={styles.loadingText}>Loading article...</ThemedText>
+    </ThemedView>
   );
 }
 
@@ -146,12 +142,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#666",
+    opacity: 0.7,
   },
   errorText: {
     fontSize: 18,
@@ -160,6 +155,6 @@ const styles = StyleSheet.create({
   },
   subText: {
     fontSize: 14,
-    color: "#666",
+    opacity: 0.7,
   },
 });

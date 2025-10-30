@@ -1,9 +1,11 @@
+import GradientHeader from "@/components/GradientHeader";
 import MagazineListView from "@/components/MagazineListView";
+import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { MagazineEdition } from "@/types";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 
 export default function MagazineScreen() {
   const { features } = useBrandConfig();
@@ -23,16 +25,20 @@ export default function MagazineScreen() {
     router.push(`/pdf/${magazine.id}`);
   };
 
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
+
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
+      <GradientHeader onSearchPress={handleSearchPress} />
       <MagazineListView onMagazineSelect={handleMagazineSelect} />
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
 });

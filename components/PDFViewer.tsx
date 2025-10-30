@@ -209,7 +209,7 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
   );
 
   return (
-    <>
+    <ThemedView style={{ flex: 1 }}>
       {loading && renderLoadingState()}
 
       {error && !loading && renderErrorState()}
@@ -251,7 +251,7 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
           />
         </GestureHandlerRootView>
       )}
-    </>
+    </ThemedView>
   );
 }
 

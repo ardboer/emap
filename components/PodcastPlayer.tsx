@@ -60,10 +60,15 @@ export function PodcastPlayer() {
       <SafeAreaView
         style={[
           styles.container,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[colorScheme].contentBackground },
         ]}
       >
-        <ThemedView style={styles.header}>
+        <ThemedView
+          style={[
+            styles.header,
+            { backgroundColor: Colors[colorScheme].contentBackground },
+          ]}
+        >
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
             <Ionicons
               name="chevron-down"
@@ -75,16 +80,21 @@ export function PodcastPlayer() {
           <View style={styles.placeholder} />
         </ThemedView>
 
-        <View style={styles.content}>
-          <View style={styles.artworkContainer}>
+        <ThemedView
+          style={[
+            styles.content,
+            { backgroundColor: Colors[colorScheme].contentBackground },
+          ]}
+        >
+          <ThemedView style={styles.artworkContainer}>
             <Image
               source={{ uri: state.currentEpisode.coverUrl }}
               style={styles.artwork}
               contentFit="cover"
             />
-          </View>
+          </ThemedView>
 
-          <View style={styles.episodeInfo}>
+          <ThemedView style={styles.episodeInfo}>
             <ThemedText style={styles.episodeTitle} numberOfLines={2}>
               {state.currentEpisode.title}
             </ThemedText>
@@ -95,9 +105,9 @@ export function PodcastPlayer() {
               {state.currentEpisode.duration} •{" "}
               {state.currentEpisode.publishDate}
             </ThemedText>
-          </View>
+          </ThemedView>
 
-          <View style={styles.progressContainer}>
+          <ThemedView style={styles.progressContainer}>
             <Slider
               style={styles.progressSlider}
               minimumValue={0}
@@ -108,11 +118,7 @@ export function PodcastPlayer() {
               maximumTrackTintColor={
                 Colors[colorScheme ?? "light"].tabIconDefault
               }
-              thumbStyle={{
-                backgroundColor: Colors[colorScheme ?? "light"].tint,
-                width: 20,
-                height: 20,
-              }}
+              thumbTintColor={Colors[colorScheme ?? "light"].tint}
             />
             <View style={styles.timeContainer}>
               <ThemedText style={styles.timeText}>
@@ -122,9 +128,9 @@ export function PodcastPlayer() {
                 {formatTime(state.duration)}
               </ThemedText>
             </View>
-          </View>
+          </ThemedView>
 
-          <View style={styles.controls}>
+          <ThemedView style={styles.controls}>
             <TouchableOpacity style={styles.controlButton}>
               <Ionicons
                 name="play-skip-back"
@@ -162,8 +168,8 @@ export function PodcastPlayer() {
                 color={Colors[colorScheme ?? "light"].text}
               />
             </TouchableOpacity>
-          </View>
-        </View>
+          </ThemedView>
+        </ThemedView>
       </SafeAreaView>
     </Modal>
   );
@@ -221,6 +227,7 @@ const styles = StyleSheet.create({
   episodeInfo: {
     alignItems: "center",
     marginBottom: 40,
+    backgroundColor: "transparant",
     width: "100%",
   },
   episodeTitle: {
@@ -243,10 +250,12 @@ const styles = StyleSheet.create({
   },
   progressContainer: {
     width: "100%",
+    backgroundColor: "transparant",
     marginBottom: 0,
   },
   progressSlider: {
     width: "100%",
+    backgroundColor: "transparant",
     height: 40,
   },
   timeContainer: {
@@ -260,6 +269,7 @@ const styles = StyleSheet.create({
   },
   controls: {
     flexDirection: "row",
+    backgroundColor: "transparant",
     alignItems: "center",
     justifyContent: "center",
     gap: 40,

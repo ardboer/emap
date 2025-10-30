@@ -14,6 +14,7 @@ import "react-native-reanimated";
 import { OnboardingContainer } from "@/components/onboarding";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { analyticsService } from "@/services/analytics";
 import { initializeFirebase } from "@/services/firebaseInit";
@@ -27,6 +28,7 @@ import { getAllFonts } from "@/utils/fontLoader";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const { brandConfig } = useBrandConfig();
   const router = useRouter();
   const pathname = usePathname();
   const segments = useSegments();
@@ -231,12 +233,39 @@ export default function RootLayout() {
     return null;
   }
 
+  // Create custom theme with brand colors
+  const themeColors = brandConfig?.theme.colors[colorScheme ?? "light"];
+  const customDarkTheme = {
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      background: themeColors?.background || DarkTheme.colors.background,
+      card: themeColors?.background || DarkTheme.colors.card,
+    },
+  };
+
+  const customLightTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: themeColors?.background || DefaultTheme.colors.background,
+      card: themeColors?.background || DefaultTheme.colors.card,
+    },
+  };
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView
+      style={{
+        flex: 1,
+        backgroundColor:
+          themeColors?.background ||
+          (colorScheme === "dark" ? "#151718" : "#fff"),
+      }}
+    >
       <AuthProvider>
         <AudioProvider>
           <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+            value={colorScheme === "dark" ? customDarkTheme : customLightTheme}
           >
             <Stack>
               <Stack.Screen

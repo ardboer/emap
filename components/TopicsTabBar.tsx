@@ -116,7 +116,8 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 12,
     fontWeight: "600",
-    lineHeight: 12,
+    paddingHorizontal: 8,
+    lineHeight: 16,
     textAlign: "center",
   },
 });
