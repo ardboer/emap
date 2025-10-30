@@ -116,7 +116,7 @@
     "secondaryButtonUrl": "https://www.nursingtimes.net/login"
   },
   "features": {
-    "enablePodcasts": true,
+    "enablePodcasts": false,
     "enableClinical": true,
     "enableEvents": true,
     "enableAsk": true,

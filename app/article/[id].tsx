@@ -7,6 +7,7 @@ import TrendingArticles from "@/components/TrendingArticles";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { getAnonymousId } from "@/services/anonymousId";
 import { trackArticleView } from "@/services/miso";
 import { Article, StructuredContentNode } from "@/types";
@@ -47,6 +48,7 @@ export default function ArticleScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallEnabled, setPaywallEnabled] = useState(true);
+  const contentBackground = useThemeColor({}, "contentBackground");
 
   // Related articles state for swipe navigation
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
@@ -294,8 +296,12 @@ export default function ArticleScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ThemedView style={styles.centerContent}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: contentBackground }]}
+      >
+        <ThemedView
+          style={[styles.centerContent, { backgroundColor: contentBackground }]}
+        >
           <ActivityIndicator size="large" />
           <ThemedText style={styles.loadingText}>Loading article...</ThemedText>
         </ThemedView>
