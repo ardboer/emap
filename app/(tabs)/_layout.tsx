@@ -1,14 +1,12 @@
 import { Tabs, router } from "expo-router";
 import React from "react";
-import { Platform, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
 
 import { BrandLogo } from "@/components/BrandLogo";
 import { HapticTab } from "@/components/HapticTab";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { PodcastPlayer } from "@/components/PodcastPlayer";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import TabBarBackground from "@/components/ui/TabBarBackground";
-import TabBarBackgroundIOS from "@/components/ui/TabBarBackground.ios";
 import { Colors } from "@/constants/Colors";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -41,40 +39,21 @@ export default function TabLayout() {
   return (
     <>
       <Tabs
-        screenOptions={({ route }) => ({
+        screenOptions={{
           tabBarActiveTintColor,
           tabBarInactiveTintColor,
-          headerShown: true, // Enable headers by default
-          headerBackTitle: "", // Remove back button text
+          headerShown: true,
           tabBarButton: HapticTab,
-          tabBarBackground: Platform.select({
-            ios: route.name === "index" ? undefined : TabBarBackgroundIOS,
-            default:
-              route.name === "index"
-                ? () => null
-                : () => <TabBarBackground shouldRender={false} />,
-          }),
-          tabBarStyle: Platform.select({
-            ios: {
-              position: "absolute",
-              backgroundColor:
-                route.name === "index" ? "transparent" : tabBarBackgroundColor,
-              borderTopWidth: route.name === "index" ? 0 : undefined,
-              shadowOpacity: route.name === "index" ? 0 : undefined,
-            },
-            default: {
-              position: "absolute",
-              backgroundColor:
-                route.name === "index"
-                  ? colorScheme === "light"
-                    ? tabBarBackgroundColor
-                    : "transparent"
-                  : tabBarBackgroundColor,
-              borderTopWidth: route.name === "index" ? 0 : undefined,
-              elevation: route.name === "index" ? 0 : undefined,
-            },
-          }),
-        })}
+          tabBarStyle: {
+            position: "absolute",
+            backgroundColor: tabBarBackgroundColor,
+            borderTopWidth: 0,
+          },
+          tabBarLabelStyle: {
+            textTransform: "uppercase",
+            fontSize: 9,
+          },
+        }}
       >
         <Tabs.Screen
           name="index"
@@ -90,29 +69,7 @@ export default function TabLayout() {
           name="news"
           options={{
             title: "Articles",
-            headerTitle: "",
-            headerShadowVisible: false,
-            headerStyle: {
-              borderBottomWidth: 0,
-              backgroundColor: headerBackgroundColor,
-            },
-            headerLeft: () => (
-              <BrandLogo
-                width={100}
-                height={32}
-                style={{ marginLeft: 16, marginBottom: 8 }}
-                variant="header"
-              />
-            ),
-            headerRight: () => (
-              <TouchableOpacity
-                style={{ marginRight: 16, padding: 8 }}
-                onPress={handleSearchPress}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="search" size={24} color={searchIconColor} />
-              </TouchableOpacity>
-            ),
+            headerShown: false, // Hide header - using custom GradientHeader in news.tsx
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="newspaper.fill" color={color} />
             ),
@@ -122,29 +79,7 @@ export default function TabLayout() {
           name="clinical"
           options={{
             title: "Clinical",
-            headerTitle: "",
-            headerShadowVisible: false,
-            headerStyle: {
-              borderBottomWidth: 0,
-              backgroundColor: headerBackgroundColor,
-            },
-            headerLeft: () => (
-              <BrandLogo
-                width={100}
-                height={32}
-                style={{ marginLeft: 16, marginBottom: 8 }}
-                variant="header"
-              />
-            ),
-            headerRight: () => (
-              <TouchableOpacity
-                style={{ marginRight: 16, padding: 8 }}
-                onPress={handleSearchPress}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="search" size={24} color={searchIconColor} />
-              </TouchableOpacity>
-            ),
+            headerShown: false, // Hide header - using custom GradientHeader in clinical.tsx
             href: features?.enableClinical ? "/(tabs)/clinical" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol
@@ -159,29 +94,7 @@ export default function TabLayout() {
           name="events"
           options={{
             title: "Events",
-            headerTitle: "",
-            headerShadowVisible: false,
-            headerStyle: {
-              borderBottomWidth: 0,
-              backgroundColor: headerBackgroundColor,
-            },
-            headerLeft: () => (
-              <BrandLogo
-                width={100}
-                height={32}
-                style={{ marginLeft: 16, marginBottom: 8 }}
-                variant="header"
-              />
-            ),
-            headerRight: () => (
-              <TouchableOpacity
-                style={{ marginRight: 16, padding: 8 }}
-                onPress={handleSearchPress}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="search" size={24} color={searchIconColor} />
-              </TouchableOpacity>
-            ),
+            headerShown: false, // Hide header - using custom GradientHeader in events.tsx
             href: features?.enableEvents ? "/(tabs)/events" : null,
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="calendar" color={color} />

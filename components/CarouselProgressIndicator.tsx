@@ -1,4 +1,5 @@
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { hexToRgba } from "@/utils/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
@@ -28,7 +29,8 @@ const ProgressBar: React.FC<{
   duration: number;
   isPlaying: boolean;
   onProgressComplete?: () => void;
-  progressColor: string;
+  progressFillColor: string;
+  progressBackgroundColor: string;
 }> = ({
   index,
   currentIndex,
@@ -36,7 +38,8 @@ const ProgressBar: React.FC<{
   duration,
   isPlaying,
   onProgressComplete,
-  progressColor,
+  progressFillColor,
+  progressBackgroundColor,
 }) => {
   const progress = useSharedValue(0);
 
@@ -86,12 +89,17 @@ const ProgressBar: React.FC<{
   });
 
   return (
-    <View style={[styles.progressBarContainer, { width: width - 4 }]}>
+    <View
+      style={[
+        styles.progressBarContainer,
+        { width: width - 4, backgroundColor: progressBackgroundColor },
+      ]}
+    >
       <Animated.View
         style={[
           styles.progressBarFill,
           progressStyle,
-          { backgroundColor: progressColor },
+          { backgroundColor: progressFillColor },
         ]}
       />
     </View>
@@ -111,23 +119,24 @@ export const CarouselProgressIndicator: React.FC<
   const { brandConfig } = useBrandConfig();
   const indicatorWidth = (screenWidth - 48) / totalItems; // 24px padding on each side
 
-  // Get the progress indicator color from brand config, fallback to white
-  const progressColor =
-    brandConfig?.theme.colors.light.progressIndicator ||
-    "rgba(255, 255, 255, 1)";
+  // Get colors from brand config
+  const overlayGradientStart =
+    brandConfig?.theme.colors.light.overlayGradientStart || "#011620";
+  const progressFillColor =
+    brandConfig?.theme.colors.light.progressIndicatorFill || "#10D1F0";
+  const progressBackgroundColor =
+    brandConfig?.theme.colors.light.progressIndicatorBackground || "#00334C";
+
+  // Create gradient colors using brand config - ensure proper typing for LinearGradient
+  const gradientColors: readonly [string, string, ...string[]] = [
+    hexToRgba(overlayGradientStart, 0.5),
+    hexToRgba(overlayGradientStart, 0.3),
+    "transparent",
+  ] as const;
 
   return (
     <View style={[styles.container, style]}>
-      <LinearGradient
-        colors={[
-          "rgba(0, 0, 0, 0.5)",
-          "rgba(0, 0, 0, 0.5)",
-          "rgba(0, 0, 0, 0.5)",
-          "rgba(0, 0, 0, 0.3)",
-          "transparent",
-        ]}
-        style={styles.gradientBackground}
-      >
+      <LinearGradient colors={gradientColors} style={styles.gradientBackground}>
         <View style={styles.progressContainer}>
           {Array.from({ length: totalItems }, (_, index) => (
             <ProgressBar
@@ -137,7 +146,8 @@ export const CarouselProgressIndicator: React.FC<
               width={indicatorWidth}
               duration={duration}
               isPlaying={isPlaying}
-              progressColor={progressColor}
+              progressFillColor={progressFillColor}
+              progressBackgroundColor={progressBackgroundColor}
               onProgressComplete={
                 index === currentIndex ? onProgressComplete : undefined
               }
@@ -173,9 +183,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   progressBarContainer: {
-    height: 4, // Slightly thicker for better visibility
+    height: 4,
     borderRadius: 2,
-    backgroundColor: "rgba(255, 255, 255, 0.3)", // More subtle background
     overflow: "hidden",
     position: "relative",
   },

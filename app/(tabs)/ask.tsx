@@ -1,6 +1,8 @@
+import GradientHeader from "@/components/GradientHeader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { router } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -87,8 +89,13 @@ export default function AskScreen() {
     );
   }
 
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
+
   return (
     <ThemedView style={styles.container}>
+      <GradientHeader onSearchPress={handleSearchPress} />
       {webViewLoading && (
         <ThemedView style={styles.loadingOverlay}>
           <ActivityIndicator size="large" />
@@ -223,8 +230,6 @@ export default function AskScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
-    paddingHorizontal: 8,
   },
   scrollView: {
     flex: 1,
@@ -249,7 +254,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: "transparent", // "rgba(255, 255, 255, 0.9)",
     zIndex: 1,
   },
   loadingText: {

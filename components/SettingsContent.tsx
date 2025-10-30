@@ -2,8 +2,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { brandManager } from "@/config/BrandManager";
+import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import {
   checkNotificationPermission,
   subscribeToTopic,
@@ -37,6 +39,7 @@ interface TopicSubscription {
 }
 
 export function SettingsContent({ onClose }: SettingsContentProps) {
+  const colorScheme = useColorScheme();
   const { user, isAuthenticated, isLoading, error, login, logout } = useAuth();
   const [notificationStatus, setNotificationStatus] = React.useState<{
     enabled: boolean;
@@ -57,7 +60,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   } | null>(null);
 
   // Get brand configuration for test article
-  const { brandConfig } = useBrandConfig();
+  const { brandConfig, colors } = useBrandConfig();
+
+  // Get article detail background color
+  const themeColors = colors?.[colorScheme ?? "light"];
+  const backgroundColor =
+    (themeColors as any)?.contentBackground ||
+    themeColors?.background ||
+    Colors[colorScheme ?? "light"].background;
+  const primaryColor = themeColors?.primary || "#007AFF";
 
   // Available topics for subscription (with brand prefix)
   const brandShortcode = brandManager.getActiveBrandShortcode();
@@ -392,10 +403,18 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     onPress?: () => void;
     rightElement?: React.ReactNode;
   }) => (
-    <TouchableOpacity style={styles.settingsItem} onPress={onPress}>
-      <ThemedView style={styles.settingsItemLeft}>
-        <IconSymbol name={icon} size={24} color="#666" />
-        <ThemedView style={styles.settingsItemText}>
+    <TouchableOpacity
+      style={[
+        styles.settingsItem,
+        {
+          backgroundColor: (themeColors as any)?.highlightBoxBg || "#00334C",
+        },
+      ]}
+      onPress={onPress}
+    >
+      <ThemedView transparant style={styles.settingsItemLeft}>
+        <IconSymbol name={icon} size={24} color={primaryColor} />
+        <ThemedView transparant style={styles.settingsItemText}>
           <ThemedText style={styles.settingsItemTitle}>{title}</ThemedText>
           {subtitle && (
             <ThemedText style={styles.settingsItemSubtitle}>
@@ -405,7 +424,9 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         </ThemedView>
       </ThemedView>
       {rightElement && (
-        <ThemedView style={styles.settingsItemRight}>{rightElement}</ThemedView>
+        <ThemedView transparant style={styles.settingsItemRight}>
+          {rightElement}
+        </ThemedView>
       )}
     </TouchableOpacity>
   );
@@ -414,9 +435,10 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     <ScrollView
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
+      style={{ backgroundColor }}
     >
       {/* Account Section */}
-      <ThemedView style={styles.section}>
+      <ThemedView transparant style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Account
         </ThemedText>
@@ -429,9 +451,13 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
               onPress={login}
               rightElement={
                 isLoading ? (
-                  <ActivityIndicator size="small" color="#007AFF" />
+                  <ActivityIndicator size="small" color={primaryColor} />
                 ) : (
-                  <IconSymbol name="chevron.right" size={20} color="#666" />
+                  <IconSymbol
+                    name="chevron.right"
+                    size={20}
+                    color={primaryColor}
+                  />
                 )
               }
             />
@@ -439,9 +465,22 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           </>
         ) : (
           <>
-            <ThemedView style={styles.userInfoContainer}>
-              <IconSymbol name="person.circle.fill" size={48} color="#007AFF" />
-              <ThemedView style={styles.userInfoText}>
+            <ThemedView
+              transparant
+              style={[
+                styles.userInfoContainer,
+                {
+                  backgroundColor:
+                    (themeColors as any)?.highlightBoxBg || "#00334C",
+                },
+              ]}
+            >
+              <IconSymbol
+                name="person.circle.fill"
+                size={48}
+                color={primaryColor}
+              />
+              <ThemedView transparant style={styles.userInfoText}>
                 <ThemedText style={styles.userEmail}>{user?.email}</ThemedText>
                 {user?.firstName && (
                   <ThemedText style={styles.userName}>
@@ -457,9 +496,13 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
               onPress={logout}
               rightElement={
                 isLoading ? (
-                  <ActivityIndicator size="small" color="#007AFF" />
+                  <ActivityIndicator size="small" color={primaryColor} />
                 ) : (
-                  <IconSymbol name="chevron.right" size={20} color="#666" />
+                  <IconSymbol
+                    name="chevron.right"
+                    size={20}
+                    color={primaryColor}
+                  />
                 )
               }
             />
@@ -469,7 +512,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
       </ThemedView>
 
       {/* Notifications Section */}
-      <ThemedView style={styles.section}>
+      <ThemedView transparant style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Notifications
         </ThemedText>
@@ -485,7 +528,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           icon="bell.fill"
           onPress={handleOpenNotificationSettings}
           rightElement={
-            <IconSymbol name="chevron.right" size={20} color="#666" />
+            <IconSymbol name="chevron.right" size={20} color={primaryColor} />
           }
         />
 
@@ -507,8 +550,8 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
                     onValueChange={() =>
                       handleTopicToggle(topic.id, topic.subscribed)
                     }
-                    trackColor={{ false: "#767577", true: "#007AFF" }}
-                    thumbColor="#fff"
+                    trackColor={{ false: "#767577", true: primaryColor }}
+                    thumbColor={topic.subscribed ? "#00334C" : "#fff"}
                   />
                 }
               />
@@ -517,7 +560,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         )}
       </ThemedView>
 
-      <ThemedView style={styles.section}>
+      <ThemedView transparant style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Content
         </ThemedText>
@@ -546,7 +589,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         />
       </ThemedView>
 
-      <ThemedView style={styles.section}>
+      <ThemedView transparant style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Storage
         </ThemedText>
@@ -562,7 +605,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         />
       </ThemedView>
 
-      <ThemedView style={styles.section}>
+      <ThemedView transparant style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Development
         </ThemedText>
@@ -592,7 +635,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         )}
       </ThemedView>
 
-      <ThemedView style={styles.section}>
+      <ThemedView transparant style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           About
         </ThemedText>
@@ -615,7 +658,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         />
       </ThemedView>
 
-      <ThemedView style={styles.section}>
+      <ThemedView transparant style={styles.section}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Debug
         </ThemedText>
@@ -627,8 +670,8 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             <Switch
               value={showPaywall}
               onValueChange={handlePaywallToggle}
-              trackColor={{ false: "#767577", true: "#007AFF" }}
-              thumbColor="#fff"
+              trackColor={{ false: "#767577", true: primaryColor }}
+              thumbColor={showPaywall ? "#00334C" : "#fff"}
             />
           }
         />
@@ -640,8 +683,8 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             <Switch
               value={forceLandscapeImages}
               onValueChange={handleForceLandscapeToggle}
-              trackColor={{ false: "#767577", true: "#007AFF" }}
-              thumbColor="#fff"
+              trackColor={{ false: "#767577", true: primaryColor }}
+              thumbColor={forceLandscapeImages ? "#00334C" : "#fff"}
             />
           }
         />
@@ -653,8 +696,8 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             <Switch
               value={useColorGradient}
               onValueChange={handleColorGradientToggle}
-              trackColor={{ false: "#767577", true: "#007AFF" }}
-              thumbColor="#fff"
+              trackColor={{ false: "#767577", true: primaryColor }}
+              thumbColor={useColorGradient ? "#00334C" : "#fff"}
             />
           }
         />

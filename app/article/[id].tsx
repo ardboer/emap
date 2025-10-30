@@ -4,10 +4,13 @@ import { RichContentRenderer } from "@/components/RichContentRenderer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TrendingArticles from "@/components/TrendingArticles";
+import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { getAnonymousId } from "@/services/anonymousId";
 import { trackArticleView } from "@/services/miso";
 import { Article, StructuredContentNode } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -17,7 +20,9 @@ import {
   ActivityIndicator,
   Dimensions,
   StyleSheet,
+  Text,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -35,6 +40,8 @@ const HEADER_HEIGHT = screenHeight * 0.4;
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>(); // const id = 345162; //
   const { user, isAuthenticated } = useAuth();
+  const colorScheme = useColorScheme() ?? "light";
+  const { brandConfig } = useBrandConfig();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -325,8 +332,31 @@ export default function ArticleScreen() {
 
         {/* Back Button */}
         <Animated.View style={[styles.backButtonTop, backButtonAnimatedStyle]}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <ThemedText style={styles.backButtonText}>← Back</ThemedText>
+          <TouchableOpacity
+            style={[
+              styles.backButtonContainer,
+              {
+                backgroundColor: Colors[colorScheme].contentBackButtonBg,
+              },
+            ]}
+            onPress={() => router.back()}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={10}
+              color={Colors[colorScheme].contentBackButtonText}
+            />
+            <Text
+              style={[
+                styles.backButtonText,
+                {
+                  color: Colors[colorScheme].contentBackButtonText,
+                  fontFamily: brandConfig?.theme.fonts.primarySemiBold,
+                },
+              ]}
+            >
+              BACK
+            </Text>
           </TouchableOpacity>
         </Animated.View>
 
@@ -360,25 +390,65 @@ export default function ArticleScreen() {
           <View style={styles.headerSpacer} />
 
           {/* Article Content */}
-          <ThemedView style={styles.contentContainer}>
-            <ThemedView style={styles.metaContainer}>
-              {/* <ThemedText style={styles.category}>{article.author}</ThemedText> */}
-              <ThemedText style={styles.timestamp}>
-                {article.timestamp}
-              </ThemedText>
-            </ThemedView>
+          <View
+            style={[
+              styles.contentContainer,
+              {
+                backgroundColor: Colors[colorScheme].contentBackground,
+              },
+            ]}
+          >
+            <View style={styles.metaContainer}>
+              <Text
+                style={[
+                  styles.timestamp,
+                  {
+                    color: Colors[colorScheme].contentMetaText,
+                    fontFamily: brandConfig?.theme.fonts.primaryMedium,
+                  },
+                ]}
+              >
+                {article.timestamp?.toUpperCase() || "65 DAYS AGO"}
+              </Text>
+            </View>
 
-            <ThemedText type="title" style={styles.title}>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: Colors[colorScheme].contentTitleText,
+                  fontFamily: brandConfig?.theme.fonts.primaryBold,
+                },
+              ]}
+            >
               {article.title}
-            </ThemedText>
+            </Text>
 
             {article.subtitle && (
-              <ThemedText type="subtitle" style={styles.subtitle}>
+              <Text
+                style={[
+                  styles.subtitle,
+                  {
+                    color: Colors[colorScheme].contentTitleText,
+                    fontFamily: brandConfig?.theme.fonts.primaryBold,
+                  },
+                ]}
+              >
                 {article.subtitle}
-              </ThemedText>
+              </Text>
             )}
 
-            <ThemedText style={styles.leadText}>{article.leadText}</ThemedText>
+            <Text
+              style={[
+                styles.leadText,
+                {
+                  color: Colors[colorScheme].contentTitleText,
+                  fontFamily: brandConfig?.theme.fonts.primaryBold,
+                },
+              ]}
+            >
+              {article.leadText}
+            </Text>
 
             {/* Banner Ad below lead text */}
             <BannerAd
@@ -398,7 +468,7 @@ export default function ArticleScreen() {
 
             {/* Trending Articles Section */}
             <TrendingArticles />
-          </ThemedView>
+          </View>
         </Animated.ScrollView>
 
         <PaywallBottomSheet
@@ -415,6 +485,16 @@ export default function ArticleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backButtonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    marginTop: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
   },
   headerContainer: {
     position: "absolute",
@@ -433,14 +513,13 @@ const styles = StyleSheet.create({
     top: 50,
     left: 16,
     zIndex: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
   },
   backButtonText: {
-    color: "white",
-    fontWeight: "600",
+    fontSize: 12,
+    paddingTop: 4,
+    lineHeight: 12,
+    fontWeight: "600" as "600",
+    textTransform: "uppercase" as "uppercase",
   },
   scrollView: {
     flex: 1,
@@ -481,39 +560,31 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   metaContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  category: {
-    fontSize: 14,
-    fontWeight: "600",
-    opacity: 0.7,
-    textTransform: "uppercase",
+    marginBottom: 18,
   },
   timestamp: {
-    fontSize: 14,
-    opacity: 0.6,
+    fontSize: 12,
+    lineHeight: 12,
+    fontWeight: "500" as "500",
+    textTransform: "uppercase" as "uppercase",
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 12,
-    lineHeight: 30,
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: "700" as "700",
+    marginBottom: 18,
   },
   subtitle: {
-    fontSize: 18,
-    marginBottom: 16,
-    opacity: 0.8,
-    lineHeight: 24,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "700" as "700",
+    marginBottom: 18,
   },
   leadText: {
     fontSize: 16,
-    fontWeight: "500",
+    lineHeight: 22,
+    fontWeight: "400" as "400",
     marginBottom: 20,
-    lineHeight: 24,
-    opacity: 0.9,
   },
   bannerAd: {
     marginVertical: 20,

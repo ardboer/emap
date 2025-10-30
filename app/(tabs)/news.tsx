@@ -1,7 +1,9 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
-import SwipeableTabBar from "@/components/SwipeableTabBar";
+import GradientHeader from "@/components/GradientHeader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import TopicsTabBar from "@/components/TopicsTabBar";
+import { Colors } from "@/constants/Colors";
 import {
   fetchCategoryContent,
   fetchMenuItems,
@@ -16,9 +18,11 @@ import {
   RefreshControl,
   StyleSheet,
   TouchableOpacity,
+  useColorScheme,
 } from "react-native";
 
 export default function NewsScreen() {
+  const colorScheme = useColorScheme() ?? "light";
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -116,6 +120,10 @@ export default function NewsScreen() {
     router.push(`/article/${article.id}`);
   };
 
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
+
   const handleTabChange = async (index: number) => {
     setActiveTabIndex(index);
 
@@ -164,7 +172,10 @@ export default function NewsScreen() {
             onRefresh={() => onRefreshTab(tabIndex)}
           />
         }
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[
+          styles.listContainer,
+          { backgroundColor: Colors[colorScheme].articleListBackground },
+        ]}
         ListEmptyComponent={
           <ThemedView style={styles.centerContent}>
             <ThemedText style={styles.emptyText}>
@@ -196,7 +207,7 @@ export default function NewsScreen() {
     );
   }
 
-  // Create tabs from menu items (only titles for SwipeableTabBar)
+  // Create tabs from menu items
   const tabs = menuItems.map((item) => ({
     id: item.object_id.toString(),
     title: item.title,
@@ -210,30 +221,54 @@ export default function NewsScreen() {
     });
   }
 
-  // Content renderer function for SwipeableTabBar
-  const renderTabContentForSwipe = (tabIndex: number) => {
-    if (menuItems.length === 0) {
-      return (
-        <ThemedView style={styles.centerContent}>
-          <ThemedText style={styles.emptyText}>
-            No menu items available
-          </ThemedText>
-        </ThemedView>
-      );
-    }
-
-    return renderTabContent(tabIndex);
-  };
+  // Get current tab's articles
+  const currentMenuItemKey =
+    menuItems[activeTabIndex]?.object_id.toString() || "default";
+  const currentArticles = tabArticles[currentMenuItemKey] || [];
+  const isCurrentTabLoading = tabLoadingStates[currentMenuItemKey] || false;
+  const isCurrentTabRefreshing =
+    tabRefreshingStates[currentMenuItemKey] || false;
 
   return (
     <ThemedView style={styles.container}>
-      <SwipeableTabBar
+      <GradientHeader onSearchPress={handleSearchPress} />
+      <TopicsTabBar
         tabs={tabs}
         activeTabIndex={activeTabIndex}
         onTabChange={handleTabChange}
-        renderTabContent={renderTabContentForSwipe}
-        preloadAdjacentTabs={true}
       />
+      {isCurrentTabLoading && currentArticles.length === 0 ? (
+        <ThemedView style={[styles.container, styles.centerContent]}>
+          <ActivityIndicator size="large" />
+          <ThemedText style={styles.loadingText}>
+            Loading {menuItems[activeTabIndex]?.title || "articles"}...
+          </ThemedText>
+        </ThemedView>
+      ) : (
+        <FlatList
+          data={currentArticles}
+          renderItem={renderArticle}
+          keyExtractor={(item, index) => item.id + index.toString()}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isCurrentTabRefreshing}
+              onRefresh={() => onRefreshTab(activeTabIndex)}
+            />
+          }
+          contentContainerStyle={[
+            styles.listContainer,
+            { backgroundColor: Colors[colorScheme].articleListBackground },
+          ]}
+          ListEmptyComponent={
+            <ThemedView style={styles.centerContent}>
+              <ThemedText style={styles.emptyText}>
+                No articles available
+              </ThemedText>
+            </ThemedView>
+          }
+        />
+      )}
     </ThemedView>
   );
 }

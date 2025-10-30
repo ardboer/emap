@@ -135,9 +135,14 @@ export function PaywallBottomSheet({
   }, [visible, paywallConfig]);
 
   const isDark = colorScheme === "dark";
-  const backgroundColor = Colors[colorScheme ?? "light"].background;
-  const textColor = Colors[colorScheme ?? "light"].text;
-  const primaryColor = colors?.[colorScheme ?? "light"].primary || "#007AFF";
+  const themeColors = colors?.[colorScheme ?? "light"];
+  // Use contentBackground for consistency with article detail view
+  const backgroundColor =
+    (themeColors as any)?.contentBackground ||
+    themeColors?.background ||
+    Colors[colorScheme ?? "light"].background;
+  const textColor = themeColors?.text || Colors[colorScheme ?? "light"].text;
+  const primaryColor = themeColors?.primary || "#007AFF";
 
   return (
     <Modal
@@ -256,9 +261,7 @@ export function PaywallBottomSheet({
                   styles.secondaryButton,
                   {
                     borderColor: primaryColor,
-                    backgroundColor: isDark
-                      ? Colors[colorScheme ?? "dark"].background
-                      : "transparent",
+                    backgroundColor: isDark ? backgroundColor : "transparent",
                   },
                 ]}
                 onPress={handleSecondaryButtonPress}

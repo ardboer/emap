@@ -6,10 +6,8 @@
   "bundleId": "metropolis.net.nursingtimes",
   "apiConfig": {
     "baseUrl": "https://www.nursingtimes.net",
-    "authUrl": "https://staging-www.nursingtimes.net",
     "jwtSecret": "4d428b80a95267746a0cb7a55e16955fbr5a09d3985e378aabdfc5179bf04vg5",
     "hash": "5506c4c9af9349c87a364b3b0b1988",
-    "authHash": "9cdd5fcf366d76e1a7b69b33129a73",
     "menuId": 162196,
     "maxNbOfItems": 10
   },
@@ -24,8 +22,29 @@
         "tabIconSelected": "#00AECA",
         "tabBarBackground": "#ffffff",
         "progressIndicator": "#00AECA",
+        "progressIndicatorBackground": "#00334C",
+        "progressIndicatorFill": "#10D1F0",
+        "overlayGradientStart": "#011620",
+        "overlayGradientEnd": "#011620",
         "headerBackground": "#ffffff",
-        "searchIcon": "#687076"
+        "searchIcon": "#B3F4FF",
+        "newsHeaderGradientStart": "#00334C",
+        "newsHeaderGradientEnd": "#00334C",
+        "topicsBackground": "#00334C",
+        "topicsActiveTab": "#FFFFFF",
+        "topicsActiveText": "#00334C",
+        "topicsInactiveText": "#B3F4FF",
+        "contentBackground": "#FFFFFF",
+        "contentTitleText": "#00334C",
+        "contentBodyText": "#011620",
+        "contentMetaText": "#00334C",
+        "contentBackButtonBg": "#00334C",
+        "contentBackButtonText": "#B3F4FF",
+        "highlightBoxBg": "#E8F4F8",
+        "highlightBoxText": "#011620",
+        "highlightBoxBorder": "#10D1F0",
+        "articleListBackground": "#FFFFFF",
+        "articleTeaserTitleText": "#00334C"
       },
       "dark": {
         "primary": "#fff",
@@ -34,15 +53,40 @@
         "icon": "#9BA1A6",
         "tabIconDefault": "#9BA1A6",
         "tabIconSelected": "#ffffff",
-        "tabBarBackground": "#151718",
+        "tabBarBackground": "#011620",
         "progressIndicator": "#fff",
+        "progressIndicatorBackground": "#00334C",
+        "progressIndicatorFill": "#10D1F0",
+        "overlayGradientStart": "#011620",
+        "overlayGradientEnd": "#011620",
         "headerBackground": "#000000",
-        "searchIcon": "#FFFFFF"
+        "searchIcon": "#B3F4FF",
+        "newsHeaderGradientStart": "#00334C",
+        "newsHeaderGradientEnd": "#011620",
+        "topicsBackground": "#00334C",
+        "topicsActiveTab": "#011620",
+        "topicsActiveText": "#ffffff",
+        "topicsInactiveText": "#B3F4FF",
+        "contentBackground": "#011620",
+        "contentTitleText": "#FFFFFF",
+        "contentBodyText": "#FFFFFF",
+        "contentMetaText": "#85E7F7",
+        "contentBackButtonBg": "#00334C",
+        "contentBackButtonText": "#B3F4FF",
+        "highlightBoxBg": "#00334C",
+        "highlightBoxText": "#FFFFFF",
+        "highlightBoxBorder": "#10D1F0",
+        "articleListBackground": "#011620",
+        "articleTeaserTitleText": "#FFFFFF"
       }
     },
     "fonts": {
       "primary": "OpenSans-Regular",
-      "secondary": "OpenSans-Regular"
+      "secondary": "Klavika-Regular-Regular",
+      "primaryBold": "OpenSans-Bold",
+      "primarySemiBold": "OpenSans-SemiBold",
+      "primaryMedium": "OpenSans-Medium",
+      "primaryItalic": "OpenSans-Italic"
     }
   },
   "branding": {
@@ -76,7 +120,7 @@
     "enableClinical": true,
     "enableEvents": true,
     "enableAsk": true,
-    "enableMagazine": true
+    "enableMagazine": false
   },
   "misoConfig": {
     "apiKey": "FcakM2bTHy0Sf0uaM6mYpwI9vnXWKdu4E9jO6Bx2",

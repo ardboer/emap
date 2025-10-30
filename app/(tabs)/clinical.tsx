@@ -1,6 +1,9 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
+import GradientHeader from "@/components/GradientHeader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme.web";
 import { fetchClinicalArticles } from "@/services/api";
 import { Article } from "@/types";
 import { router } from "expo-router";
@@ -16,6 +19,7 @@ import {
 
 export default function ClinicalScreen() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const colorScheme = useColorScheme() ?? "light";
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -96,6 +100,10 @@ export default function ClinicalScreen() {
     router.push(`/article/${article.id}`);
   };
 
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
+
   const renderArticle = ({ item }: { item: Article }) => (
     <ArticleTeaser article={item} onPress={() => handleArticlePress(item)} />
   );
@@ -145,6 +153,7 @@ export default function ClinicalScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <GradientHeader onSearchPress={handleSearchPress} />
       <FlatList
         data={articles}
         renderItem={renderArticle}
@@ -153,9 +162,12 @@ export default function ClinicalScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        contentContainerStyle={[
+          styles.listContainer,
+          { backgroundColor: Colors[colorScheme].articleListBackground },
+        ]}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
-        contentContainerStyle={styles.listContainer}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
       />

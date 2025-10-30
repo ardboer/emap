@@ -19,10 +19,17 @@
         "icon": "#687076",
         "tabIconDefault": "#687076",
         "tabIconSelected": "#FFDD00",
-        "tabBarBackground": "#fff",
+        "tabBarBackground": "#011620",
         "progressIndicator": "#FFDD00",
+        "progressIndicatorBackground": "#333333",
+        "progressIndicatorFill": "#FFDD00",
+        "overlayGradientStart": "#1a1a1a",
+        "overlayGradientEnd": "#1a1a1a",
         "headerBackground": "#ffffff",
-        "searchIcon": "#333333"
+        "searchIcon": "#333333",
+        "articleDetailHighlightBoxBg": "#E8F4F8",
+        "articleDetailHighlightBoxText": "#11181C",
+        "articleDetailHighlightBoxBorder": "#10D1F0"
       },
       "dark": {
         "primary": "#FFDD00",
@@ -31,15 +38,25 @@
         "icon": "#9BA1A6",
         "tabIconDefault": "#9BA1A6",
         "tabIconSelected": "#FFDD00",
-        "tabBarBackground": "#151718",
+        "tabBarBackground": "#011620",
         "progressIndicator": "#FFDD00",
+        "progressIndicatorBackground": "#333333",
+        "progressIndicatorFill": "#FFDD00",
+        "overlayGradientStart": "#1a1a1a",
+        "overlayGradientEnd": "#1a1a1a",
         "headerBackground": "#000000",
-        "searchIcon": "#FFFFFF"
+        "searchIcon": "#FFFFFF",
+        "articleDetailHighlightBoxBg": "#00334C",
+        "articleDetailHighlightBoxText": "#FFFFFF",
+        "articleDetailHighlightBoxBorder": "#10D1F0"
       }
     },
     "fonts": {
       "primary": "antenna-cond",
-      "secondary": "antenna-cond"
+      "secondary": "antenna-cond",
+      "primaryBold": "antenna-cond",
+      "primarySemiBold": "antenna-cond",
+      "primaryMedium": "antenna-cond"
     }
   },
   "branding": {

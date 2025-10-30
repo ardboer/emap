@@ -3,9 +3,12 @@ import { CarouselProgressIndicator } from "@/components/CarouselProgressIndicato
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAudio } from "@/contexts/AudioContext";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { analyticsService } from "@/services/analytics";
 import { fetchFeaturedArticles } from "@/services/api";
 import { Article } from "@/types";
+import { hexToRgba } from "@/utils/colors";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
@@ -42,6 +45,8 @@ export default function HighlightedScreen() {
   const [isCarouselVisible, setIsCarouselVisible] = useState(true);
   const flatListRef = useRef<FlatList>(null);
   const { state: audioState } = useAudio();
+  const { brandConfig } = useBrandConfig();
+  const backgroundColor = useThemeColor({}, "background");
 
   // Analytics tracking state
   const [carouselStartTime, setCarouselStartTime] = useState<number | null>(
@@ -489,7 +494,14 @@ export default function HighlightedScreen() {
       setIsPlaying(false);
     };
   }, []);
-
+  console.log("backgroundColor", backgroundColor);
+  const styles = {
+    ...staticStyles,
+    container: {
+      flex: 1,
+      backgroundColor: backgroundColor,
+    },
+  };
   const renderCarouselItem = ({ item }: { item: Article }) => {
     // For landscape images, choose between blurred background or color gradient
     if (item.isLandscape) {
@@ -530,14 +542,16 @@ export default function HighlightedScreen() {
               contentPosition="center"
             />
             <LinearGradient
-              colors={[
-                "transparent",
-                "transparent",
-                "rgba(0,0,0,0.3)",
-                "rgba(0,0,0,0.7)",
-                "rgba(0,0,0,0.9)",
-              ]}
-              locations={[0, 0.3, 0.5, 0.7, 1]}
+              colors={
+                [
+                  "transparent",
+                  hexToRgba(
+                    brandConfig?.theme.colors.light.overlayGradientEnd ||
+                      "#011620",
+                    0.7
+                  ),
+                ] as const
+              }
               style={styles.overlay}
             >
               <ThemedView
@@ -548,11 +562,22 @@ export default function HighlightedScreen() {
                     styles.contentContainerWithMiniPlayer,
                 ]}
               >
-                <ThemedText type="title" style={styles.title}>
+                <ThemedText
+                  type="title"
+                  style={[
+                    styles.title,
+                    { fontFamily: brandConfig?.theme.fonts.primaryBold },
+                  ]}
+                >
                   {item.title}
                 </ThemedText>
                 <ThemedView transparant style={styles.metaContainer}>
-                  <ThemedText style={styles.category}>
+                  <ThemedText
+                    style={[
+                      styles.category,
+                      { fontFamily: brandConfig?.theme.fonts.primarySemiBold },
+                    ]}
+                  >
                     {item.category}
                   </ThemedText>
                 </ThemedView>
@@ -585,14 +610,16 @@ export default function HighlightedScreen() {
               contentPosition="center"
             />
             <LinearGradient
-              colors={[
-                "transparent",
-                "transparent",
-                "rgba(0,0,0,0.3)",
-                "rgba(0,0,0,0.7)",
-                "rgba(0,0,0,0.9)",
-              ]}
-              locations={[0, 0.3, 0.5, 0.7, 1]}
+              colors={
+                [
+                  "transparent",
+                  hexToRgba(
+                    brandConfig?.theme.colors.light.overlayGradientEnd ||
+                      "#011620",
+                    0.7
+                  ),
+                ] as const
+              }
               style={styles.overlay}
             >
               <ThemedView
@@ -603,14 +630,26 @@ export default function HighlightedScreen() {
                     styles.contentContainerWithMiniPlayer,
                 ]}
               >
-                <ThemedText type="title" style={styles.title}>
+                <ThemedText
+                  type="title"
+                  style={[
+                    styles.title,
+                    { fontFamily: brandConfig?.theme.fonts.primaryBold },
+                  ]}
+                >
                   {item.title}
                 </ThemedText>
-                <ThemedView transparant style={styles.metaContainer}>
-                  <ThemedText style={styles.category}>
-                    {item.category}
+                {item.leadText && (
+                  <ThemedText
+                    numberOfLines={3}
+                    style={[
+                      styles.leadText,
+                      { fontFamily: brandConfig?.theme.fonts.primaryMedium },
+                    ]}
+                  >
+                    {item.leadText}
                   </ThemedText>
-                </ThemedView>
+                )}
               </ThemedView>
             </LinearGradient>
           </TouchableOpacity>
@@ -632,14 +671,15 @@ export default function HighlightedScreen() {
           contentPosition="center"
         />
         <LinearGradient
-          colors={[
-            "transparent",
-            "transparent",
-            "rgba(0,0,0,0.3)",
-            "rgba(0,0,0,0.7)",
-            "rgba(0,0,0,0.9)",
-          ]}
-          locations={[0, 0.3, 0.5, 0.7, 1]}
+          colors={
+            [
+              "transparent",
+              hexToRgba(
+                brandConfig?.theme.colors.light.overlayGradientEnd || "#011620",
+                0.7
+              ),
+            ] as const
+          }
           style={styles.overlay}
         >
           <ThemedView
@@ -650,12 +690,26 @@ export default function HighlightedScreen() {
                 styles.contentContainerWithMiniPlayer,
             ]}
           >
-            <ThemedText type="title" style={styles.title}>
+            <ThemedText
+              type="title"
+              style={[
+                styles.title,
+                { fontFamily: brandConfig?.theme.fonts.primaryBold },
+              ]}
+            >
               {item.title}
             </ThemedText>
-            <ThemedView transparant style={styles.metaContainer}>
-              <ThemedText style={styles.category}>{item.category}</ThemedText>
-            </ThemedView>
+            {item.leadText && (
+              <ThemedText
+                numberOfLines={3}
+                style={[
+                  styles.leadText,
+                  { fontFamily: brandConfig?.theme.fonts.primaryMedium },
+                ]}
+              >
+                {item.leadText}
+              </ThemedText>
+            )}
           </ThemedView>
         </LinearGradient>
       </TouchableOpacity>
@@ -700,11 +754,11 @@ export default function HighlightedScreen() {
         style={styles.userButton}
         onPress={() => setSettingsDrawerVisible(true)}
       >
-        {React.createElement(require("@/components/ui/IconSymbol").IconSymbol, {
-          name: "person.fill",
-          size: 24,
-          color: "white",
-        })}
+        <Image
+          source={require("@/assets/images/user-icon.png")}
+          style={{ width: 24, height: 24 }}
+          contentFit="contain"
+        />
       </TouchableOpacity>
 
       <FlatList
@@ -741,11 +795,7 @@ export default function HighlightedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
+const staticStyles = StyleSheet.create({
   brandLogo: {
     position: "absolute",
     top: 80,
@@ -796,30 +846,33 @@ const styles = StyleSheet.create({
     right: 0,
   },
   contentContainer: {
-    padding: 24,
-    paddingBottom: 120,
+    paddingTop: 48,
+    paddingHorizontal: 16,
+    paddingBottom: 100, // Reduced to match Figma spacing
   },
   contentContainerWithMiniPlayer: {
-    paddingBottom: 180, // 40 (original) + 50 (miniplayer height + margin)
+    paddingBottom: 160, // Adjusted for mini player
   },
   title: {
-    color: "white",
-    fontSize: 28,
+    color: "#FFFFFF",
+    fontSize: 24,
+    lineHeight: 26,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 16,
   },
   subtitle: {
-    color: "white",
-    fontSize: 20,
-    marginBottom: 12,
-    opacity: 0.9,
-  },
-  leadText: {
-    color: "white",
+    color: "#FFFFFF",
     fontSize: 16,
     lineHeight: 22,
+    fontWeight: "600",
+    marginBottom: 0,
+  },
+  leadText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "600",
     marginBottom: 16,
-    opacity: 0.9,
   },
   metaContainer: {
     flexDirection: "row",
@@ -827,10 +880,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   category: {
-    color: "white",
-    fontSize: 14,
+    color: "#FFFFFF",
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: "600",
-    opacity: 0.8,
   },
   timestamp: {
     color: "white",

@@ -1,3 +1,5 @@
+import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { useImageViewer } from "@/hooks/useImageViewer";
 import { StructuredContentNode } from "@/types";
 import { Image } from "expo-image";
@@ -5,6 +7,7 @@ import React from "react";
 import {
   Dimensions,
   Linking,
+  Text as RNText,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -15,6 +18,15 @@ import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
 const { width: screenWidth } = Dimensions.get("window");
+
+// Themed text component for blockquotes and factboxes
+const HighlightBoxText: React.FC<{
+  style?: any;
+  children: React.ReactNode;
+  color?: string;
+}> = ({ style, children, color = "#FFFFFF" }) => {
+  return <RNText style={[style, { color }]}>{children}</RNText>;
+};
 
 // Helper function to calculate proper image dimensions
 const calculateImageDimensions = (
@@ -119,6 +131,8 @@ interface RichContentNodeProps {
   node: StructuredContentNode;
   index: number;
   onImagePress: (imageUri: string, caption?: string) => void;
+  forceHighlightBoxText?: boolean;
+  isBlockquote?: boolean;
 }
 
 interface RichContentTableCellProps {
@@ -160,12 +174,31 @@ const RichContentTableCell: React.FC<RichContentTableCellProps> = ({
   isHeader,
   onImagePress,
 }) => {
+  const { colors, fonts } = useBrandConfig();
+  const colorScheme = useColorScheme();
+  const themeColors = colors?.[colorScheme ?? "light"];
   const textContent = extractSingleNodeTextContent(node);
-
   return (
-    <ThemedView style={[styles.tableCell, isHeader && styles.tableHeaderCell]}>
+    <ThemedView
+      style={[
+        styles.tableCell,
+        isHeader && styles.tableHeaderCell,
+        {
+          backgroundColor: isHeader
+            ? themeColors?.highlightBoxBg || "#00334C"
+            : themeColors?.highlightBoxBg || "#FFFFFF",
+        },
+      ]}
+    >
       <ThemedText
-        style={[styles.tableCellText, isHeader && styles.tableHeaderText]}
+        style={[
+          styles.tableCellText,
+          isHeader && { fontFamily: fonts?.primaryBold },
+          isHeader && styles.tableHeaderText,
+          isHeader && {
+            color: themeColors?.highlightBoxText || "#FFFFFF",
+          },
+        ]}
       >
         {textContent}
       </ThemedText>
@@ -193,7 +226,13 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
   node,
   index,
   onImagePress,
+  forceHighlightBoxText = false,
+  isBlockquote = false,
 }) => {
+  const { colors, fonts } = useBrandConfig();
+  const colorScheme = useColorScheme();
+  const themeColors = colors?.[colorScheme ?? "light"];
+
   const handleLinkPress = (url: string) => {
     Linking.openURL(url).catch((err) =>
       console.error("Failed to open URL:", err)
@@ -202,6 +241,22 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
 
   // Handle text nodes
   if (node.typename === "HTMLTextNode") {
+    if (forceHighlightBoxText) {
+      const textStyle = isBlockquote
+        ? [
+            styles.blockquoteText,
+            { fontFamily: fonts?.primaryItalic || "OpenSans-Italic" },
+          ]
+        : styles.inlineText;
+      return (
+        <HighlightBoxText
+          style={textStyle}
+          color={themeColors?.highlightBoxText}
+        >
+          {node.text || ""}
+        </HighlightBoxText>
+      );
+    }
     return <ThemedText style={styles.inlineText}>{node.text || ""}</ThemedText>;
   }
 
@@ -211,6 +266,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
       <RichContentRendererInternal
         content={node.children}
         onImagePress={onImagePress}
+        forceHighlightBoxText={forceHighlightBoxText}
+        isBlockquote={isBlockquote}
       />
     ) : null;
 
@@ -219,6 +276,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         // For simple text headers, extract text to avoid nested ThemedText issues
         if (node.children && isSimpleTextHeader(node.children)) {
           const textContent = extractTextContent(node.children);
+          if (forceHighlightBoxText) {
+            return (
+              <HighlightBoxText
+                key={index}
+                style={[styles.h1, { fontSize: 28, fontWeight: "bold" }]}
+                color={themeColors?.highlightBoxText}
+              >
+                {textContent}
+              </HighlightBoxText>
+            );
+          }
           return (
             <ThemedText key={index} type="title" style={styles.h1}>
               {textContent}
@@ -226,6 +294,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           );
         }
         // For complex headers with formatting, render children but with header context
+        if (forceHighlightBoxText) {
+          return (
+            <HighlightBoxText
+              key={index}
+              style={[styles.h1, { fontSize: 28, fontWeight: "bold" }]}
+              color={themeColors?.highlightBoxText}
+            >
+              {children}
+            </HighlightBoxText>
+          );
+        }
         return (
           <ThemedText key={index} type="title" style={styles.h1}>
             {children}
@@ -236,6 +315,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         // For simple text headers, extract text to avoid nested ThemedText issues
         if (node.children && isSimpleTextHeader(node.children)) {
           const textContent = extractTextContent(node.children);
+          if (forceHighlightBoxText) {
+            return (
+              <HighlightBoxText
+                key={index}
+                style={[styles.h2, { fontSize: 24, fontWeight: "bold" }]}
+                color={themeColors?.highlightBoxText}
+              >
+                {textContent}
+              </HighlightBoxText>
+            );
+          }
           return (
             <ThemedText key={index} type="subtitle" style={styles.h2}>
               {textContent}
@@ -243,6 +333,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           );
         }
         // For complex headers with formatting, render children but with header context
+        if (forceHighlightBoxText) {
+          return (
+            <HighlightBoxText
+              key={index}
+              style={[styles.h2, { fontSize: 24, fontWeight: "bold" }]}
+              color={themeColors?.highlightBoxText}
+            >
+              {children}
+            </HighlightBoxText>
+          );
+        }
         return (
           <ThemedText key={index} type="subtitle" style={styles.h2}>
             {children}
@@ -253,6 +354,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         // For simple text headers, extract text to avoid nested ThemedText issues
         if (node.children && isSimpleTextHeader(node.children)) {
           const textContent = extractTextContent(node.children);
+          if (forceHighlightBoxText) {
+            return (
+              <HighlightBoxText
+                key={index}
+                style={[styles.h3, { fontSize: 20, fontWeight: "bold" }]}
+                color={themeColors?.highlightBoxText}
+              >
+                {textContent}
+              </HighlightBoxText>
+            );
+          }
           return (
             <ThemedText key={index} style={styles.h3}>
               {textContent}
@@ -260,6 +372,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           );
         }
         // For complex headers with formatting, render children but with header context
+        if (forceHighlightBoxText) {
+          return (
+            <HighlightBoxText
+              key={index}
+              style={[styles.h3, { fontSize: 20, fontWeight: "bold" }]}
+              color={themeColors?.highlightBoxText}
+            >
+              {children}
+            </HighlightBoxText>
+          );
+        }
         return (
           <ThemedText key={index} style={styles.h3}>
             {children}
@@ -267,6 +390,16 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         );
 
       case "h5":
+        if (forceHighlightBoxText) {
+          return (
+            <HighlightBoxText
+              key={index}
+              style={[styles.h5, { fontSize: 16, fontWeight: "bold" }]}
+            >
+              {children}
+            </HighlightBoxText>
+          );
+        }
         return (
           <ThemedText key={index} style={styles.h5}>
             {children}
@@ -335,6 +468,21 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           }
         }
 
+        if (forceHighlightBoxText) {
+          return (
+            <HighlightBoxText
+              key={index}
+              style={[
+                styles.blockquoteText,
+                { fontFamily: fonts?.primaryItalic || "OpenSans-Italic" },
+              ]}
+              color={themeColors?.highlightBoxText}
+            >
+              {children}
+            </HighlightBoxText>
+          );
+        }
+
         return (
           <ThemedText key={index} style={styles.paragraph}>
             {children}
@@ -342,6 +490,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         );
 
       case "strong":
+        if (forceHighlightBoxText) {
+          return (
+            <HighlightBoxText
+              key={index}
+              style={styles.bold}
+              color={themeColors?.highlightBoxText}
+            >
+              {children}
+            </HighlightBoxText>
+          );
+        }
         return (
           <ThemedText key={index} style={styles.bold}>
             {children}
@@ -349,6 +508,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         );
 
       case "em":
+        if (forceHighlightBoxText) {
+          return (
+            <HighlightBoxText
+              key={index}
+              style={styles.italic}
+              color={themeColors?.highlightBoxText}
+            >
+              {children}
+            </HighlightBoxText>
+          );
+        }
         return (
           <ThemedText key={index} style={styles.italic}>
             {children}
@@ -356,6 +526,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         );
 
       case "span":
+        if (forceHighlightBoxText) {
+          return (
+            <HighlightBoxText
+              key={index}
+              style={styles.span}
+              color={themeColors?.highlightBoxText}
+            >
+              {children}
+            </HighlightBoxText>
+          );
+        }
         return (
           <ThemedText key={index} style={styles.span}>
             {children}
@@ -363,21 +544,58 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         );
 
       case "blockquote":
-        // For blockquotes, extract text to avoid nested ThemedText issues with styling
-        if (node.children) {
-          const textContent = extractTextContent(node.children);
+        // For blockquotes, render with brand-specific styling
+        const blockquoteStyle = [
+          styles.blockquote,
+          {
+            backgroundColor: themeColors?.highlightBoxBg || "#00334C",
+            borderTopColor: themeColors?.highlightBoxBorder || "#10D1F0",
+          },
+        ];
+
+        // Check if blockquote has a title (first child is a heading or strong text)
+        const hasTitle =
+          node.children?.[0]?.type === "strong" ||
+          node.children?.[0]?.type === "h3" ||
+          node.children?.[0]?.type === "h5";
+
+        if (hasTitle && node.children) {
+          const titleNode = node.children[0];
+          const titleText = extractTextContent([titleNode]);
+          const restContent = node.children.slice(1);
+
           return (
-            <ThemedView key={index} style={styles.blockquote}>
-              <ThemedText style={styles.blockquoteText}>
-                {textContent}
-              </ThemedText>
-            </ThemedView>
+            <View key={index} style={blockquoteStyle}>
+              <HighlightBoxText
+                style={styles.blockquoteTitle}
+                color={themeColors?.highlightBoxText}
+              >
+                {titleText}
+              </HighlightBoxText>
+              {restContent.length > 0 && (
+                <RichContentRendererInternal
+                  content={restContent}
+                  onImagePress={onImagePress}
+                  forceHighlightBoxText={true}
+                  isBlockquote={true}
+                />
+              )}
+            </View>
           );
         }
+
+        // Regular blockquote without title - render children with white text
         return (
-          <ThemedView key={index} style={styles.blockquote}>
-            <ThemedText style={styles.blockquoteText}>{children}</ThemedText>
-          </ThemedView>
+          <View key={index} style={blockquoteStyle}>
+            {node.children && (
+              <RichContentRendererInternal
+                content={node.children}
+                onImagePress={onImagePress}
+                forceHighlightBoxText={true}
+                isBlockquote={true}
+              />
+            )}
+          </View>
         );
 
       case "ul":
@@ -385,12 +603,22 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           <View key={index} style={styles.list}>
             {node.children?.map((child, childIndex) => (
               <View key={childIndex} style={styles.listItem}>
-                <ThemedText style={styles.bullet}>•</ThemedText>
+                {forceHighlightBoxText ? (
+                  <HighlightBoxText
+                    style={styles.bullet}
+                    color={themeColors?.highlightBoxText}
+                  >
+                    •
+                  </HighlightBoxText>
+                ) : (
+                  <ThemedText style={styles.bullet}>•</ThemedText>
+                )}
                 <View style={styles.listItemContent}>
                   <RichContentNode
                     node={child}
                     index={childIndex}
                     onImagePress={onImagePress}
+                    forceHighlightBoxText={forceHighlightBoxText}
                   />
                 </View>
               </View>
@@ -403,12 +631,24 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           <View key={index} style={styles.list}>
             {node.children?.map((child, childIndex) => (
               <View key={childIndex} style={styles.listItem}>
-                <ThemedText style={styles.bullet}>{childIndex + 1}.</ThemedText>
+                {forceHighlightBoxText ? (
+                  <HighlightBoxText
+                    style={styles.bullet}
+                    color={themeColors?.highlightBoxText}
+                  >
+                    {childIndex + 1}.
+                  </HighlightBoxText>
+                ) : (
+                  <ThemedText style={styles.bullet}>
+                    {childIndex + 1}.
+                  </ThemedText>
+                )}
                 <View style={styles.listItemContent}>
                   <RichContentNode
                     node={child}
                     index={childIndex}
                     onImagePress={onImagePress}
+                    forceHighlightBoxText={forceHighlightBoxText}
                   />
                 </View>
               </View>
@@ -428,7 +668,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
               showsHorizontalScrollIndicator={true}
               style={styles.tableScrollView}
             >
-              <View style={styles.table}>{children}</View>
+              <ThemedView style={styles.table}>{children}</ThemedView>
             </ScrollView>
           </ThemedView>
         );
@@ -440,7 +680,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         // Check if this is the first row (header row)
         const isHeaderRow = index === 0;
         return (
-          <View
+          <ThemedView
             key={index}
             style={[styles.tableRow, isHeaderRow && styles.tableHeaderRow]}
           >
@@ -452,7 +692,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                 onImagePress={onImagePress}
               />
             ))}
-          </View>
+          </ThemedView>
         );
 
       case "td":
@@ -462,10 +702,24 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
       case "div":
         // Handle special div classes
         if (node.class?.includes("factfile")) {
+          const factBoxStyle = [
+            styles.factBox,
+            {
+              backgroundColor: themeColors?.highlightBoxBg || "#00334C",
+              borderTopColor: themeColors?.highlightBoxBorder || "#10D1F0",
+            },
+          ];
+
           return (
-            <ThemedView key={index} style={styles.factBox}>
-              {children}
-            </ThemedView>
+            <View key={index} style={factBoxStyle}>
+              {node.children && (
+                <RichContentRendererInternal
+                  content={node.children}
+                  onImagePress={onImagePress}
+                  forceHighlightBoxText={true}
+                />
+              )}
+            </View>
           );
         }
 
@@ -509,7 +763,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                       if (imageData.linkUri) {
                         handleLinkPress(imageData.linkUri);
                       } else {
-                        onImagePress(imageData.imageUri, imageData.caption);
+                        onImagePress(imageData.imageUri!, imageData.caption);
                       }
                     }}
                     activeOpacity={0.8}
@@ -656,11 +910,19 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
 
 interface RichContentRendererInternalProps extends RichContentRendererProps {
   onImagePress: (imageUri: string, caption?: string) => void;
+  forceHighlightBoxText?: boolean;
+  isBlockquote?: boolean;
 }
 
 const RichContentRendererInternal: React.FC<
   RichContentRendererInternalProps
-> = ({ content, style, onImagePress }) => {
+> = ({
+  content,
+  style,
+  onImagePress,
+  forceHighlightBoxText = false,
+  isBlockquote = false,
+}) => {
   return (
     <View style={style}>
       {content.map((node, index) => (
@@ -669,6 +931,8 @@ const RichContentRendererInternal: React.FC<
           node={node}
           index={index}
           onImagePress={onImagePress}
+          forceHighlightBoxText={forceHighlightBoxText}
+          isBlockquote={isBlockquote}
         />
       ))}
     </View>
@@ -733,7 +997,7 @@ const styles = StyleSheet.create({
   },
   paragraph: {
     fontSize: 16,
-    lineHeight: 24,
+    lineHeight: 22,
     marginBottom: 16,
   },
   bold: {
@@ -746,18 +1010,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   blockquote: {
-    borderLeftWidth: 4,
-    borderLeftColor: "#007AFF",
-    paddingLeft: 16,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    padding: 12,
     marginVertical: 16,
-    backgroundColor: "rgba(0, 122, 255, 0.1)",
-    padding: 16,
-    borderRadius: 8,
+    borderRadius: 4,
+    gap: 16,
+  },
+  blockquoteTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    lineHeight: 25, // 1.3888888888888888 * 18
   },
   blockquoteText: {
-    fontSize: 20,
-    fontStyle: "italic",
-    lineHeight: 28,
+    fontSize: 22,
+    fontWeight: "400",
+    lineHeight: 32,
+    marginVertical: 8,
   },
   list: {
     marginVertical: 8,
@@ -836,7 +1105,6 @@ const styles = StyleSheet.create({
   },
   table: {
     borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.15)",
     borderRadius: 8,
     overflow: "hidden",
     minWidth: screenWidth - 32,
@@ -844,46 +1112,40 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.1)",
     minHeight: 48,
   },
   tableHeaderRow: {
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
     borderBottomWidth: 2,
-    borderBottomColor: "rgba(0, 0, 0, 0.2)",
   },
   tableCell: {
     flex: 1,
     padding: 16,
     borderRightWidth: 1,
-    borderRightColor: "rgba(0, 0, 0, 0.1)",
     justifyContent: "center",
     minHeight: 48,
     width: 150,
   },
   tableHeaderCell: {
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
     borderRightWidth: 1,
-    borderRightColor: "rgba(0, 0, 0, 0.15)",
   },
   tableCellText: {
     fontSize: 14,
     lineHeight: 20,
-    color: "rgba(0, 0, 0, 0.8)",
+    opacity: 0.8,
   },
   tableHeaderText: {
     fontSize: 14,
     fontWeight: "600",
     lineHeight: 20,
-    color: "rgba(0, 0, 0, 0.9)",
+    opacity: 0.9,
   },
   factBox: {
-    backgroundColor: "rgba(255, 193, 7, 0.1)",
-    borderLeftWidth: 4,
-    borderLeftColor: "#FFC107",
-    padding: 16,
+    borderTopWidth: 2,
+    borderLeftWidth: 0,
+    padding: 12,
     marginVertical: 16,
-    borderRadius: 8,
+    borderRadius: 4,
+    gap: 16,
   },
   gallery: {
     flexDirection: "row",

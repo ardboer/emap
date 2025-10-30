@@ -382,6 +382,10 @@ export async function fetchArticleContent(articleId: string): Promise<string> {
 
   try {
     const { baseUrl } = getApiConfig();
+    console.log(
+      "fetchArticleContent",
+      `${baseUrl}${INDIVIDUAL_POST_ENDPOINT}/${articleId}/?hash=${hash}&_fields=id,title,subtitle,leadText,content,imageUrl,timestamp,category`
+    );
     const response = await fetch(
       `${baseUrl}${INDIVIDUAL_POST_ENDPOINT}/${articleId}/?hash=${hash}&_fields=id,title,subtitle,leadText,content,imageUrl,timestamp,category`
     );
@@ -489,7 +493,11 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
   const { cacheService } = await import("./cache");
   const cacheKey = "single_article";
   const { hash } = getApiConfig();
-
+  const { baseUrl } = getApiConfig();
+  console.log(
+    "fetching article",
+    `${baseUrl}${INDIVIDUAL_POST_ENDPOINT}/${articleId}/?hash=${hash}`
+  );
   // Try to get from cache first
   const cached = await cacheService.get<Article>(cacheKey, { articleId, hash });
   if (cached) {
@@ -498,7 +506,6 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
   }
 
   try {
-    const { baseUrl } = getApiConfig();
     const response = await fetch(
       `${baseUrl}${INDIVIDUAL_POST_ENDPOINT}/${articleId}/?hash=${hash}`
     );
@@ -731,6 +738,10 @@ export async function fetchSingleEvent(eventId: string): Promise<any> {
   }
 
   try {
+    console.log(
+      "fetchSingleEvent",
+      `${baseUrl}${EVENTS_ENDPOINT}/${eventId}?hash=${hash}`
+    );
     const { baseUrl } = getApiConfig();
     const response = await fetch(
       `${baseUrl}${EVENTS_ENDPOINT}/${eventId}?hash=${hash}`

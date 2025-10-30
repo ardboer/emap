@@ -3,6 +3,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import React from "react";
 import {
@@ -23,6 +24,7 @@ interface SettingsDrawerProps {
 
 export function SettingsDrawer({ visible, onClose }: SettingsDrawerProps) {
   const colorScheme = useColorScheme();
+  const { colors } = useBrandConfig();
   const translateX = React.useRef(new Animated.Value(DRAWER_WIDTH)).current;
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
 
@@ -58,8 +60,13 @@ export function SettingsDrawer({ visible, onClose }: SettingsDrawerProps) {
     }
   }, [visible]);
 
-  const backgroundColor = Colors[colorScheme ?? "light"].background;
-  const textColor = Colors[colorScheme ?? "light"].text;
+  const themeColors = colors?.[colorScheme ?? "light"];
+  // Use contentBackground for consistency with article detail view
+  const backgroundColor =
+    (themeColors as any)?.contentBackground ||
+    themeColors?.background ||
+    Colors[colorScheme ?? "light"].background;
+  const textColor = themeColors?.text || Colors[colorScheme ?? "light"].text;
 
   return (
     <Modal
@@ -95,7 +102,7 @@ export function SettingsDrawer({ visible, onClose }: SettingsDrawerProps) {
         ]}
       >
         {/* Header */}
-        <ThemedView style={styles.header}>
+        <ThemedView transparant style={styles.header}>
           <ThemedText type="title" style={styles.headerTitle}>
             Settings
           </ThemedText>
@@ -109,7 +116,7 @@ export function SettingsDrawer({ visible, onClose }: SettingsDrawerProps) {
         </ThemedView>
 
         {/* Settings Content */}
-        <ThemedView style={styles.content}>
+        <ThemedView transparant style={styles.content}>
           <SettingsContent onClose={onClose} />
         </ThemedView>
       </Animated.View>

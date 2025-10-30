@@ -16,10 +16,8 @@ export interface BrandConfig {
   bundleId?: string;
   apiConfig: {
     baseUrl: string;
-    authUrl?: string;
     jwtSecret?: string;
     hash: string;
-    authHash?: string;
     menuId?: number;
     maxNbOfItems?: number;
   };
@@ -34,8 +32,15 @@ export interface BrandConfig {
         tabIconSelected: string;
         tabBarBackground: string;
         progressIndicator: string;
+        progressIndicatorBackground: string;
+        progressIndicatorFill: string;
+        overlayGradientStart: string;
+        overlayGradientEnd: string;
         headerBackground: string;
         searchIcon: string;
+        articleDetailHighlightBoxBg?: string;
+        articleDetailHighlightBoxText?: string;
+        articleDetailHighlightBoxBorder?: string;
       };
       dark: {
         primary: string;
@@ -46,13 +51,24 @@ export interface BrandConfig {
         tabIconSelected: string;
         tabBarBackground: string;
         progressIndicator: string;
+        progressIndicatorBackground: string;
+        progressIndicatorFill: string;
+        overlayGradientStart: string;
+        overlayGradientEnd: string;
         headerBackground: string;
         searchIcon: string;
+        articleDetailHighlightBoxBg?: string;
+        articleDetailHighlightBoxText?: string;
+        articleDetailHighlightBoxBorder?: string;
       };
     };
     fonts: {
       primary: string;
       secondary: string;
+      primaryBold: string;
+      primarySemiBold: string;
+      primaryMedium: string;
+      primaryItalic?: string;
     };
   };
   branding: {

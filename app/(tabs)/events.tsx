@@ -1,6 +1,8 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
+import GradientHeader from "@/components/GradientHeader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
 import { fetchEvents } from "@/services/api";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -11,9 +13,11 @@ import {
   RefreshControl,
   StyleSheet,
   TouchableOpacity,
+  useColorScheme,
 } from "react-native";
 
 export default function EventsScreen() {
+  const colorScheme = useColorScheme() ?? "light";
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -70,6 +74,10 @@ export default function EventsScreen() {
     }
   };
 
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
+
   const renderEvent = ({ item }: { item: any }) => (
     <ArticleTeaser article={item} onPress={() => handleEventPress(item)} />
   );
@@ -96,6 +104,7 @@ export default function EventsScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <GradientHeader onSearchPress={handleSearchPress} />
       <FlatList
         data={events}
         renderItem={renderEvent}
@@ -104,7 +113,10 @@ export default function EventsScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[
+          styles.listContainer,
+          { backgroundColor: Colors[colorScheme].articleListBackground },
+        ]}
       />
     </ThemedView>
   );
