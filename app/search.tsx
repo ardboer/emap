@@ -1,5 +1,8 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { fetchSearchResults } from "@/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -28,6 +31,18 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+
+  // Brand configuration
+  const { brandConfig } = useBrandConfig();
+  const colorScheme = useColorScheme();
+  const contentBackground = useThemeColor({}, "contentBackground");
+  const textColor = useThemeColor({}, "text");
+  const iconColor = useThemeColor({}, "icon");
+  const primaryColor = useThemeColor({}, "tint");
+  const buttonColor = useThemeColor({}, "highlightBoxBorder");
+
+  // Get brand fonts
+  const primaryFont = brandConfig?.theme.fonts.primary || "System";
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -68,7 +83,9 @@ export default function SearchScreen() {
 
     if (!hasSearched) {
       return (
-        <ThemedView style={styles.emptyState}>
+        <ThemedView
+          style={[styles.emptyState, { backgroundColor: contentBackground }]}
+        >
           <Ionicons name="search" size={48} color="#ccc" />
           <ThemedText style={styles.emptyText}>
             Enter a search term to find articles
@@ -79,7 +96,9 @@ export default function SearchScreen() {
 
     if (results.length === 0) {
       return (
-        <ThemedView style={styles.emptyState}>
+        <ThemedView
+          style={[styles.emptyState, { backgroundColor: contentBackground }]}
+        >
           <Ionicons name="document-text-outline" size={48} color="#ccc" />
           <ThemedText style={styles.emptyText}>
             No results found for &ldquo;{query}&rdquo;
@@ -95,8 +114,12 @@ export default function SearchScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ThemedView style={styles.content}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: contentBackground }]}
+    >
+      <ThemedView
+        style={[styles.content, { backgroundColor: contentBackground }]}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -104,23 +127,39 @@ export default function SearchScreen() {
             onPress={() => router.back()}
             activeOpacity={0.7}
           >
-            <Ionicons name="close" size={24} color="#000" />
+            <Ionicons name="close" size={24} color={textColor} />
           </TouchableOpacity>
-          <ThemedText style={styles.headerTitle}>Search</ThemedText>
+          <ThemedText style={[styles.headerTitle, { fontFamily: primaryFont }]}>
+            Search
+          </ThemedText>
         </View>
 
         {/* Search Input */}
         <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
+          <View
+            style={[
+              styles.searchInputContainer,
+              {
+                backgroundColor: contentBackground,
+              },
+            ]}
+          >
             <Ionicons
               name="search"
               size={20}
-              color="#666"
+              color={iconColor}
               style={styles.searchIcon}
             />
             <TextInput
-              style={styles.searchInput}
+              style={[
+                styles.searchInput,
+                {
+                  fontFamily: primaryFont,
+                  color: textColor,
+                },
+              ]}
               placeholder="Search articles..."
+              placeholderTextColor={iconColor}
               value={query}
               onChangeText={setQuery}
               onSubmitEditing={handleSearch}
@@ -138,35 +177,53 @@ export default function SearchScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <Ionicons name="close-circle" size={20} color="#666" />
+                <Ionicons name="close-circle" size={20} color={iconColor} />
               </TouchableOpacity>
             )}
           </View>
           <TouchableOpacity
             style={[
               styles.searchButton,
-              { opacity: query.trim().length > 0 ? 1 : 0.5 },
+              {
+                backgroundColor: buttonColor,
+                opacity: query.trim().length > 0 ? 1 : 0.5,
+              },
             ]}
             onPress={handleSearch}
             disabled={!query.trim() || loading}
             activeOpacity={0.7}
           >
-            <ThemedText style={styles.searchButtonText}>Search</ThemedText>
+            <ThemedText
+              style={[styles.searchButtonText, { fontFamily: primaryFont }]}
+            >
+              Search
+            </ThemedText>
           </TouchableOpacity>
         </View>
 
         {/* Error Message */}
         {error && (
           <View style={styles.errorContainer}>
-            <ThemedText style={styles.errorText}>{error}</ThemedText>
+            <ThemedText style={[styles.errorText, { fontFamily: primaryFont }]}>
+              {error}
+            </ThemedText>
           </View>
         )}
 
         {/* Loading Indicator */}
         {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" />
-            <ThemedText style={styles.loadingText}>Searching...</ThemedText>
+          <View
+            style={[
+              styles.loadingContainer,
+              { backgroundColor: contentBackground },
+            ]}
+          >
+            <ActivityIndicator size="large" color={primaryColor} />
+            <ThemedText
+              style={[styles.loadingText, { fontFamily: primaryFont }]}
+            >
+              Searching...
+            </ThemedText>
           </View>
         )}
 
@@ -178,9 +235,10 @@ export default function SearchScreen() {
           style={styles.resultsList}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={renderEmptyState}
-          contentContainerStyle={
-            results.length === 0 ? styles.emptyListContainer : undefined
-          }
+          contentContainerStyle={[
+            results.length === 0 ? styles.emptyListContainer : undefined,
+            { backgroundColor: contentBackground },
+          ]}
         />
       </ThemedView>
     </SafeAreaView>
@@ -200,7 +258,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.1)",
+    borderBottomColor: "rgba(128, 128, 128, 0.2)",
   },
   backButton: {
     marginRight: 16,
@@ -220,7 +278,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
     borderRadius: 8,
     paddingHorizontal: 12,
     marginRight: 12,
@@ -237,13 +294,12 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   searchButton: {
-    backgroundColor: "#007AFF",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
   },
   searchButtonText: {
-    color: "white",
+    color: "#000000",
     fontWeight: "600",
   },
   errorContainer: {
@@ -292,7 +348,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.1)",
+    borderBottomColor: "rgba(128, 128, 128, 0.2)",
   },
   resultTitle: {
     fontSize: 16,

@@ -1,5 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
@@ -18,6 +20,10 @@ interface SearchTeaserProps {
 }
 
 export default function SearchTeaser({ result, onPress }: SearchTeaserProps) {
+  const { brandConfig } = useBrandConfig();
+  const contentBackground = useThemeColor({}, "contentBackground");
+  const primaryFont = brandConfig?.theme.fonts.primary || "System";
+
   const handlePress = () => {
     if (onPress) {
       onPress(result);
@@ -30,8 +36,13 @@ export default function SearchTeaser({ result, onPress }: SearchTeaserProps) {
 
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
-      <ThemedView style={styles.content}>
-        <ThemedText style={styles.title} numberOfLines={3}>
+      <ThemedView
+        style={[styles.content, { backgroundColor: contentBackground }]}
+      >
+        <ThemedText
+          style={[styles.title, { fontFamily: primaryFont }]}
+          numberOfLines={3}
+        >
           {result.title}
         </ThemedText>
       </ThemedView>
@@ -46,7 +57,6 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: "rgba(0,0,0,0.02)",
   },
   title: {
     fontSize: 16,
