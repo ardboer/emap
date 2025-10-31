@@ -1,5 +1,6 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { CarouselProgressIndicator } from "@/components/CarouselProgressIndicator";
+import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAudio } from "@/contexts/AudioContext";
@@ -14,7 +15,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   FlatList,
   NativeScrollEvent,
@@ -718,9 +718,23 @@ export default function HighlightedScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" />
-        <ThemedText style={styles.loadingText}>Loading articles...</ThemedText>
+      <ThemedView style={styles.container}>
+        <CarouselProgressIndicator
+          totalItems={3}
+          currentIndex={0}
+          duration={SLIDE_DURATION}
+          isPlaying={false}
+          onProgressComplete={() => {}}
+        />
+        <BrandLogo style={styles.brandLogo} width={100} height={35} />
+        <TouchableOpacity style={styles.userButton} disabled>
+          <Image
+            source={require("@/assets/images/user-icon.png")}
+            style={{ width: 24, height: 24, opacity: 0.5 }}
+            contentFit="contain"
+          />
+        </TouchableOpacity>
+        <SkeletonLoader variant="carousel" />
       </ThemedView>
     );
   }

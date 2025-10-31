@@ -1,17 +1,11 @@
-import { ThemedText } from "@/components/ThemedText";
+import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { fetchMagazineCover, fetchMagazineEditions } from "@/services/api";
 import { MagazineEdition } from "@/types";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import { FlatList, RefreshControl, StyleSheet } from "react-native";
 import MagazineListItem from "./MagazineListItem";
 
 interface MagazineListViewProps {
@@ -93,53 +87,10 @@ export default function MagazineListView({
   );
 
   const renderEmptyState = () => {
-    if (loading) {
-      return (
-        <ThemedView style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#666" />
-          <ThemedText style={styles.loadingText}>
-            Loading magazines...
-          </ThemedText>
-        </ThemedView>
-      );
+    if (true) {
+      return <SkeletonLoader variant="magazine" count={6} />;
     }
-
-    if (error) {
-      return (
-        <ThemedView style={styles.centerContainer}>
-          <ThemedText style={styles.errorTitle}>
-            Unable to load magazines
-          </ThemedText>
-          <ThemedText style={styles.errorMessage}>{error}</ThemedText>
-          <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-            <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
-      );
-    }
-
-    return (
-      <ThemedView style={styles.centerContainer}>
-        <ThemedText style={styles.emptyTitle}>
-          No magazines available
-        </ThemedText>
-        <ThemedText style={styles.emptyMessage}>
-          Check back later for new issues
-        </ThemedText>
-      </ThemedView>
-    );
   };
-
-  const renderHeader = () => (
-    <ThemedView style={styles.header}>
-      <ThemedText type="title" style={styles.headerTitle}>
-        Magazines
-      </ThemedText>
-      <ThemedText style={styles.headerSubtitle}>
-        Select a magazine to read
-      </ThemedText>
-    </ThemedView>
-  );
 
   if (loading && magazines.length === 0) {
     return renderEmptyState();

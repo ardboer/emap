@@ -1,5 +1,6 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
 import GradientHeader from "@/components/GradientHeader";
+import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
@@ -131,11 +132,9 @@ export default function ClinicalScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" />
-        <ThemedText style={styles.loadingText}>
-          Loading clinical articles...
-        </ThemedText>
+      <ThemedView style={styles.container}>
+        <GradientHeader onSearchPress={handleSearchPress} />
+        <SkeletonLoader variant="list" count={8} />
       </ThemedView>
     );
   }

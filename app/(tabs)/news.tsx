@@ -1,6 +1,7 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
 import ArticleTeaserHero from "@/components/ArticleTeaserHero";
 import GradientHeader from "@/components/GradientHeader";
+import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TopicsTabBar from "@/components/TopicsTabBar";
@@ -15,7 +16,6 @@ import { Article } from "@/types";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -156,14 +156,7 @@ export default function NewsScreen() {
     const isRefreshing = tabRefreshingStates[tabKey] || false;
 
     if (isLoading && articles.length === 0) {
-      return (
-        <ThemedView style={[styles.container, styles.centerContent]}>
-          <ActivityIndicator size="large" />
-          <ThemedText style={styles.loadingText}>
-            Loading {menuItem.title}...
-          </ThemedText>
-        </ThemedView>
-      );
+      return <SkeletonLoader variant="list" count={6} />;
     }
 
     return (
@@ -195,9 +188,9 @@ export default function NewsScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" />
-        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
+      <ThemedView style={styles.container}>
+        <GradientHeader onSearchPress={handleSearchPress} />
+        <SkeletonLoader variant="list" count={8} />
       </ThemedView>
     );
   }
@@ -244,18 +237,7 @@ export default function NewsScreen() {
         onTabChange={handleTabChange}
       />
       {isCurrentTabLoading && currentArticles.length === 0 ? (
-        <ThemedView
-          style={[
-            styles.container,
-            styles.centerContent,
-            { backgroundColor: contentBackground },
-          ]}
-        >
-          <ActivityIndicator size="large" />
-          <ThemedText style={styles.loadingText}>
-            Loading {menuItems[activeTabIndex]?.title || "articles"}...
-          </ThemedText>
-        </ThemedView>
+        <SkeletonLoader variant="list" count={6} />
       ) : (
         <FlatList
           data={currentArticles}
