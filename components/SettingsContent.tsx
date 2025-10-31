@@ -533,31 +533,33 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         />
 
         {/* Show topics only if notifications are enabled */}
-        {notificationStatus.enabled && topicSubscriptions.length > 0 && (
-          <>
-            <ThemedText style={styles.sectionDescription}>
-              Choose which topics you want to receive notifications about
-            </ThemedText>
-            {topicSubscriptions.map((topic) => (
-              <SettingsItem
-                key={topic.id}
-                title={topic.label}
-                subtitle={topic.description}
-                icon="tag.fill"
-                rightElement={
-                  <Switch
-                    value={topic.subscribed}
-                    onValueChange={() =>
-                      handleTopicToggle(topic.id, topic.subscribed)
-                    }
-                    trackColor={{ false: "#767577", true: primaryColor }}
-                    thumbColor={topic.subscribed ? "#00334C" : "#fff"}
-                  />
-                }
-              />
-            ))}
-          </>
-        )}
+        {false &&
+          notificationStatus.enabled &&
+          topicSubscriptions.length > 0 && (
+            <>
+              <ThemedText style={styles.sectionDescription}>
+                Choose which topics you want to receive notifications about
+              </ThemedText>
+              {topicSubscriptions.map((topic) => (
+                <SettingsItem
+                  key={topic.id}
+                  title={topic.label}
+                  subtitle={topic.description}
+                  icon="tag.fill"
+                  rightElement={
+                    <Switch
+                      value={topic.subscribed}
+                      onValueChange={() =>
+                        handleTopicToggle(topic.id, topic.subscribed)
+                      }
+                      trackColor={{ false: "#767577", true: primaryColor }}
+                      thumbColor={topic.subscribed ? "#00334C" : "#fff"}
+                    />
+                  }
+                />
+              ))}
+            </>
+          )}
       </ThemedView>
 
       <ThemedView transparant style={styles.section}>
@@ -581,12 +583,6 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           icon="textformat"
           onPress={() => {}}
         />
-        <SettingsItem
-          title="Categories"
-          subtitle="Manage your news categories"
-          icon="list.bullet"
-          onPress={() => {}}
-        />
       </ThemedView>
 
       <ThemedView transparant style={styles.section}>
@@ -594,7 +590,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           Storage
         </ThemedText>
         <SettingsItem
-          title="Clear WordPress Cache"
+          title="Clear Cache"
           subtitle={
             cacheStats
               ? `${cacheStats.totalKeys} cached items (${cacheStats.formattedSize})`
@@ -603,36 +599,6 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           icon="trash.fill"
           onPress={handleClearCache}
         />
-      </ThemedView>
-
-      <ThemedView transparant style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>
-          Development
-        </ThemedText>
-        {/* Brand Switcher - Only show in development */}
-        {__DEV__ && (
-          <ThemedView>
-            {React.createElement(
-              require("@/components/BrandSwitcher").BrandSwitcher
-            )}
-            {/* Test Article Button */}
-            {brandConfig?.testArticleId && (
-              <SettingsItem
-                title="Test Article"
-                subtitle={`Open test article for ${brandConfig.displayName} (ID: ${brandConfig.testArticleId})`}
-                icon="doc.text"
-                onPress={handleTestArticle}
-              />
-            )}
-            {/* Reset Onboarding Button */}
-            <SettingsItem
-              title="Reset Onboarding"
-              subtitle="Clear onboarding flag to see the welcome flow again"
-              icon="arrow.counterclockwise"
-              onPress={handleResetOnboarding}
-            />
-          </ThemedView>
-        )}
       </ThemedView>
 
       <ThemedView transparant style={styles.section}>
@@ -662,6 +628,24 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Debug
         </ThemedText>
+        <ThemedView>
+          {/* Test Article Button */}
+          {brandConfig?.testArticleId && (
+            <SettingsItem
+              title="Test Article"
+              subtitle={`Open test article for ${brandConfig.displayName} (ID: ${brandConfig.testArticleId})`}
+              icon="doc.text"
+              onPress={handleTestArticle}
+            />
+          )}
+          {/* Reset Onboarding Button */}
+          <SettingsItem
+            title="Reset Onboarding"
+            subtitle="Clear onboarding flag to see the welcome flow again"
+            icon="arrow.counterclockwise"
+            onPress={handleResetOnboarding}
+          />
+        </ThemedView>
         <SettingsItem
           title="Show Paywall"
           subtitle="Enable paywall for testing"

@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     aspectRatio: 3 / 2,
     backgroundColor: "transparent",
     position: "relative",
-    borderRadius: 8,
+    borderRadius: 4,
     overflow: "hidden",
   },
   heroImage: {

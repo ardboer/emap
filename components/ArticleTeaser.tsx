@@ -66,6 +66,10 @@ export default function ArticleTeaser({
         />
       </ThemedView>
       <ThemedView style={styles.contentContainer}>
+        <ThemedView style={styles.metaContainer}>
+          <ThemedText style={styles.category}>{article.category}</ThemedText>
+          {/* <ThemedText style={styles.timestamp}>{article.timestamp}</ThemedText> */}
+        </ThemedView>
         <ThemedText
           type="defaultSemiBold"
           style={[
@@ -101,7 +105,7 @@ const styles = StyleSheet.create({
   thumbnail: {
     width: thumbnailSize.width,
     height: thumbnailSize.height,
-    borderRadius: 4,
+    borderRadius: 3,
   },
   contentContainer: {
     flex: 1,
