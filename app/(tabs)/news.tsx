@@ -1,4 +1,5 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
+import ArticleTeaserHero from "@/components/ArticleTeaserHero";
 import GradientHeader from "@/components/GradientHeader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -137,9 +138,13 @@ export default function NewsScreen() {
     }
   };
 
-  const renderArticle = ({ item }: { item: Article }) => (
-    <ArticleTeaser article={item} onPress={handleArticlePress} />
-  );
+  const renderArticle = ({ item, index }: { item: Article; index: number }) => {
+    // Use hero variant for every fifth article (0, 5, 10, 15, etc.)
+    if (index % 5 === 0) {
+      return <ArticleTeaserHero article={item} onPress={handleArticlePress} />;
+    }
+    return <ArticleTeaser article={item} onPress={handleArticlePress} />;
+  };
 
   const renderTabContent = (tabIndex: number) => {
     if (menuItems.length === 0) return null;
