@@ -11,11 +11,15 @@ import {
   Dimensions,
   Linking,
   Modal,
+  Platform,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.7;
@@ -35,8 +39,22 @@ export function PaywallBottomSheet({
 }: PaywallBottomSheetProps) {
   const colorScheme = useColorScheme();
   const { colors, paywall } = useBrandConfig();
+  const insets = useSafeAreaInsets();
   const translateY = React.useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
+
+  // Log safe area insets for debugging
+  React.useEffect(() => {
+    console.log("[PaywallBottomSheet] Platform:", Platform.OS);
+    console.log("[PaywallBottomSheet] Safe Area Insets:", {
+      top: insets.top,
+      bottom: insets.bottom,
+      left: insets.left,
+      right: insets.right,
+    });
+    console.log("[PaywallBottomSheet] Screen Height:", SCREEN_HEIGHT);
+    console.log("[PaywallBottomSheet] Sheet Height:", SHEET_HEIGHT);
+  }, [insets]);
 
   // Get paywall configuration from brand config with fallbacks
   const paywallConfig = paywall || {
@@ -295,7 +313,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     width: "100%",
-    height: SHEET_HEIGHT,
+    height: SHEET_HEIGHT + (Platform.OS === "android" ? 40 : 0),
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: "#000",
@@ -332,6 +350,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 8,
+    paddingBottom: 24,
   },
   logoContainer: {
     alignItems: "center",

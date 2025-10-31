@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -25,7 +26,7 @@ export function MiniPlayer() {
     closeMiniPlayer,
   } = useAudio();
   const colorScheme = useColorScheme();
-
+  const insets = useSafeAreaInsets();
   const handlePlayPause = () => {
     if (state.isPlaying) {
       pauseAudio();
@@ -56,6 +57,7 @@ export function MiniPlayer() {
         {
           backgroundColor: Colors[colorScheme ?? "light"].contentBackground,
           borderTopColor: Colors[colorScheme ?? "light"].tabIconDefault,
+          bottom: 45 + insets.bottom,
         },
       ]}
     >
@@ -129,7 +131,6 @@ export function MiniPlayer() {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    bottom: 83, // Height of tab bar + some padding
     left: 0,
     right: 0,
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -138,9 +139,9 @@ const styles = StyleSheet.create({
       width: 0,
       height: -2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 8,
+    // shadowOpacity: 0.1,
+    // shadowRadius: 4,
+    // elevation: 8,
     zIndex: 1000,
   },
   progressBarContainer: {
