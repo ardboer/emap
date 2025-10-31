@@ -5,8 +5,13 @@ import { Animated, Dimensions, StyleSheet, View } from "react-native";
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface SkeletonLoaderProps {
-  variant?: "carousel" | "list" | "magazine";
-  count?: number; // Number of skeleton items to show for list/magazine variant
+  variant?:
+    | "carousel"
+    | "list"
+    | "magazine"
+    | "podcast-horizontal"
+    | "podcast-vertical";
+  count?: number; // Number of skeleton items to show for list/magazine/podcast variant
 }
 
 export function SkeletonLoader({
@@ -341,6 +346,202 @@ export function SkeletonLoader({
     );
   }
 
+  // Podcast horizontal variant (for multiple feeds)
+  if (variant === "podcast-horizontal") {
+    return (
+      <View style={styles.podcastHorizontalContainer}>
+        {Array.from({ length: count }).map((_, categoryIndex) => (
+          <View key={categoryIndex} style={styles.podcastCategory}>
+            {/* Category title skeleton */}
+            <View
+              style={[
+                styles.podcastCategoryTitle,
+                { backgroundColor: skeletonBaseColor },
+              ]}
+            >
+              <Animated.View
+                style={[
+                  styles.shimmer,
+                  {
+                    backgroundColor: skeletonHighlightColor,
+                    transform: [{ translateX: shimmerTranslate }],
+                  },
+                ]}
+              />
+            </View>
+            {/* Horizontal scrolling podcast cards */}
+            <View style={styles.podcastHorizontalScroll}>
+              {Array.from({ length: 3 }).map((_, index) => (
+                <View key={index} style={styles.podcastHorizontalCard}>
+                  <View
+                    style={[
+                      styles.podcastHorizontalCover,
+                      { backgroundColor: skeletonBaseColor },
+                    ]}
+                  >
+                    <Animated.View
+                      style={[
+                        styles.shimmer,
+                        {
+                          backgroundColor: skeletonHighlightColor,
+                          transform: [{ translateX: shimmerTranslate }],
+                        },
+                      ]}
+                    />
+                  </View>
+                  <View
+                    style={[
+                      styles.podcastHorizontalTitle,
+                      { backgroundColor: skeletonBaseColor },
+                    ]}
+                  >
+                    <Animated.View
+                      style={[
+                        styles.shimmer,
+                        {
+                          backgroundColor: skeletonHighlightColor,
+                          transform: [{ translateX: shimmerTranslate }],
+                        },
+                      ]}
+                    />
+                  </View>
+                  <View
+                    style={[
+                      styles.podcastHorizontalMeta,
+                      { backgroundColor: skeletonBaseColor },
+                    ]}
+                  >
+                    <Animated.View
+                      style={[
+                        styles.shimmer,
+                        {
+                          backgroundColor: skeletonHighlightColor,
+                          transform: [{ translateX: shimmerTranslate }],
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  // Podcast vertical variant (for single feed)
+  if (variant === "podcast-vertical") {
+    return (
+      <View style={styles.podcastVerticalContainer}>
+        {/* Category title skeleton */}
+        <View
+          style={[
+            styles.podcastCategoryTitle,
+            { backgroundColor: skeletonBaseColor },
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.shimmer,
+              {
+                backgroundColor: skeletonHighlightColor,
+                transform: [{ translateX: shimmerTranslate }],
+              },
+            ]}
+          />
+        </View>
+        {/* Vertical list of podcast cards */}
+        {Array.from({ length: count }).map((_, index) => (
+          <View key={index} style={styles.podcastVerticalCard}>
+            <View
+              style={[
+                styles.podcastVerticalCover,
+                { backgroundColor: skeletonBaseColor },
+              ]}
+            >
+              <Animated.View
+                style={[
+                  styles.shimmer,
+                  {
+                    backgroundColor: skeletonHighlightColor,
+                    transform: [{ translateX: shimmerTranslate }],
+                  },
+                ]}
+              />
+            </View>
+            <View style={styles.podcastVerticalContent}>
+              <View
+                style={[
+                  styles.podcastVerticalTitle,
+                  { backgroundColor: skeletonBaseColor },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.shimmer,
+                    {
+                      backgroundColor: skeletonHighlightColor,
+                      transform: [{ translateX: shimmerTranslate }],
+                    },
+                  ]}
+                />
+              </View>
+              <View
+                style={[
+                  styles.podcastVerticalTitle,
+                  { backgroundColor: skeletonBaseColor, width: "70%" },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.shimmer,
+                    {
+                      backgroundColor: skeletonHighlightColor,
+                      transform: [{ translateX: shimmerTranslate }],
+                    },
+                  ]}
+                />
+              </View>
+              <View
+                style={[
+                  styles.podcastVerticalDescription,
+                  { backgroundColor: skeletonBaseColor },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.shimmer,
+                    {
+                      backgroundColor: skeletonHighlightColor,
+                      transform: [{ translateX: shimmerTranslate }],
+                    },
+                  ]}
+                />
+              </View>
+              <View
+                style={[
+                  styles.podcastVerticalMeta,
+                  { backgroundColor: skeletonBaseColor },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.shimmer,
+                    {
+                      backgroundColor: skeletonHighlightColor,
+                      transform: [{ translateX: shimmerTranslate }],
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          </View>
+        ))}
+      </View>
+    );
+  }
+
   return null;
 }
 
@@ -470,6 +671,90 @@ const styles = StyleSheet.create({
   magazineTitleSkeleton: {
     width: "80%",
     height: 16,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  // Podcast horizontal variant styles
+  podcastHorizontalContainer: {
+    padding: 16,
+  },
+  podcastCategory: {
+    marginBottom: 32,
+  },
+  podcastCategoryTitle: {
+    width: 150,
+    height: 24,
+    borderRadius: 4,
+    marginBottom: 16,
+    marginLeft: 4,
+    overflow: "hidden",
+  },
+  podcastHorizontalScroll: {
+    flexDirection: "row",
+  },
+  podcastHorizontalCard: {
+    width: 160,
+    marginRight: 16,
+  },
+  podcastHorizontalCover: {
+    width: 160,
+    height: 160,
+    borderRadius: 12,
+    marginBottom: 8,
+    overflow: "hidden",
+  },
+  podcastHorizontalTitle: {
+    width: "100%",
+    height: 18,
+    borderRadius: 4,
+    marginBottom: 4,
+    overflow: "hidden",
+  },
+  podcastHorizontalMeta: {
+    width: 80,
+    height: 14,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  // Podcast vertical variant styles
+  podcastVerticalContainer: {
+    padding: 16,
+  },
+  podcastVerticalCard: {
+    flexDirection: "row",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+    overflow: "hidden",
+  },
+  podcastVerticalCover: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  podcastVerticalContent: {
+    flex: 1,
+    marginLeft: 12,
+    justifyContent: "space-between",
+  },
+  podcastVerticalTitle: {
+    width: "100%",
+    height: 20,
+    borderRadius: 4,
+    marginBottom: 6,
+    overflow: "hidden",
+  },
+  podcastVerticalDescription: {
+    width: "90%",
+    height: 16,
+    borderRadius: 4,
+    marginBottom: 8,
+    overflow: "hidden",
+  },
+  podcastVerticalMeta: {
+    width: 120,
+    height: 14,
     borderRadius: 4,
     overflow: "hidden",
   },

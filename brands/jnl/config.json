@@ -129,5 +129,6 @@
     "configured": false,
     "details": "No keystore alias found for jnl",
     "lastChecked": "2025-10-19T19:43:46.872Z"
-  }
+  },
+  "podcastFeeds": []
 }

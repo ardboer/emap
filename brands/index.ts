@@ -104,6 +104,12 @@ export interface BrandConfig {
   };
   misoConfig?: MisoConfig;
   testArticleId?: string;
+  podcastFeeds?: PodcastFeed[];
+}
+
+export interface PodcastFeed {
+  name: string;
+  url: string;
 }
 
 // Dynamically discover available brands from filesystem

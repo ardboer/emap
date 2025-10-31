@@ -131,5 +131,6 @@
     "details": "Keystore alias found: construction-news-key",
     "lastChecked": "2025-10-23T20:39:46.254Z",
     "alias": "construction-news-key"
-  }
+  },
+  "podcastFeeds": []
 }

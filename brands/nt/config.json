@@ -118,10 +118,10 @@
     "secondaryButtonUrl": "https://www.nursingtimes.net/login"
   },
   "features": {
-    "enablePodcasts": false,
+    "enablePodcasts": true,
     "enableClinical": true,
     "enableEvents": false,
-    "enableAsk": true,
+    "enableAsk": false,
     "enableMagazine": true
   },
   "misoConfig": {
@@ -136,5 +136,23 @@
     "details": "Keystore alias found: nursing-times-key",
     "lastChecked": "2025-10-23T20:42:10.873Z",
     "alias": "nursing-times-key"
-  }
+  },
+  "podcastFeeds": [
+    {
+      "name": "CN First Site",
+      "url": "https://feed.podbean.com/cnfirstsite/feed.xml"
+    },
+    {
+      "name": "LGC - The Local Authority",
+      "url": "https://feed.podbean.com/thelocalauthority/feed.xml"
+    },
+    {
+      "name": "LGC – LGC Investment Series",
+      "url": "https://feed.podbean.com/lgcinvestmentseries/feed.xml"
+    },
+    {
+      "name": "NCE – The Engineers Collective",
+      "url": "https://feed.podbean.com/theengineerscollective/feed.xml"
+    }
+  ]
 }
