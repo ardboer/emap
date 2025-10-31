@@ -41,6 +41,7 @@ export interface BrandConfig {
         articleDetailHighlightBoxBg?: string;
         articleDetailHighlightBoxText?: string;
         articleDetailHighlightBoxBorder?: string;
+        linkColor?: string;
       };
       dark: {
         primary: string;
@@ -60,6 +61,7 @@ export interface BrandConfig {
         articleDetailHighlightBoxBg?: string;
         articleDetailHighlightBoxText?: string;
         articleDetailHighlightBoxBorder?: string;
+        linkColor?: string;
       };
     };
     fonts: {

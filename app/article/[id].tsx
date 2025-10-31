@@ -8,6 +8,7 @@ import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { AdSizes } from "@/services/admob";
 import { getAnonymousId } from "@/services/anonymousId";
 import { trackArticleView } from "@/services/miso";
 import { Article, StructuredContentNode } from "@/types";
@@ -464,6 +465,7 @@ export default function ArticleScreen() {
               onAdFailedToLoad={(error) =>
                 console.log("Banner ad failed to load:", error)
               }
+              size={AdSizes.MEDIUM_RECTANGLE}
               style={styles.bannerAd}
             />
 

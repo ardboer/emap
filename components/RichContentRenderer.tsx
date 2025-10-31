@@ -133,6 +133,7 @@ interface RichContentNodeProps {
   onImagePress: (imageUri: string, caption?: string) => void;
   forceHighlightBoxText?: boolean;
   isBlockquote?: boolean;
+  isLink?: boolean;
 }
 
 interface RichContentTableCellProps {
@@ -228,6 +229,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
   onImagePress,
   forceHighlightBoxText = false,
   isBlockquote = false,
+  isLink = false,
 }) => {
   const { colors, fonts } = useBrandConfig();
   const colorScheme = useColorScheme();
@@ -257,6 +259,16 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         </HighlightBoxText>
       );
     }
+    // If inside a link, use RNText with link color to avoid ThemedText overriding it
+    if (isLink) {
+      return (
+        <RNText
+          style={[styles.link, { color: themeColors?.linkColor || "#007AFF" }]}
+        >
+          {node.text || ""}
+        </RNText>
+      );
+    }
     return <ThemedText style={styles.inlineText}>{node.text || ""}</ThemedText>;
   }
 
@@ -268,6 +280,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         onImagePress={onImagePress}
         forceHighlightBoxText={forceHighlightBoxText}
         isBlockquote={isBlockquote}
+        isLink={isLink}
       />
     ) : null;
 
@@ -811,17 +824,18 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
       <RichContentRendererInternal
         content={node.children}
         onImagePress={onImagePress}
+        isLink={true}
       />
     ) : null;
 
     return (
-      <ThemedText
+      <RNText
         key={index}
-        style={styles.link}
+        style={[styles.link, { color: themeColors?.linkColor || "#007AFF" }]}
         onPress={() => node.href && handleLinkPress(node.href)}
       >
         {children}
-      </ThemedText>
+      </RNText>
     );
   }
 
@@ -912,6 +926,7 @@ interface RichContentRendererInternalProps extends RichContentRendererProps {
   onImagePress: (imageUri: string, caption?: string) => void;
   forceHighlightBoxText?: boolean;
   isBlockquote?: boolean;
+  isLink?: boolean;
 }
 
 const RichContentRendererInternal: React.FC<
@@ -922,6 +937,7 @@ const RichContentRendererInternal: React.FC<
   onImagePress,
   forceHighlightBoxText = false,
   isBlockquote = false,
+  isLink = false,
 }) => {
   return (
     <View style={style}>
@@ -933,6 +949,7 @@ const RichContentRendererInternal: React.FC<
           onImagePress={onImagePress}
           forceHighlightBoxText={forceHighlightBoxText}
           isBlockquote={isBlockquote}
+          isLink={isLink}
         />
       ))}
     </View>

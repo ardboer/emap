@@ -42,7 +42,8 @@
         "highlightBoxText": "#FFFFFF",
         "highlightBoxBorder": "#10D1F0",
         "articleListBackground": "#FFFFFF",
-        "articleTeaserTitleText": "#00334C"
+        "articleTeaserTitleText": "#00334C",
+        "linkColor": "#007AFF"
       },
       "dark": {
         "primary": "#df7446",
@@ -75,7 +76,8 @@
         "highlightBoxText": "#FFFFFF",
         "highlightBoxBorder": "#10D1F0",
         "articleListBackground": "#011620",
-        "articleTeaserTitleText": "#FFFFFF"
+        "articleTeaserTitleText": "#FFFFFF",
+        "linkColor": "#10D1F0"
       }
     },
     "fonts": {
