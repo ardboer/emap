@@ -1,6 +1,6 @@
+import { FadeInImage } from "@/components/FadeInImage";
 import { ThemedView } from "@/components/ThemedView";
 import { MagazineEdition } from "@/types";
-import { Image } from "expo-image";
 import React, { useState } from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
 
@@ -61,7 +61,7 @@ export default function MagazineListItem({
             <ActivityIndicator size="small" color="#666" />
           </ThemedView>
         )}
-        <Image
+        <FadeInImage
           source={{
             uri: imageError
               ? "https://picsum.photos/300/400?random=magazine"

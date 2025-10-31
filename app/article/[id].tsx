@@ -1,4 +1,5 @@
 import { BannerAd } from "@/components/BannerAd";
+import { FadeInImage } from "@/components/FadeInImage";
 import { PaywallBottomSheet } from "@/components/PaywallBottomSheet";
 import { RichContentRenderer } from "@/components/RichContentRenderer";
 import { ThemedText } from "@/components/ThemedText";
@@ -15,7 +16,6 @@ import { Article, StructuredContentNode } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -331,7 +331,7 @@ export default function ArticleScreen() {
       <View style={styles.container}>
         {/* Fixed Header Image */}
         <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
-          <Image
+          <FadeInImage
             source={{ uri: article.imageUrl }}
             style={styles.headerImage}
           />

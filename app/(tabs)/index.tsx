@@ -1,5 +1,6 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { CarouselProgressIndicator } from "@/components/CarouselProgressIndicator";
+import { FadeInImage } from "@/components/FadeInImage";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -10,7 +11,6 @@ import { analyticsService } from "@/services/analytics";
 import { fetchFeaturedArticles } from "@/services/api";
 import { Article } from "@/types";
 import { hexToRgba } from "@/utils/colors";
-import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -535,7 +535,7 @@ export default function HighlightedScreen() {
               style={styles.backgroundImageBlurred}
             />
             {/* Main centered image */}
-            <Image
+            <FadeInImage
               source={{ uri: item.imageUrl }}
               style={styles.centeredImage}
               contentFit="contain"
@@ -594,7 +594,7 @@ export default function HighlightedScreen() {
             activeOpacity={1}
           >
             {/* Blurred background image */}
-            <Image
+            <FadeInImage
               source={{ uri: item.imageUrl }}
               style={styles.backgroundImageBlurred}
               contentFit="cover"
@@ -603,7 +603,7 @@ export default function HighlightedScreen() {
             {/* Dark overlay for blurred background */}
             <View style={styles.darkOverlay} />
             {/* Main centered image */}
-            <Image
+            <FadeInImage
               source={{ uri: item.imageUrl }}
               style={styles.centeredImage}
               contentFit="contain"
@@ -664,7 +664,7 @@ export default function HighlightedScreen() {
         onPress={() => handleArticlePress(item)}
         activeOpacity={1}
       >
-        <Image
+        <FadeInImage
           source={{ uri: item.imageUrl }}
           style={styles.backgroundImage}
           contentFit="cover"
@@ -728,7 +728,7 @@ export default function HighlightedScreen() {
         />
         <BrandLogo style={styles.brandLogo} width={100} height={35} />
         <TouchableOpacity style={styles.userButton} disabled>
-          <Image
+          <FadeInImage
             source={require("@/assets/images/user-icon.png")}
             style={{ width: 24, height: 24, opacity: 0.5 }}
             contentFit="contain"
@@ -768,7 +768,7 @@ export default function HighlightedScreen() {
         style={styles.userButton}
         onPress={() => setSettingsDrawerVisible(true)}
       >
-        <Image
+        <FadeInImage
           source={require("@/assets/images/user-icon.png")}
           style={{ width: 24, height: 24 }}
           contentFit="contain"

@@ -1,3 +1,4 @@
+import { FadeInImage } from "@/components/FadeInImage";
 import GradientHeader from "@/components/GradientHeader";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
@@ -8,7 +9,6 @@ import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { fetchPodcastsByBrand } from "@/services/podcast";
 import { PodcastCategory, PodcastEpisode } from "@/types";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -150,7 +150,10 @@ export default function PodcastsScreen() {
       style={[styles.podcastCard, { backgroundColor: "transparent" }]}
       onPress={() => handlePodcastPress(item)}
     >
-      <Image source={{ uri: item.coverUrl }} style={styles.podcastCover} />
+      <FadeInImage
+        source={{ uri: item.coverUrl }}
+        style={styles.podcastCover}
+      />
       <ThemedView
         style={[styles.podcastInfo, { backgroundColor: "transparent" }]}
       >
@@ -173,11 +176,10 @@ export default function PodcastsScreen() {
         ]}
         onPress={() => handlePodcastPress(item)}
       >
-        <Image
+        <FadeInImage
           source={{ uri: item.coverUrl }}
           style={styles.verticalPodcastCover}
           contentFit="cover"
-          transition={200}
         />
         <ThemedView
           style={[

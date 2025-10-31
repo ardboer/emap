@@ -1,5 +1,5 @@
+import { FadeInImage } from "@/components/FadeInImage";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import React from "react";
 import {
   Dimensions,
@@ -139,7 +139,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
         <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.imageContainer, animatedStyle]}>
-            <Image
+            <FadeInImage
               source={{ uri: imageUri }}
               style={styles.image}
               contentFit="contain"

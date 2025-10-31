@@ -1,8 +1,8 @@
+import { FadeInImage } from "@/components/FadeInImage";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useImageViewer } from "@/hooks/useImageViewer";
 import { StructuredContentNode } from "@/types";
-import { Image } from "expo-image";
 import React from "react";
 import {
   Dimensions,
@@ -13,7 +13,6 @@ import {
   View,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import { ImageViewer } from "./ImageViewer";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -461,7 +460,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                   }
                   activeOpacity={0.8}
                 >
-                  <Image
+                  <FadeInImage
                     source={{ uri: imageNode.relation.href }}
                     style={{
                       width: imageDimensions.width,
@@ -781,7 +780,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                     }}
                     activeOpacity={0.8}
                   >
-                    <Image
+                    <FadeInImage
                       source={{ uri: imageData.imageUri }}
                       style={styles.enhancedGalleryImage}
                       contentFit="cover"
@@ -899,7 +898,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           }
           activeOpacity={0.8}
         >
-          <Image
+          <FadeInImage
             source={{ uri: node.relation.href }}
             style={{
               width: imageDimensions.width,

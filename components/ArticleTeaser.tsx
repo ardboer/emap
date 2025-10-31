@@ -1,8 +1,8 @@
+import { FadeInImage } from "@/components/FadeInImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { Article } from "@/types";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -59,7 +59,7 @@ export default function ArticleTeaser({
   return (
     <TouchableOpacity style={styles.articleContainer} onPress={handlePress}>
       <ThemedView style={styles.imageWrapper}>
-        <Image
+        <FadeInImage
           source={{ uri: article.imageUrl }}
           style={styles.thumbnail}
           contentFit="cover"

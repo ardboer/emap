@@ -1,7 +1,7 @@
+import { FadeInImage } from "@/components/FadeInImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { fetchSingleEvent } from "@/services/api";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -111,7 +111,10 @@ export default function EventDetailScreen() {
     <View style={styles.container}>
       {/* Fixed Header Image */}
       <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
-        <Image source={{ uri: event.imageUrl }} style={styles.headerImage} />
+        <FadeInImage
+          source={{ uri: event.imageUrl }}
+          style={styles.headerImage}
+        />
       </Animated.View>
 
       {/* Back Button */}

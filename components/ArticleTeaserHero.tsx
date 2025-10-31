@@ -1,7 +1,7 @@
+import { FadeInImage } from "@/components/FadeInImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Article } from "@/types";
-import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
@@ -37,7 +37,7 @@ export default function ArticleTeaserHero({
   return (
     <TouchableOpacity style={styles.heroContainer} onPress={handlePress}>
       <ThemedView style={styles.imageContainer}>
-        <Image
+        <FadeInImage
           source={{ uri: article.imageUrl }}
           style={styles.heroImage}
           contentFit="cover"

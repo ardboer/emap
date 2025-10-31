@@ -1,8 +1,8 @@
+import { FadeInImage } from "@/components/FadeInImage";
 import { Colors } from "@/constants/Colors";
 import { useAudio } from "@/contexts/AudioContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import React from "react";
 import {
   ActivityIndicator,
@@ -78,7 +78,7 @@ export function MiniPlayer() {
         activeOpacity={0.8}
       >
         <View style={styles.leftContent}>
-          <Image
+          <FadeInImage
             source={{ uri: state.currentEpisode.coverUrl }}
             style={styles.artwork}
             contentFit="cover"

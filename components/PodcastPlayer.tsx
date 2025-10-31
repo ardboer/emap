@@ -1,9 +1,9 @@
+import { FadeInImage } from "@/components/FadeInImage";
 import { Colors } from "@/constants/Colors";
 import { useAudio } from "@/contexts/AudioContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
-import { Image } from "expo-image";
 import React from "react";
 import {
   ActivityIndicator,
@@ -87,7 +87,7 @@ export function PodcastPlayer() {
           ]}
         >
           <ThemedView style={styles.artworkContainer}>
-            <Image
+            <FadeInImage
               source={{ uri: state.currentEpisode.coverUrl }}
               style={styles.artwork}
               contentFit="cover"
