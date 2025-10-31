@@ -3,6 +3,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import React, { useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { OnboardingStepProps } from "./types";
@@ -11,7 +12,7 @@ export function WelcomeScreen({ onNext, onSkip }: OnboardingStepProps) {
   const { brandConfig, colors } = useBrandConfig();
   const primaryColor = colors?.light.primary || "#0a7ea4";
   const [imageError, setImageError] = useState(false);
-
+  const backgroundColorContent = useThemeColor({}, "contentBackground");
   // Determine editor image source using auto-generated registry
   let editorImageSource = null;
   if (
@@ -30,7 +31,9 @@ export function WelcomeScreen({ onNext, onSkip }: OnboardingStepProps) {
       : "Stay informed with the latest news, in-depth analysis, and exclusive content from our editorial team.";
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: backgroundColorContent }]}
+    >
       <ThemedView style={styles.content}>
         {/* Brand Logo */}
         <View style={styles.logoContainer}>
@@ -90,11 +93,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     justifyContent: "space-between",
+    backgroundColor: "transparent",
   },
   content: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "transparent",
   },
   logoContainer: {
     marginBottom: 32,

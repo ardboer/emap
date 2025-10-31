@@ -22,7 +22,7 @@ export function SkeletonLoader({
   const backgroundColor = useThemeColor({}, "background");
   const skeletonBase = useThemeColor({}, "text");
   const skeletonHighlight = useThemeColor({}, "background");
-
+  const backgroundColorContent = useThemeColor({}, "contentBackground");
   useEffect(() => {
     const shimmer = Animated.loop(
       Animated.sequence([
@@ -58,7 +58,12 @@ export function SkeletonLoader({
 
   if (variant === "carousel") {
     return (
-      <View style={styles.carouselContainer}>
+      <View
+        style={[
+          styles.carouselContainer,
+          { backgroundColor: backgroundColorContent },
+        ]}
+      >
         {/* Image skeleton */}
         <View
           style={[styles.imageSkeleton, { backgroundColor: skeletonBaseColor }]}
@@ -199,7 +204,12 @@ export function SkeletonLoader({
   // List variant for article teasers
   if (variant === "list") {
     return (
-      <View style={styles.listContainer}>
+      <View
+        style={[
+          styles.listContainer,
+          { backgroundColor: backgroundColorContent },
+        ]}
+      >
         {Array.from({ length: count }).map((_, index) => (
           <View key={index} style={styles.listItemSkeleton}>
             {/* Image skeleton */}
@@ -301,7 +311,12 @@ export function SkeletonLoader({
   // Magazine grid variant
   if (variant === "magazine") {
     return (
-      <View style={styles.magazineContainer}>
+      <View
+        style={[
+          styles.magazineContainer,
+          { backgroundColor: backgroundColorContent },
+        ]}
+      >
         <View style={styles.magazineGrid}>
           {Array.from({ length: count }).map((_, index) => (
             <View key={index} style={styles.magazineItemSkeleton}>
@@ -651,11 +666,13 @@ const styles = StyleSheet.create({
   magazineContainer: {
     flex: 1,
     paddingTop: 20,
+    backgroundColor: "transparent",
   },
   magazineGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     paddingHorizontal: 8,
+    backgroundColor: "transparent",
   },
   magazineItemSkeleton: {
     width: "50%",

@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingBottom: 12,
     alignSelf: "stretch",
+    backgroundColor: "transparent",
   },
   imageWrapper: {
     paddingTop: 4,
@@ -126,6 +127,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "transparent",
   },
   category: {
     fontSize: 12,

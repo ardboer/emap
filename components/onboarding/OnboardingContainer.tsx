@@ -1,10 +1,14 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { setOnboardingCompleted } from "@/services/onboarding";
 import React, { useState } from "react";
 import { Modal, Platform, StyleSheet, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { LoginScreen } from "./LoginScreen";
 import { NotificationAlertScreen } from "./NotificationAlertScreen";
 import { NotificationPermissionScreen } from "./NotificationPermissionScreen";
@@ -22,7 +26,8 @@ interface OnboardingContainerProps {
 export function OnboardingContainer({ onComplete }: OnboardingContainerProps) {
   const { primaryColor } = useBrandColors();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-
+  const backgroundColorContent = useThemeColor({}, "contentBackground");
+  const insets = useSafeAreaInsets();
   // Define the steps based on platform
   const getSteps = (): OnboardingStep[] => {
     const baseSteps: OnboardingStep[] = [
@@ -113,10 +118,26 @@ export function OnboardingContainer({ onComplete }: OnboardingContainerProps) {
 
   return (
     <Modal visible={true} animationType="slide" presentationStyle="fullScreen">
-      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-        <ThemedView style={styles.container}>
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          {
+            backgroundColor: backgroundColorContent,
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+          },
+        ]}
+      >
+        <ThemedView
+          style={[
+            styles.container,
+            { backgroundColor: backgroundColorContent },
+          ]}
+        >
           {/* Header with progress and back button */}
-          <ThemedView style={styles.header}>
+          <ThemedView
+            style={[styles.header, { backgroundColor: backgroundColorContent }]}
+          >
             {currentStepIndex > 0 && (
               <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                 <IconSymbol
@@ -132,11 +153,21 @@ export function OnboardingContainer({ onComplete }: OnboardingContainerProps) {
               </TouchableOpacity>
             )}
 
-            <ThemedView style={styles.progressContainer}>
+            <ThemedView
+              style={[
+                styles.progressContainer,
+                { backgroundColor: backgroundColorContent },
+              ]}
+            >
               <ThemedText style={styles.progressText}>
                 {currentStepIndex + 1} of {totalSteps}
               </ThemedText>
-              <ThemedView style={styles.progressBarContainer}>
+              <ThemedView
+                style={[
+                  styles.progressBarContainer,
+                  { backgroundColor: backgroundColorContent },
+                ]}
+              >
                 {steps.map((_, index) => (
                   <ThemedView
                     key={index}
@@ -155,7 +186,13 @@ export function OnboardingContainer({ onComplete }: OnboardingContainerProps) {
             {currentStepIndex && (
               <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
                 <ThemedText
-                  style={[styles.skipButtonText, { color: primaryColor }]}
+                  style={[
+                    styles.skipButtonText,
+                    {
+                      color: primaryColor,
+                      backgroundColor: backgroundColorContent,
+                    },
+                  ]}
                 >
                   {/* Skip */}
                 </ThemedText>
@@ -164,7 +201,12 @@ export function OnboardingContainer({ onComplete }: OnboardingContainerProps) {
           </ThemedView>
 
           {/* Current step content */}
-          <ThemedView style={styles.stepContent}>
+          <ThemedView
+            style={[
+              styles.stepContent,
+              { backgroundColor: backgroundColorContent },
+            ]}
+          >
             {renderCurrentStep()}
           </ThemedView>
         </ThemedView>
@@ -185,7 +227,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingTop: 60,
+    paddingTop: 0,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0, 0, 0, 0.1)",

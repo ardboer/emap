@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import {
   isTrackingAvailable,
   requestTrackingPermission,
@@ -22,7 +23,7 @@ export function TrackingPermissionScreen({
 }: OnboardingStepProps) {
   const { primaryColor } = useBrandColors();
   const [isLoading, setIsLoading] = useState(false);
-
+  const backgroundColorContent = useThemeColor({}, "contentBackground");
   // This screen should only be shown on iOS
   if (Platform.OS !== "ios") {
     onNext();
@@ -129,11 +130,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     justifyContent: "space-between",
+    backgroundColor: "transparent",
   },
   content: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "transparent",
   },
   iconContainer: {
     marginBottom: 32,
@@ -162,6 +165,7 @@ const styles = StyleSheet.create({
   infoTextContainer: {
     flex: 1,
     gap: 4,
+    backgroundColor: "rgba(10, 126, 164, 0)",
     padding: 8,
   },
   infoTitle: {

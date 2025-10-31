@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { brandManager } from "@/config/BrandManager";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import {
   getFCMToken,
   requestNotificationPermission,
@@ -19,7 +20,7 @@ export function NotificationPermissionScreen({
 }: OnboardingStepProps) {
   const { primaryColor } = useBrandColors();
   const [isRequesting, setIsRequesting] = useState(false);
-
+  const backgroundColorContent = useThemeColor({}, "contentBackground");
   const handleRequestPermission = async () => {
     if (isRequesting) return;
 
@@ -163,7 +164,13 @@ export function NotificationPermissionScreen({
           </ThemedText>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryButton} onPress={onSkip}>
+        <TouchableOpacity
+          style={[
+            styles.secondaryButton,
+            { backgroundColor: backgroundColorContent },
+          ]}
+          onPress={onSkip}
+        >
           <ThemedText style={styles.secondaryButtonText}>Not Now</ThemedText>
         </TouchableOpacity>
       </ThemedView>
@@ -176,11 +183,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     justifyContent: "space-between",
+    backgroundColor: "transparent",
   },
   content: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "transparent",
   },
   iconContainer: {
     marginBottom: 32,
@@ -200,7 +209,8 @@ const styles = StyleSheet.create({
   infoBox: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "rgba(10, 126, 164, 0.1)",
+    // backgroundColor: "rgba(10, 126, 164, 0.1)",
+    backgroundColor: "transparent",
     padding: 16,
     borderRadius: 12,
     gap: 12,
@@ -230,6 +240,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 32,
     alignItems: "center",
+    backgroundColor: "transparent",
   },
   secondaryButtonText: {
     fontSize: 16,
