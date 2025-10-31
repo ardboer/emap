@@ -141,18 +141,6 @@
     {
       "name": "CN First Site",
       "url": "https://feed.podbean.com/cnfirstsite/feed.xml"
-    },
-    {
-      "name": "LGC - The Local Authority",
-      "url": "https://feed.podbean.com/thelocalauthority/feed.xml"
-    },
-    {
-      "name": "LGC – LGC Investment Series",
-      "url": "https://feed.podbean.com/lgcinvestmentseries/feed.xml"
-    },
-    {
-      "name": "NCE – The Engineers Collective",
-      "url": "https://feed.podbean.com/theengineerscollective/feed.xml"
     }
   ]
 }

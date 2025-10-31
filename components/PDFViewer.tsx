@@ -121,27 +121,6 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
     }
   }, []);
 
-  // Test function to verify alert system works
-  const testAlert = useCallback(() => {
-    console.log("🧪 Test alert triggered");
-    Alert.alert("Test Alert", "This is a test to verify alerts work", [
-      { text: "OK" },
-    ]);
-  }, []);
-
-  // Add a single tap handler as alternative
-  const handleSingleTap = useCallback((page: number, x: number, y: number) => {
-    console.log(
-      `👆 Single tap detected on page ${page} at coordinates (${x}, ${y})`
-    );
-    // For testing - show alert on any tap
-    Alert.alert(
-      "Tap Detected",
-      `Tapped page ${page} at (${Math.round(x)}, ${Math.round(y)})`,
-      [{ text: "OK" }]
-    );
-  }, []);
-
   const formatMagazineTitle = (id: string): string => {
     try {
       if (id.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -202,11 +181,9 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
             onLoadProgress={handlePdfLoadProgress}
             onLoadComplete={handlePdfLoadComplete}
             onPageChanged={(page, numberOfPages) => {
-              console.log(`📖 Page ${page} of ${numberOfPages}`);
               currentPageRef.current = page;
             }}
             onScaleChanged={(scale) => {
-              console.log(`🔍 Scale changed: ${scale}`);
               currentScaleRef.current = scale;
               lastScaleChangeRef.current = Date.now();
             }}
@@ -221,6 +198,7 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
             horizontal={true}
             fitPolicy={0}
             scale={1.0}
+            enableAnnotationRendering={true}
           />
         </GestureHandlerRootView>
       )}
