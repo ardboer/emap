@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { fetchTrendingArticles } from "@/services/api";
 import { Article } from "@/types";
 import React, { useEffect, useState } from "react";
@@ -10,7 +11,7 @@ export default function TrendingArticles() {
   const [trendingArticles, setTrendingArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const contentBackground = useThemeColor({}, "contentBackground");
   useEffect(() => {
     const loadTrendingArticles = async () => {
       try {
@@ -31,7 +32,9 @@ export default function TrendingArticles() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView
+        style={[styles.container, { backgroundColor: contentBackground }]}
+      >
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Trending Articles
         </ThemedText>
@@ -50,12 +53,19 @@ export default function TrendingArticles() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: contentBackground }]}
+    >
       <ThemedView style={styles.divider} />
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Trending Articles
       </ThemedText>
-      <ThemedView style={styles.articlesContainer}>
+      <ThemedView
+        style={[
+          styles.articlesContainer,
+          { backgroundColor: contentBackground },
+        ]}
+      >
         {trendingArticles.map((article) => (
           <ArticleTeaser key={article.id} article={article} />
         ))}

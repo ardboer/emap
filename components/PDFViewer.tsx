@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { fetchMagazinePDF } from "@/services/api";
 import { MagazineEdition } from "@/types";
 import { parsePDFArticleUri } from "@/utils/pdfUriParser";
@@ -30,7 +31,7 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
   const currentPageRef = useRef(1);
   const currentScaleRef = useRef(1.0);
   const lastScaleChangeRef = useRef(0);
-
+  const contentBackground = useThemeColor({}, "contentBackground");
   const loadPDF = useCallback(async () => {
     try {
       setLoading(true);
@@ -157,35 +158,6 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
     }
   };
 
-  const renderHeader = () => (
-    <ThemedView style={styles.header}>
-      <ThemedView style={styles.headerContent}>
-        <ThemedText type="defaultSemiBold" style={styles.headerTitle}>
-          {brandName || "Magazine"}
-        </ThemedText>
-      </ThemedView>
-      {/* <TouchableOpacity
-        style={styles.testButton}
-        onPress={testAlert}
-        accessibilityRole="button"
-        accessibilityLabel="Test alert functionality"
-      >
-        <ThemedText style={styles.testButtonText}>Test</ThemedText>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.testButton, { backgroundColor: "#28A745" }]}
-        onPress={() => {
-          console.log("🧪 Switching to local test PDF");
-          setPdfUrl(require("../assets/pdf/paper.pdf"));
-        }}
-        accessibilityRole="button"
-        accessibilityLabel="Load local test PDF"
-      >
-        <ThemedText style={styles.testButtonText}>Local</ThemedText>
-      </TouchableOpacity> */}
-    </ThemedView>
-  );
-
   const renderLoadingState = () => (
     <ThemedView style={styles.centerContainer}>
       <ActivityIndicator size="large" />
@@ -209,7 +181,7 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
   );
 
   return (
-    <ThemedView style={{ flex: 1 }}>
+    <ThemedView style={{ flex: 1, backgroundColor: contentBackground }}>
       {loading && renderLoadingState()}
 
       {error && !loading && renderErrorState()}
@@ -219,6 +191,7 @@ export default function PDFViewer({ magazine, onBack }: PDFViewerProps) {
           style={{
             flex: 1,
             marginBottom: 70,
+            backgroundColor: contentBackground,
           }}
         >
           <Pdf

@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     top: 60,
     left: 16,
     zIndex: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    // backgroundColor: "rgba(0, 0, 0, 0.6)",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -210,6 +210,7 @@ const styles = StyleSheet.create({
   metaContainer: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "transparent",
     marginBottom: 16,
     opacity: 0.6,
   },

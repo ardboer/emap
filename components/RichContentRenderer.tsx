@@ -1065,6 +1065,8 @@ const styles = StyleSheet.create({
   link: {
     color: "#007AFF",
     textDecorationLine: "underline",
+    fontSize: 16,
+    lineHeight: 22,
   },
   imageContainer: {
     marginVertical: 16,
