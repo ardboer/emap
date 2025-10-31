@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { WebView } from "react-native-webview";
+import { ImageViewer } from "./ImageViewer";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 

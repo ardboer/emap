@@ -87,7 +87,12 @@ export default function PodcastsScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView
+        style={[
+          styles.container,
+          { backgroundColor: Colors[colorScheme].contentBackground },
+        ]}
+      >
         <GradientHeader onSearchPress={() => router.push("/search")} />
         <SkeletonLoader
           variant={
@@ -103,7 +108,12 @@ export default function PodcastsScreen() {
 
   if (error) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView
+        style={[
+          styles.container,
+          { backgroundColor: Colors[colorScheme].contentBackground },
+        ]}
+      >
         <GradientHeader onSearchPress={() => router.push("/search")} />
         <ThemedView style={styles.errorContainer}>
           <ThemedText style={styles.errorText}>{error}</ThemedText>
@@ -125,7 +135,12 @@ export default function PodcastsScreen() {
 
   if (categories.length === 0) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView
+        style={[
+          styles.container,
+          { backgroundColor: Colors[colorScheme].contentBackground },
+        ]}
+      >
         <GradientHeader onSearchPress={() => router.push("/search")} />
         <ThemedView style={styles.errorContainer}>
           <ThemedText style={styles.errorText}>

@@ -2,6 +2,7 @@ import { FadeInImage } from "@/components/FadeInImage";
 import { Colors } from "@/constants/Colors";
 import { useAudio } from "@/contexts/AudioContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import React from "react";
@@ -23,7 +24,7 @@ export function PodcastPlayer() {
   const { state, pauseAudio, resumeAudio, seekTo, hideFullscreenPlayer } =
     useAudio();
   const colorScheme = useColorScheme();
-
+  const contentBackground = useThemeColor({}, "contentBackground");
   const formatTime = (milliseconds: number) => {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -58,16 +59,10 @@ export function PodcastPlayer() {
       presentationStyle="fullScreen"
     >
       <SafeAreaView
-        style={[
-          styles.container,
-          { backgroundColor: Colors[colorScheme].contentBackground },
-        ]}
+        style={[styles.container, { backgroundColor: contentBackground }]}
       >
         <ThemedView
-          style={[
-            styles.header,
-            { backgroundColor: Colors[colorScheme].contentBackground },
-          ]}
+          style={[styles.header, { backgroundColor: contentBackground }]}
         >
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
             <Ionicons
@@ -81,10 +76,7 @@ export function PodcastPlayer() {
         </ThemedView>
 
         <ThemedView
-          style={[
-            styles.content,
-            { backgroundColor: Colors[colorScheme].contentBackground },
-          ]}
+          style={[styles.content, { backgroundColor: contentBackground }]}
         >
           <ThemedView style={styles.artworkContainer}>
             <FadeInImage
@@ -94,7 +86,9 @@ export function PodcastPlayer() {
             />
           </ThemedView>
 
-          <ThemedView style={styles.episodeInfo}>
+          <ThemedView
+            style={[styles.episodeInfo, { backgroundColor: contentBackground }]}
+          >
             <ThemedText style={styles.episodeTitle} numberOfLines={2}>
               {state.currentEpisode.title}
             </ThemedText>
@@ -107,7 +101,12 @@ export function PodcastPlayer() {
             </ThemedText>
           </ThemedView>
 
-          <ThemedView style={styles.progressContainer}>
+          <ThemedView
+            style={[
+              styles.progressContainer,
+              { backgroundColor: contentBackground },
+            ]}
+          >
             <Slider
               style={styles.progressSlider}
               minimumValue={0}
@@ -130,7 +129,9 @@ export function PodcastPlayer() {
             </View>
           </ThemedView>
 
-          <ThemedView style={styles.controls}>
+          <ThemedView
+            style={[styles.controls, { backgroundColor: contentBackground }]}
+          >
             <TouchableOpacity style={styles.controlButton}>
               <Ionicons
                 name="play-skip-back"
