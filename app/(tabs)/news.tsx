@@ -1,5 +1,6 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
 import ArticleTeaserHero from "@/components/ArticleTeaserHero";
+import { BlockHeader } from "@/components/BlockHeader";
 import GradientHeader from "@/components/GradientHeader";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
@@ -7,17 +8,13 @@ import { ThemedView } from "@/components/ThemedView";
 import TopicsTabBar from "@/components/TopicsTabBar";
 import { Colors } from "@/constants/Colors";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import {
-  fetchCategoryContent,
-  fetchMenuItems,
-  fetchNewsArticles,
-} from "@/services/api";
-import { Article } from "@/types";
+import { fetchCategoryContent, fetchMenuItems } from "@/services/api";
+import { Article, CategoryContentResponse } from "@/types";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  FlatList,
   RefreshControl,
+  SectionList,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
@@ -30,10 +27,10 @@ export default function NewsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const contentBackground = useThemeColor({}, "contentBackground");
-  // Store articles per tab
-  const [tabArticles, setTabArticles] = useState<{ [key: string]: Article[] }>(
-    {}
-  );
+  // Store content per tab - all tabs now use grouped blocks structure
+  const [tabContent, setTabContent] = useState<{
+    [key: string]: CategoryContentResponse;
+  }>({});
   const [tabLoadingStates, setTabLoadingStates] = useState<{
     [key: string]: boolean;
   }>({});
@@ -70,20 +67,21 @@ export default function NewsScreen() {
     setTabLoadingStates((prev) => ({ ...prev, [tabKey]: true }));
 
     try {
-      let articles: Article[];
-
-      // Check if this is the "Home" tab
-      if (menuItem.title === "Home") {
-        articles = await fetchNewsArticles();
-      } else {
-        // Use the menu item's object_id to fetch category content
-        articles = await fetchCategoryContent(menuItem.object_id.toString());
-      }
-
-      setTabArticles((prev) => ({ ...prev, [tabKey]: articles }));
+      // All tabs now use category content with blocks (including Home)
+      const categoryContent = await fetchCategoryContent(
+        menuItem.object_id.toString()
+      );
+      setTabContent((prev) => ({ ...prev, [tabKey]: categoryContent }));
     } catch (err) {
       console.error(`Error loading content for tab ${menuItem.title}:`, err);
-      setTabArticles((prev) => ({ ...prev, [tabKey]: [] }));
+      // Set empty category content on error
+      setTabContent((prev) => ({
+        ...prev,
+        [tabKey]: {
+          categoryInfo: { id: 0, name: "", description: "", slug: "" },
+          blocks: [],
+        },
+      }));
     } finally {
       setTabLoadingStates((prev) => ({ ...prev, [tabKey]: false }));
     }
@@ -98,15 +96,11 @@ export default function NewsScreen() {
     setTabRefreshingStates((prev) => ({ ...prev, [tabKey]: true }));
 
     try {
-      let articles: Article[];
-
-      if (menuItem.title === "Home") {
-        articles = await fetchNewsArticles();
-      } else {
-        articles = await fetchCategoryContent(menuItem.object_id.toString());
-      }
-
-      setTabArticles((prev) => ({ ...prev, [tabKey]: articles }));
+      // All tabs now use category content with blocks
+      const categoryContent = await fetchCategoryContent(
+        menuItem.object_id.toString()
+      );
+      setTabContent((prev) => ({ ...prev, [tabKey]: categoryContent }));
     } catch (err) {
       console.error(`Error refreshing content for tab ${menuItem.title}:`, err);
     } finally {
@@ -133,55 +127,39 @@ export default function NewsScreen() {
     const menuItem = menuItems[index];
     const tabKey = menuItem.object_id.toString();
 
-    if (!tabArticles[tabKey] && !tabLoadingStates[tabKey]) {
+    if (!tabContent[tabKey] && !tabLoadingStates[tabKey]) {
       await loadTabContent(index);
     }
   };
 
   const renderArticle = ({ item, index }: { item: Article; index: number }) => {
-    // Use hero variant for every fifth article (0, 5, 10, 15, etc.)
-    if (index % 5 === 0) {
+    // Use hero variant for the first article in each block (index 0)
+    if (index === 0) {
       return <ArticleTeaserHero article={item} onPress={handleArticlePress} />;
     }
     return <ArticleTeaser article={item} onPress={handleArticlePress} />;
   };
 
-  const renderTabContent = (tabIndex: number) => {
-    if (menuItems.length === 0) return null;
-
-    const menuItem = menuItems[tabIndex];
-    const tabKey = menuItem.object_id.toString();
-    const articles = tabArticles[tabKey] || [];
-    const isLoading = tabLoadingStates[tabKey] || false;
-    const isRefreshing = tabRefreshingStates[tabKey] || false;
-
-    if (isLoading && articles.length === 0) {
-      return <SkeletonLoader variant="list" count={6} />;
+  const renderSectionHeader = ({
+    section,
+  }: {
+    section: {
+      title: string;
+      layout: string;
+      description: string;
+      index: number;
+    };
+  }) => {
+    // Hide the first block's title
+    if (section.index === 0) {
+      return null;
     }
 
     return (
-      <FlatList
-        data={articles}
-        renderItem={renderArticle}
-        keyExtractor={(item, index) => item.id + index.toString()}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={() => onRefreshTab(tabIndex)}
-          />
-        }
-        contentContainerStyle={[
-          styles.listContainer,
-          { backgroundColor: Colors[colorScheme].articleListBackground },
-        ]}
-        ListEmptyComponent={
-          <ThemedView style={styles.centerContent}>
-            <ThemedText style={styles.emptyText}>
-              No articles available
-            </ThemedText>
-          </ThemedView>
-        }
+      <BlockHeader
+        title={section.title}
+        description={section.description}
+        layout={section.layout}
       />
     );
   };
@@ -220,13 +198,43 @@ export default function NewsScreen() {
     });
   }
 
-  // Get current tab's articles
+  // Get current tab's content
   const currentMenuItemKey =
     menuItems[activeTabIndex]?.object_id.toString() || "default";
-  const currentArticles = tabArticles[currentMenuItemKey] || [];
+  const currentContent = tabContent[currentMenuItemKey];
   const isCurrentTabLoading = tabLoadingStates[currentMenuItemKey] || false;
   const isCurrentTabRefreshing =
     tabRefreshingStates[currentMenuItemKey] || false;
+
+  // All tabs now use CategoryContentResponse with blocks
+  const isCategoryContent =
+    currentContent &&
+    typeof currentContent === "object" &&
+    "blocks" in currentContent;
+
+  // Prepare sections for SectionList
+  let sections: {
+    title: string;
+    layout: string;
+    description: string;
+    data: Article[];
+    index: number;
+  }[] = [];
+
+  if (isCategoryContent) {
+    // All tabs now have category content with blocks
+    const categoryContent = currentContent as CategoryContentResponse;
+    sections = categoryContent.blocks.map((block, index) => ({
+      title: block.blockTitle,
+      layout: block.blockLayout,
+      description: block.blockDescription,
+      data: block.articles,
+      index,
+    }));
+  }
+
+  const hasContent =
+    sections.length > 0 && sections.some((s) => s.data.length > 0);
 
   return (
     <ThemedView style={styles.container}>
@@ -236,12 +244,13 @@ export default function NewsScreen() {
         activeTabIndex={activeTabIndex}
         onTabChange={handleTabChange}
       />
-      {isCurrentTabLoading && currentArticles.length === 0 ? (
+      {isCurrentTabLoading && !hasContent ? (
         <SkeletonLoader variant="list" count={6} />
       ) : (
-        <FlatList
-          data={currentArticles}
+        <SectionList
+          sections={sections}
           renderItem={renderArticle}
+          renderSectionHeader={renderSectionHeader}
           keyExtractor={(item, index) => item.id + index.toString()}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -261,6 +270,7 @@ export default function NewsScreen() {
               </ThemedText>
             </ThemedView>
           }
+          stickySectionHeadersEnabled={false}
         />
       )}
     </ThemedView>

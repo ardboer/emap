@@ -147,6 +147,27 @@ export interface CategoryResponse {
   yoast_head_json: any;
   blocks: CategoryBlock[];
 }
+
+// Transformed block structure for grouped article display
+export interface ArticleBlock {
+  blockTitle: string;
+  blockLayout: string;
+  blockDescription: string;
+  blockBottomLink?: string;
+  blockBottomLinkUrl?: string;
+  articles: Article[];
+}
+
+export interface CategoryContentResponse {
+  categoryInfo: {
+    id: number;
+    name: string;
+    description: string;
+    slug: string;
+  };
+  blocks: ArticleBlock[];
+}
+
 // Clinical articles API types
 export interface ClinicalPost {
   post_id: number;
