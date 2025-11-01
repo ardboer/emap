@@ -1119,6 +1119,74 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                     <div className="form-help">Miso API base URL</div>
                   </div>
                 </div>
+                <div className="form-section">
+                  <h3 className="form-section-title">
+                    Highlights Recommendations
+                  </h3>
+
+                  <div className="form-group">
+                    <div className="checkbox-group">
+                      <input
+                        type="checkbox"
+                        id="highlightsRecommendationsEnabled"
+                        checked={
+                          config.highlightsRecommendations?.enabled || false
+                        }
+                        onChange={(e) =>
+                          setConfig((prev) => ({
+                            ...prev,
+                            highlightsRecommendations: {
+                              ...prev.highlightsRecommendations,
+                              enabled: e.target.checked,
+                              misoItemCount:
+                                prev.highlightsRecommendations?.misoItemCount ||
+                                10,
+                            },
+                          }))
+                        }
+                      />
+                      <label htmlFor="highlightsRecommendationsEnabled">
+                        Enable Miso recommendations in highlights carousel
+                      </label>
+                    </div>
+                    <div className="form-help">
+                      When enabled, Miso recommendations will appear after
+                      WordPress highlights
+                    </div>
+                  </div>
+
+                  {config.highlightsRecommendations?.enabled && (
+                    <div className="form-group">
+                      <label className="form-label">Number of Miso Items</label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        min="1"
+                        max="50"
+                        value={
+                          config.highlightsRecommendations?.misoItemCount || 10
+                        }
+                        onChange={(e) =>
+                          setConfig((prev) => ({
+                            ...prev,
+                            highlightsRecommendations: {
+                              ...prev.highlightsRecommendations,
+                              enabled:
+                                prev.highlightsRecommendations?.enabled ||
+                                false,
+                              misoItemCount: parseInt(e.target.value) || 10,
+                            },
+                          }))
+                        }
+                        placeholder="10"
+                      />
+                      <div className="form-help">
+                        Number of Miso recommended articles to show after
+                        WordPress highlights (1-50)
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <div className="form-section">
                   <h3 className="form-section-title">
