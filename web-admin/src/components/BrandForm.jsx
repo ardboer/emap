@@ -51,6 +51,27 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
         enableAsk: false,
         enableMagazine: false,
       },
+      podcastFeeds: [],
+      misoConfig: {
+        apiKey: "",
+        publishableKey: "",
+        brandFilter: "",
+        baseUrl: "https://api.askmiso.com/v1",
+      },
+      trendingBlockListView: {
+        enabled: true,
+        position: 1,
+        itemCount: 5,
+      },
+      relatedArticlesBlock: {
+        enabled: true,
+        afterParagraph: 3,
+        itemCount: 5,
+      },
+      trendingArticlesDetail: {
+        enabled: true,
+        itemCount: 5,
+      },
     }
   );
   const [logoFile, setLogoFile] = useState(null);
@@ -163,6 +184,71 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
       ...prev,
       onboarding: {
         ...prev.onboarding,
+        [field]: value,
+      },
+    }));
+  };
+
+  // Update podcast feeds
+  const updatePodcastFeed = (index, field, value) => {
+    setConfig((prev) => {
+      const feeds = [...(prev.podcastFeeds || [])];
+      feeds[index] = { ...feeds[index], [field]: value };
+      return { ...prev, podcastFeeds: feeds };
+    });
+  };
+
+  const addPodcastFeed = () => {
+    setConfig((prev) => ({
+      ...prev,
+      podcastFeeds: [...(prev.podcastFeeds || []), { name: "", url: "" }],
+    }));
+  };
+
+  const removePodcastFeed = (index) => {
+    setConfig((prev) => ({
+      ...prev,
+      podcastFeeds: (prev.podcastFeeds || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  // Update miso config
+  const updateMisoConfig = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      misoConfig: {
+        ...prev.misoConfig,
+        [field]: value,
+      },
+    }));
+  };
+
+  // Update trending/related blocks
+  const updateTrendingBlockListView = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      trendingBlockListView: {
+        ...prev.trendingBlockListView,
+        [field]: value,
+      },
+    }));
+  };
+
+  const updateRelatedArticlesBlock = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      relatedArticlesBlock: {
+        ...prev.relatedArticlesBlock,
+        [field]: value,
+      },
+    }));
+  };
+
+  const updateTrendingArticlesDetail = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      trendingArticlesDetail: {
+        ...prev.trendingArticlesDetail,
         [field]: value,
       },
     }));
@@ -342,6 +428,18 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
             onClick={() => setActiveTab("features")}
           >
             Features
+          </button>
+          <button
+            className={`tab ${activeTab === "podcasts" ? "active" : ""}`}
+            onClick={() => setActiveTab("podcasts")}
+          >
+            Podcast Feeds
+          </button>
+          <button
+            className={`tab ${activeTab === "miso" ? "active" : ""}`}
+            onClick={() => setActiveTab("miso")}
+          >
+            Miso Config
           </button>
           <button
             className={`tab ${activeTab === "assets" ? "active" : ""}`}
@@ -857,6 +955,357 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                     may need to run the prebuild script to regenerate the editor
                     image registry for the mobile app.
                   </p>
+                </div>
+              </>
+            )}
+
+            {activeTab === "podcasts" && (
+              <>
+                <div className="form-help" style={{ marginBottom: "1.5rem" }}>
+                  Configure podcast RSS feeds for this brand. These feeds will
+                  be displayed in the Podcasts tab of the app.
+                </div>
+
+                {(config.podcastFeeds || []).map((feed, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "1rem",
+                      marginBottom: "1rem",
+                      backgroundColor: "#f8f9fa",
+                      borderRadius: "6px",
+                      border: "1px solid #dee2e6",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <h4 style={{ margin: 0 }}>Podcast Feed {index + 1}</h4>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => removePodcastFeed(index)}
+                        style={{
+                          padding: "0.25rem 0.75rem",
+                          fontSize: "0.875rem",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Podcast Name</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={feed.name || ""}
+                        onChange={(e) =>
+                          updatePodcastFeed(index, "name", e.target.value)
+                        }
+                        placeholder="e.g., CN First Site"
+                      />
+                      <div className="form-help">
+                        Display name for the podcast feed
+                      </div>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">RSS Feed URL</label>
+                      <input
+                        type="url"
+                        className="form-input"
+                        value={feed.url || ""}
+                        onChange={(e) =>
+                          updatePodcastFeed(index, "url", e.target.value)
+                        }
+                        placeholder="e.g., https://feed.podbean.com/cnfirstsite/feed.xml"
+                      />
+                      <div className="form-help">
+                        Full URL to the podcast RSS feed
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={addPodcastFeed}
+                  style={{ marginTop: "1rem" }}
+                >
+                  + Add Podcast Feed
+                </button>
+              </>
+            )}
+
+            {activeTab === "miso" && (
+              <>
+                <div className="form-help" style={{ marginBottom: "1.5rem" }}>
+                  Configure Miso AI recommendations and content blocks for this
+                  brand.
+                </div>
+
+                <div className="form-section">
+                  <h3 className="form-section-title">Miso API Configuration</h3>
+
+                  <div className="form-group">
+                    <label className="form-label">API Key</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={config.misoConfig?.apiKey || ""}
+                      onChange={(e) =>
+                        updateMisoConfig("apiKey", e.target.value)
+                      }
+                      placeholder="e.g., fAd2K3q1t6pw5SwzQcm0gPkHYvBpqFWkxBWwLvyL"
+                    />
+                    <div className="form-help">
+                      Miso API key for authentication
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Publishable Key</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={config.misoConfig?.publishableKey || ""}
+                      onChange={(e) =>
+                        updateMisoConfig("publishableKey", e.target.value)
+                      }
+                      placeholder="e.g., VNMnQW8LlARMf8TPdZvtidWCi8EljMSbPFppPgJo"
+                    />
+                    <div className="form-help">
+                      Miso publishable key for client-side requests
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Brand Filter</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={config.misoConfig?.brandFilter || ""}
+                      onChange={(e) =>
+                        updateMisoConfig("brandFilter", e.target.value)
+                      }
+                      placeholder="e.g., Nursing Times"
+                    />
+                    <div className="form-help">
+                      Brand name used to filter Miso recommendations
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Base URL</label>
+                    <input
+                      type="url"
+                      className="form-input"
+                      value={
+                        config.misoConfig?.baseUrl ||
+                        "https://api.askmiso.com/v1"
+                      }
+                      onChange={(e) =>
+                        updateMisoConfig("baseUrl", e.target.value)
+                      }
+                      placeholder="https://api.askmiso.com/v1"
+                    />
+                    <div className="form-help">Miso API base URL</div>
+                  </div>
+                </div>
+
+                <div className="form-section">
+                  <h3 className="form-section-title">
+                    Trending Block (List View)
+                  </h3>
+
+                  <div className="form-group">
+                    <div className="checkbox-group">
+                      <input
+                        type="checkbox"
+                        id="trendingBlockEnabled"
+                        checked={config.trendingBlockListView?.enabled || false}
+                        onChange={(e) =>
+                          updateTrendingBlockListView(
+                            "enabled",
+                            e.target.checked
+                          )
+                        }
+                      />
+                      <label
+                        htmlFor="trendingBlockEnabled"
+                        style={{ cursor: "pointer", userSelect: "none" }}
+                      >
+                        Enable Trending Block in List View
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Position</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={config.trendingBlockListView?.position || 1}
+                      onChange={(e) =>
+                        updateTrendingBlockListView(
+                          "position",
+                          parseInt(e.target.value) || 1
+                        )
+                      }
+                      min="1"
+                      placeholder="1"
+                    />
+                    <div className="form-help">
+                      Position in the article list (1 = first)
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Item Count</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={config.trendingBlockListView?.itemCount || 5}
+                      onChange={(e) =>
+                        updateTrendingBlockListView(
+                          "itemCount",
+                          parseInt(e.target.value) || 5
+                        )
+                      }
+                      min="1"
+                      max="20"
+                      placeholder="5"
+                    />
+                    <div className="form-help">
+                      Number of trending articles to display
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-section">
+                  <h3 className="form-section-title">Related Articles Block</h3>
+
+                  <div className="form-group">
+                    <div className="checkbox-group">
+                      <input
+                        type="checkbox"
+                        id="relatedArticlesEnabled"
+                        checked={config.relatedArticlesBlock?.enabled || false}
+                        onChange={(e) =>
+                          updateRelatedArticlesBlock(
+                            "enabled",
+                            e.target.checked
+                          )
+                        }
+                      />
+                      <label
+                        htmlFor="relatedArticlesEnabled"
+                        style={{ cursor: "pointer", userSelect: "none" }}
+                      >
+                        Enable Related Articles Block
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">After Paragraph</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={config.relatedArticlesBlock?.afterParagraph || 3}
+                      onChange={(e) =>
+                        updateRelatedArticlesBlock(
+                          "afterParagraph",
+                          parseInt(e.target.value) || 3
+                        )
+                      }
+                      min="1"
+                      placeholder="3"
+                    />
+                    <div className="form-help">
+                      Insert related articles after this paragraph number
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Item Count</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={config.relatedArticlesBlock?.itemCount || 5}
+                      onChange={(e) =>
+                        updateRelatedArticlesBlock(
+                          "itemCount",
+                          parseInt(e.target.value) || 5
+                        )
+                      }
+                      min="1"
+                      max="20"
+                      placeholder="5"
+                    />
+                    <div className="form-help">
+                      Number of related articles to display
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-section">
+                  <h3 className="form-section-title">
+                    Trending Articles (Detail View)
+                  </h3>
+
+                  <div className="form-group">
+                    <div className="checkbox-group">
+                      <input
+                        type="checkbox"
+                        id="trendingArticlesDetailEnabled"
+                        checked={
+                          config.trendingArticlesDetail?.enabled || false
+                        }
+                        onChange={(e) =>
+                          updateTrendingArticlesDetail(
+                            "enabled",
+                            e.target.checked
+                          )
+                        }
+                      />
+                      <label
+                        htmlFor="trendingArticlesDetailEnabled"
+                        style={{ cursor: "pointer", userSelect: "none" }}
+                      >
+                        Enable Trending Articles in Detail View
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Item Count</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={config.trendingArticlesDetail?.itemCount || 5}
+                      onChange={(e) =>
+                        updateTrendingArticlesDetail(
+                          "itemCount",
+                          parseInt(e.target.value) || 5
+                        )
+                      }
+                      min="1"
+                      max="20"
+                      placeholder="5"
+                    />
+                    <div className="form-help">
+                      Number of trending articles to display at bottom of
+                      article
+                    </div>
+                  </div>
                 </div>
               </>
             )}
