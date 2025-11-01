@@ -14,6 +14,7 @@ import "react-native-reanimated";
 import { OnboardingContainer } from "@/components/onboarding";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ColorSchemeProvider } from "@/contexts/ColorSchemeContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { analyticsService } from "@/services/analytics";
@@ -26,7 +27,7 @@ import {
 import { hasCompletedOnboarding } from "@/services/onboarding";
 import { getAllFonts } from "@/utils/fontLoader";
 
-export default function RootLayout() {
+function RootLayoutContent() {
   const colorScheme = useColorScheme();
   const { brandConfig } = useBrandConfig();
   const router = useRouter();
@@ -303,5 +304,13 @@ export default function RootLayout() {
         </AudioProvider>
       </AuthProvider>
     </GestureHandlerRootView>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ColorSchemeProvider>
+      <RootLayoutContent />
+    </ColorSchemeProvider>
   );
 }

@@ -808,7 +808,9 @@ export async function fetchSingleEvent(eventId: string): Promise<any> {
 // Fetch related articles (excluding current article)
 export async function fetchRelatedArticles(
   articleId: string,
-  limit: number = 5
+  limit: number = 5,
+  userId?: string,
+  isAuthenticated: boolean = false
 ): Promise<Article[]> {
   const { cacheService } = await import("./cache");
   const cacheKey = "related_articles";
@@ -834,26 +836,30 @@ export async function fetchRelatedArticles(
       return [];
     }
 
-    const { apiKey, brandFilter } = brandConfig.misoConfig;
-    const endpoint =
-      "https://api.askmiso.com/v1/recommendation/product_to_products";
+    const { apiKey, brandFilter, baseUrl } = brandConfig.misoConfig;
+    const endpoint = `${baseUrl}/recommendation/product_to_products`;
 
-    // Get persistent anonymous ID for tracking
-    // Format: "1658570109.1761120937" (Google Analytics style)
-    const anonymousId = await getAnonymousId();
+    // Determine which ID to use based on authentication status
+    let misoUserId: string | undefined;
+    let misoAnonymousId: string | undefined;
+
+    if (isAuthenticated && userId) {
+      // Authenticated user: use "sub:" prefix for subscriber
+      misoUserId = `sub:${userId}`;
+      misoAnonymousId = undefined;
+    } else {
+      // Anonymous user: use anonymous_id only
+      misoUserId = undefined;
+      misoAnonymousId = await getAnonymousId();
+    }
 
     // Construct product_id with brand shortcode prefix (e.g., "NT-339716")
     // Use uppercase shortcode for consistency with Miso data
     const brandPrefix = brandConfig.shortcode.toUpperCase();
     const productId = `${brandPrefix}-${articleId}`;
 
-    // Prepare request body for anonymous users
-    // For authenticated users, this would use:
-    // - user_id: "sub:user_id" + user_hash for subscribers
-    // - user_id: "reg:user_id" + user_hash for registered users
-    // Since we don't have authentication yet, use anonymous_id
-    const requestBody = {
-      anonymous_id: anonymousId, // Use persistent anonymous ID (Google Analytics style)
+    // Prepare request body with appropriate ID
+    const requestBody: any = {
       product_id: productId,
       rows: limit,
       fl: ["*"],
@@ -866,12 +872,22 @@ export async function fetchRelatedArticles(
       } TO *]`,
     };
 
+    // Add only the appropriate ID
+    if (misoUserId) {
+      requestBody.user_id = misoUserId;
+    } else if (misoAnonymousId) {
+      requestBody.anonymous_id = misoAnonymousId;
+    }
+
     console.log("Fetching related articles from Miso:", {
       endpoint,
       brand: brandConfig.name,
       articleId,
       productId,
       limit,
+      mode: isAuthenticated ? "AUTHENTICATED" : "ANONYMOUS",
+      userId: misoUserId || "N/A",
+      anonymousId: misoAnonymousId || "N/A",
       requestBody,
     });
 
@@ -978,7 +994,9 @@ export async function fetchRelatedArticles(
 }
 // Fetch trending articles from Miso API
 export async function fetchTrendingArticles(
-  limit: number = 5
+  limit: number = 5,
+  userId?: string,
+  isAuthenticated: boolean = false
 ): Promise<Article[]> {
   const { cacheService } = await import("./cache");
   const cacheKey = "trending_articles";
@@ -1000,23 +1018,30 @@ export async function fetchTrendingArticles(
       return [];
     }
 
-    const { apiKey, brandFilter, endpoint } = brandConfig.misoConfig;
+    const { apiKey, brandFilter, baseUrl } = brandConfig.misoConfig;
+    const endpoint = `${baseUrl}/recommendation/user_to_trending`;
 
-    // Get persistent anonymous ID for tracking
-    // Format: "1658570109.1761120937" (Google Analytics style)
-    const anonymousId = await getAnonymousId();
+    // Determine which ID to use based on authentication status
+    let misoUserId: string | undefined;
+    let misoAnonymousId: string | undefined;
+
+    if (isAuthenticated && userId) {
+      // Authenticated user: use "sub:" prefix for subscriber
+      misoUserId = `sub:${userId}`;
+      misoAnonymousId = undefined;
+    } else {
+      // Anonymous user: use anonymous_id only
+      misoUserId = undefined;
+      misoAnonymousId = await getAnonymousId();
+    }
 
     // Calculate date one year ago for boost_fq
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     const oneYearAgoISO = oneYearAgo.toISOString().split("T")[0] + "T00:00:00Z";
 
-    // Prepare request body for anonymous users
-    // For authenticated users, this would use:
-    // - user_id: "sub:user_id" for subscribers
-    // - user_id: "reg:user_id" for registered users
-    const requestBody = {
-      anonymous_id: anonymousId, // Use persistent anonymous ID
+    // Prepare request body with appropriate ID
+    const requestBody: any = {
       fl: ["*"],
       rows: limit,
       // Date filter to get articles from the last year
@@ -1025,10 +1050,20 @@ export async function fetchTrendingArticles(
       fq: `brand:"${brandFilter}"`,
     };
 
+    // Add only the appropriate ID
+    if (misoUserId) {
+      requestBody.user_id = misoUserId;
+    } else if (misoAnonymousId) {
+      requestBody.anonymous_id = misoAnonymousId;
+    }
+
     console.log("Fetching trending articles from Miso:", {
       endpoint,
       brand: brandConfig.name,
       limit,
+      mode: isAuthenticated ? "AUTHENTICATED" : "ANONYMOUS",
+      userId: misoUserId || "N/A",
+      anonymousId: misoAnonymousId || "N/A",
       requestBody,
     });
 

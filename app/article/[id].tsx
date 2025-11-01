@@ -114,7 +114,8 @@ export default function ArticleScreen() {
         const anonymousId = await getAnonymousId();
         trackArticleView({
           articleId: id,
-          userId: isAuthenticated ? user?.userId : undefined,
+          userId: user?.userId,
+          isAuthenticated,
           anonymousId,
         });
       } catch (err) {
@@ -139,7 +140,12 @@ export default function ArticleScreen() {
       console.log("Fetching related articles for article ID:", id);
       try {
         const { fetchRelatedArticles } = await import("@/services/api");
-        const related = await fetchRelatedArticles(id);
+        const related = await fetchRelatedArticles(
+          id,
+          5,
+          user?.userId,
+          isAuthenticated
+        );
         console.log(
           "Related articles fetched:",
           related?.length || 0,

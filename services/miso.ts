@@ -10,6 +10,7 @@ import { brandManager } from "./api";
 interface TrackArticleViewParams {
   articleId: string;
   userId?: string;
+  isAuthenticated: boolean;
   anonymousId: string;
 }
 
@@ -18,8 +19,8 @@ interface MisoInteractionPayload {
     type: "product_detail_page_view";
     product_ids: string[];
     timestamp: string;
-    user_id: string;
-    anonymous_id: string;
+    user_id?: string;
+    anonymous_id?: string;
   }[];
 }
 
@@ -45,15 +46,31 @@ interface MisoInteractionPayload {
 export async function trackArticleView({
   articleId,
   userId,
+  isAuthenticated,
   anonymousId,
 }: TrackArticleViewParams): Promise<boolean> {
   console.group("📊 Miso Article View Tracking");
 
   try {
+    // Determine which ID to use based on authentication status
+    let misoUserId: string | undefined;
+    let misoAnonymousId: string | undefined;
+
+    if (isAuthenticated && userId) {
+      // Authenticated user: use "sub:" prefix for subscriber
+      misoUserId = `sub:${userId}`;
+      misoAnonymousId = undefined;
+    } else {
+      // Anonymous user: use anonymous_id only
+      misoUserId = undefined;
+      misoAnonymousId = anonymousId;
+    }
+
     console.log("📝 Tracking Parameters:", {
       articleId,
-      userId: userId || "(not authenticated)",
-      anonymousId,
+      mode: isAuthenticated ? "AUTHENTICATED" : "ANONYMOUS",
+      userId: misoUserId || "N/A",
+      anonymousId: misoAnonymousId || "N/A",
     });
 
     // Get current brand configuration
@@ -78,13 +95,13 @@ export async function trackArticleView({
     console.log("🆔 Product ID:", productId);
 
     // Get Miso API configuration
-    const { apiKey } = brand.misoConfig;
+    const { apiKey, baseUrl } = brand.misoConfig;
     const maskedApiKey = `${apiKey.substring(0, 8)}...${apiKey.substring(
       apiKey.length - 4
     )}`;
     console.log("🔑 API Key:", maskedApiKey);
 
-    // Prepare the request payload
+    // Prepare the request payload with only the appropriate ID
     const timestamp = new Date().toISOString();
     const payload: MisoInteractionPayload = {
       data: [
@@ -92,14 +109,14 @@ export async function trackArticleView({
           type: "product_detail_page_view",
           product_ids: [productId],
           timestamp,
-          user_id: userId || "",
-          anonymous_id: anonymousId,
+          ...(misoUserId && { user_id: misoUserId }),
+          ...(misoAnonymousId && { anonymous_id: misoAnonymousId }),
         },
       ],
     };
 
     // Log request details
-    const endpoint = "https://api.askmiso.com/v1/interactions";
+    const endpoint = `${baseUrl}/interactions`;
     console.log("🌐 Request Details:", {
       method: "POST",
       endpoint,

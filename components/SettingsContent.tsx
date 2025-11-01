@@ -4,6 +4,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { brandManager } from "@/config/BrandManager";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useColorSchemeContext } from "@/contexts/ColorSchemeContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import {
@@ -40,12 +41,14 @@ interface TopicSubscription {
 
 export function SettingsContent({ onClose }: SettingsContentProps) {
   const colorScheme = useColorScheme();
+  const { mode, setMode } = useColorSchemeContext();
   const { user, isAuthenticated, isLoading, error, login, logout } = useAuth();
   const [notificationStatus, setNotificationStatus] = React.useState<{
     enabled: boolean;
     loading: boolean;
   }>({ enabled: false, loading: true });
-  const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
+  // Dark mode is enabled when mode is explicitly set to "dark"
+  const darkModeEnabled = mode === "dark";
   const [showPaywall, setShowPaywall] = React.useState(true);
   const [forceLandscapeImages, setForceLandscapeImages] = React.useState(false);
   const [useColorGradient, setUseColorGradient] = React.useState(false);
@@ -568,12 +571,24 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         </ThemedText>
         <SettingsItem
           title="Dark Mode"
-          subtitle="Switch between light and dark themes"
+          subtitle={
+            mode === "auto"
+              ? "Following system settings"
+              : mode === "dark"
+              ? "Always dark"
+              : "Always light"
+          }
           icon="moon.fill"
           rightElement={
             <Switch
               value={darkModeEnabled}
-              onValueChange={setDarkModeEnabled}
+              onValueChange={async (value) => {
+                // When toggled on, force dark mode
+                // When toggled off, return to system settings (auto)
+                await setMode(value ? "dark" : "auto");
+              }}
+              trackColor={{ false: "#767577", true: primaryColor }}
+              thumbColor={darkModeEnabled ? "#00334C" : "#fff"}
             />
           }
         />

@@ -122,7 +122,7 @@
     "apiKey": "FcakM2bTHy0Sf0uaM6mYpwI9vnXWKdu4E9jO6Bx2",
     "publishableKey": "4yxesK8tUzRGIz17RXDPgplM0c5ZAWnWjtD9cdcD",
     "brandFilter": "Construction News",
-    "endpoint": "https://api.askmiso.com/v1/recommendation/user_to_trending"
+    "baseUrl": "https://api.askmiso.com/v1"
   },
   "testArticleId": "528406",
   "keystoreStatus": {

@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useAuth } from "@/contexts/AuthContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { fetchTrendingArticles } from "@/services/api";
 import { Article } from "@/types";
@@ -8,6 +9,7 @@ import { ActivityIndicator, StyleSheet } from "react-native";
 import ArticleTeaser from "./ArticleTeaser";
 
 export default function TrendingArticles() {
+  const { user, isAuthenticated } = useAuth();
   const [trendingArticles, setTrendingArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +19,11 @@ export default function TrendingArticles() {
       try {
         setLoading(true);
         setError(null);
-        const articles = await fetchTrendingArticles(5);
+        const articles = await fetchTrendingArticles(
+          5,
+          user?.userId,
+          isAuthenticated
+        );
         setTrendingArticles(articles);
       } catch (err) {
         setError("Failed to load trending articles");
@@ -28,7 +34,7 @@ export default function TrendingArticles() {
     };
 
     loadTrendingArticles();
-  }, []);
+  }, [user?.userId, isAuthenticated]);
 
   if (loading) {
     return (

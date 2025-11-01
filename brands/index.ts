@@ -5,7 +5,7 @@ export interface MisoConfig {
   apiKey: string;
   publishableKey: string;
   brandFilter: string;
-  endpoint: string;
+  baseUrl: string;
 }
 
 export interface BrandConfig {
