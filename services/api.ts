@@ -1324,6 +1324,269 @@ export async function fetchRecommendedArticles(
     return [];
   }
 }
+// Fetch recommended articles with exclude parameter to filter out specific product IDs
+export async function fetchRecommendedArticlesWithExclude(
+  limit: number = 5,
+  excludeIds: string[] = [],
+  userId?: string,
+  isAuthenticated: boolean = false
+): Promise<Article[]> {
+  const { cacheService } = await import("./cache");
+  const cacheKey = "recommended_articles_exclude";
+  const { hash } = getApiConfig();
+
+  // Try to get from cache first (cache by limit, excludeIds, and hash)
+  const cacheParams = { limit, excludeIds: excludeIds.join(","), hash };
+  const cached = await cacheService.get<Article[]>(cacheKey, cacheParams);
+  // if (cached) {
+  //   console.log("Returning cached recommended articles with exclusions");
+  //   return cached;
+  // }
+
+  try {
+    // Get brand config to access Miso configuration
+    const brandConfig = brandManager.getCurrentBrand();
+
+    if (!brandConfig.misoConfig) {
+      console.warn("Miso configuration not found for current brand");
+      return [];
+    }
+
+    const { apiKey, brandFilter, baseUrl } = brandConfig.misoConfig;
+    const endpoint = `${baseUrl}/recommendation/user_to_products`;
+
+    // Determine which ID to use based on authentication status
+    let misoUserId: string | undefined;
+    let misoAnonymousId: string | undefined;
+
+    if (isAuthenticated && userId) {
+      // Authenticated user: use "sub:" prefix for subscriber
+      misoUserId = `sub:${userId}`;
+      misoAnonymousId = undefined;
+    } else {
+      // Anonymous user: use anonymous_id only
+      misoUserId = undefined;
+      misoAnonymousId = await getAnonymousId();
+    }
+
+    // Calculate date one year ago for boost_fq
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const oneYearAgoISO = oneYearAgo.toISOString().split("T")[0] + "T00:00:00Z";
+
+    // Prepare request body with appropriate ID and exclude parameter
+    const requestBody: any = {
+      fl: ["*"],
+      rows: limit,
+      // Date filter to get articles from the last year
+      boost_fq: `published_at:[${oneYearAgoISO} TO *]`,
+      // Brand filter with quotes for proper matching
+      fq: `brand:"${brandFilter}"`,
+    };
+
+    // Add exclude parameter if provided
+    if (excludeIds.length > 0) {
+      requestBody.exclude = excludeIds;
+    }
+
+    // Add only the appropriate ID
+    if (misoUserId) {
+      requestBody.user_id = misoUserId;
+    } else if (misoAnonymousId) {
+      requestBody.anonymous_id = misoAnonymousId;
+    }
+
+    console.log("Fetching recommended articles with exclusions from Miso:", {
+      endpoint,
+      brand: brandConfig.name,
+      limit,
+      excludeCount: excludeIds.length,
+      mode: isAuthenticated ? "AUTHENTICATED" : "ANONYMOUS",
+      userId: misoUserId || "N/A",
+      anonymousId: misoAnonymousId || "N/A",
+      requestBody,
+    });
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Miso API request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(
+      "Miso API response for recommended articles with exclusions:",
+      data
+    );
+
+    // Transform Miso response to Article interface
+    const products = (data.data && data.data.products) || data.products || [];
+    const recommendedArticles: Article[] = products.map((product: any) => {
+      // Extract category
+      let category = "News";
+      if (
+        product.categories &&
+        Array.isArray(product.categories) &&
+        product.categories.length > 0
+      ) {
+        const firstCategoryArray = product.categories[0];
+        if (
+          Array.isArray(firstCategoryArray) &&
+          firstCategoryArray.length > 0
+        ) {
+          category = firstCategoryArray[0];
+        } else if (typeof firstCategoryArray === "string") {
+          category = firstCategoryArray;
+        }
+      }
+
+      // Extract numeric ID from product_id (e.g., "NT-339716" -> "339716")
+      let articleId = product.product_id || "";
+      const idMatch = articleId.match(/\d+$/);
+      if (idMatch) {
+        articleId = idMatch[0];
+      }
+
+      // Miso only provides 150x150 thumbnails - we need to get full-size images
+      // Since Miso doesn't provide full-size images, we'll use the thumbnail
+      // but mark as landscape to trigger better rendering (blurred background + centered)
+      let imageUrl =
+        product.cover_image || "https://picsum.photos/800/600?random=1";
+      let isLandscape = true; // Force landscape rendering for better appearance
+
+      // Remove the 150x150 size constraint from URL to get larger image
+      if (imageUrl.includes("-150x150")) {
+        imageUrl = imageUrl.replace("-150x150", "");
+        console.log(
+          `Miso product ${product.product_id}: Removed 150x150 constraint, using: ${imageUrl}`
+        );
+      } else {
+        console.log(
+          `Miso product ${product.product_id}: Using cover_image: ${imageUrl}`
+        );
+      }
+
+      return {
+        id: articleId,
+        title: decodeHtmlEntities(stripHtml(product.title || "")),
+        leadText: "", // Miso doesn't provide lead text
+        content: product.html || "",
+        imageUrl,
+        timestamp: formatDate(product.published_at || new Date().toISOString()),
+        category,
+        isLandscape,
+      };
+    });
+
+    // Cache the result
+    await cacheService.set(cacheKey, recommendedArticles, cacheParams);
+
+    return recommendedArticles;
+  } catch (error) {
+    console.error(
+      "Error fetching recommended articles with exclusions from Miso:",
+      error
+    );
+
+    // Try to return stale cached data if available
+    const staleCache = await cacheService.get<Article[]>(cacheKey, { limit });
+    if (staleCache) {
+      console.log(
+        "Returning stale cached recommended articles due to API error"
+      );
+      return staleCache;
+    }
+
+    // Return empty array instead of throwing to gracefully handle errors
+    return [];
+  }
+}
+
+// Fetch highlights with Miso recommendations appended
+export async function fetchHighlightsWithRecommendations(
+  userId?: string,
+  isAuthenticated: boolean = false
+): Promise<Article[]> {
+  try {
+    // 1. Fetch WordPress highlights (existing function)
+    const wordpressArticles = await fetchFeaturedArticles();
+
+    // Mark as WordPress source
+    const markedWordpressArticles = wordpressArticles.map((article) => ({
+      ...article,
+      source: "wordpress" as const,
+      isRecommended: false,
+    }));
+
+    // 2. Check if Miso recommendations are enabled
+    const brandConfig = brandManager.getCurrentBrand();
+    if (!brandConfig.highlightsRecommendations?.enabled) {
+      console.log(
+        "Miso recommendations disabled for highlights, returning WordPress only"
+      );
+      return markedWordpressArticles;
+    }
+
+    // 3. Check if Miso is configured
+    if (!brandConfig.misoConfig) {
+      console.warn("Miso not configured, returning WordPress highlights only");
+      return markedWordpressArticles;
+    }
+
+    try {
+      // 4. Build exclude list from WordPress article IDs
+      const brandPrefix = brandConfig.shortcode.toUpperCase();
+      const excludeIds = wordpressArticles.map(
+        (article) => `${brandPrefix}-${article.id}`
+      );
+
+      console.log(
+        "Excluding WordPress articles from Miso recommendations:",
+        excludeIds
+      );
+
+      // 5. Fetch Miso recommendations with exclude parameter
+      const misoCount =
+        brandConfig.highlightsRecommendations.misoItemCount || 10;
+      const misoArticles = await fetchRecommendedArticlesWithExclude(
+        misoCount,
+        excludeIds,
+        userId,
+        isAuthenticated
+      );
+
+      // Mark as Miso source
+      const markedMisoArticles = misoArticles.map((article) => ({
+        ...article,
+        source: "miso" as const,
+        isRecommended: true,
+      }));
+
+      console.log(
+        `Combined highlights: ${markedWordpressArticles.length} WordPress + ${markedMisoArticles.length} Miso`
+      );
+
+      // 6. Combine: WordPress first, then Miso
+      return [...markedWordpressArticles, ...markedMisoArticles];
+    } catch (misoError) {
+      console.error(
+        "Error fetching Miso recommendations, falling back to WordPress only:",
+        misoError
+      );
+      return markedWordpressArticles;
+    }
+  } catch (error) {
+    console.error("Error in fetchHighlightsWithRecommendations:", error);
+    throw error;
+  }
+}
 
 // Get all news articles
 export async function fetchNewsArticles(): Promise<Article[]> {

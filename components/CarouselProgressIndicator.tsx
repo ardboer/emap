@@ -10,6 +10,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -20,6 +21,7 @@ interface CarouselProgressIndicatorProps {
   isPlaying?: boolean;
   onProgressComplete?: () => void;
   style?: any;
+  wordpressItemCount: number; // Number of WordPress items (only show progress for these)
 }
 
 const ProgressBar: React.FC<{
@@ -115,9 +117,17 @@ export const CarouselProgressIndicator: React.FC<
   isPlaying = true,
   onProgressComplete,
   style,
+  wordpressItemCount,
 }) => {
   const { brandConfig } = useBrandConfig();
-  const indicatorWidth = (screenWidth - 48) / totalItems; // 24px padding on each side
+  const insets = useSafeAreaInsets();
+  // Only render progress bars for WordPress articles
+  const displayItemCount = wordpressItemCount;
+  const indicatorWidth = (screenWidth - 48) / displayItemCount; // 24px padding on each side
+
+  // Only show progress bars if we're viewing a WordPress article
+  const shouldShowProgress =
+    currentIndex < wordpressItemCount && displayItemCount > 0;
 
   // Get colors from brand config
   const overlayGradientStart =
@@ -136,25 +146,33 @@ export const CarouselProgressIndicator: React.FC<
 
   return (
     <View style={[styles.container, style]}>
-      <LinearGradient colors={gradientColors} style={styles.gradientBackground}>
-        <View style={styles.progressContainer}>
-          {Array.from({ length: totalItems }, (_, index) => (
-            <ProgressBar
-              key={index}
-              index={index}
-              currentIndex={currentIndex}
-              width={indicatorWidth}
-              duration={duration}
-              isPlaying={isPlaying}
-              progressFillColor={progressFillColor}
-              progressBackgroundColor={progressBackgroundColor}
-              onProgressComplete={
-                index === currentIndex ? onProgressComplete : undefined
-              }
-            />
-          ))}
-        </View>
-      </LinearGradient>
+      {shouldShowProgress ? (
+        <LinearGradient
+          colors={gradientColors}
+          style={styles.gradientBackground}
+        >
+          <View style={[styles.progressContainer, { top: 10 + insets.top }]}>
+            {Array.from({ length: displayItemCount }, (_, index) => (
+              <ProgressBar
+                key={index}
+                index={index}
+                currentIndex={currentIndex}
+                width={indicatorWidth}
+                duration={duration}
+                isPlaying={isPlaying && currentIndex < wordpressItemCount}
+                progressFillColor={progressFillColor}
+                progressBackgroundColor={progressBackgroundColor}
+                onProgressComplete={
+                  index === currentIndex ? onProgressComplete : undefined
+                }
+              />
+            ))}
+          </View>
+        </LinearGradient>
+      ) : (
+        // Keep container but make it transparent for Miso articles
+        <View style={styles.gradientBackground} />
+      )}
     </View>
   );
 };
@@ -176,7 +194,7 @@ const styles = StyleSheet.create({
   progressContainer: {
     flexDirection: "row",
     position: "absolute",
-    top: 60,
+    top: 30,
     left: 24,
     justifyContent: "space-between",
     alignItems: "center",

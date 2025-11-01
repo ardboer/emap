@@ -5,10 +5,11 @@ import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAudio } from "@/contexts/AudioContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { analyticsService } from "@/services/analytics";
-import { fetchFeaturedArticles } from "@/services/api";
+import { fetchHighlightsWithRecommendations } from "@/services/api";
 import { Article } from "@/types";
 import { hexToRgba } from "@/utils/colors";
 import { LinearGradient } from "expo-linear-gradient";
@@ -24,6 +25,7 @@ import {
   View,
 } from "react-native";
 import { getColors } from "react-native-image-colors";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -36,6 +38,7 @@ export default function HighlightedScreen() {
   const [isUserInteracting, setIsUserInteracting] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const insets = useSafeAreaInsets();
   const [error, setError] = useState<string | null>(null);
   const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
   const [useColorGradient, setUseColorGradient] = useState(false);
@@ -43,7 +46,9 @@ export default function HighlightedScreen() {
     {}
   );
   const [isCarouselVisible, setIsCarouselVisible] = useState(true);
+  const [wordpressArticleCount, setWordpressArticleCount] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { state: audioState } = useAudio();
   const { brandConfig } = useBrandConfig();
   const backgroundColor = useThemeColor({}, "background");
@@ -82,10 +87,14 @@ export default function HighlightedScreen() {
       article_id: article.id,
       article_title: article.title,
       article_category: article.category,
+      article_source: article.source || "wordpress",
+      is_recommended: article.isRecommended || false,
       position: currentIndex,
       dwell_time_before_click_ms: dwellTime,
       dwell_time_before_click_seconds: Math.round(dwellTime / 1000),
       total_articles: articles.length,
+      wordpress_count: wordpressArticleCount,
+      miso_count: articles.length - wordpressArticleCount,
       articles_viewed_before_click: viewedArticles.size,
       max_index_reached: maxIndexReached,
       scroll_depth_percentage: Math.round(
@@ -129,7 +138,26 @@ export default function HighlightedScreen() {
     try {
       setLoading(true);
       setError(null);
-      const fetchedArticles = await fetchFeaturedArticles();
+
+      // Fetch combined articles (WordPress + Miso recommendations)
+      // Uses authenticated user ID when logged in, otherwise anonymous
+      const fetchedArticles = await fetchHighlightsWithRecommendations(
+        user?.userId,
+        isAuthenticated
+      );
+
+      // Track WordPress count for progress bar logic
+      const wpCount = fetchedArticles.filter(
+        (a) => a.source === "wordpress"
+      ).length;
+      setWordpressArticleCount(wpCount);
+
+      console.log(
+        `Loaded ${fetchedArticles.length} articles: ${wpCount} WordPress, ${
+          fetchedArticles.length - wpCount
+        } Miso`
+      );
+
       setArticles(fetchedArticles);
 
       // Load color gradient setting
@@ -170,12 +198,19 @@ export default function HighlightedScreen() {
   };
 
   const handleProgressComplete = () => {
-    if (!isUserInteracting && isCarouselVisible) {
+    // Only auto-advance if current article is from WordPress
+    const currentArticle = articles[currentIndex];
+    if (
+      !isUserInteracting &&
+      isCarouselVisible &&
+      currentArticle?.source === "wordpress"
+    ) {
       analyticsService.logEvent("carousel_auto_advance", {
         from_position: currentIndex,
         to_position: (currentIndex + 1) % articles.length,
         total_articles: articles.length,
         max_index_reached: maxIndexReached,
+        article_source: currentArticle.source,
       });
       goToNextSlide();
     }
@@ -237,10 +272,13 @@ export default function HighlightedScreen() {
     }
   };
 
-  // Load articles on component mount
+  // Load articles when auth is ready
   useEffect(() => {
-    loadArticles();
-  }, []);
+    // Wait for auth to finish loading before fetching articles
+    if (!isAuthLoading) {
+      loadArticles();
+    }
+  }, [isAuthLoading, isAuthenticated, user?.userId]);
 
   // Track carousel session start/end
   useEffect(() => {
@@ -257,8 +295,11 @@ export default function HighlightedScreen() {
 
     analyticsService.logEvent("carousel_session_start", {
       total_articles: articles.length,
+      wordpress_count: wordpressArticleCount,
+      miso_count: articles.length - wordpressArticleCount,
       first_article_id: articles[0]?.id,
       first_article_title: articles[0]?.title,
+      first_article_source: articles[0]?.source || "wordpress",
       session_start_time: new Date().toISOString(),
     });
 
@@ -431,10 +472,14 @@ export default function HighlightedScreen() {
       article_id: currentArticle.id,
       article_title: currentArticle.title,
       article_category: currentArticle.category,
+      article_source: currentArticle.source || "wordpress",
+      is_recommended: currentArticle.isRecommended || false,
 
       // Position info
       position: currentIndex,
       total_articles: articles.length,
+      wordpress_count: wordpressArticleCount,
+      miso_count: articles.length - wordpressArticleCount,
       position_percentage: Math.round(
         ((currentIndex + 1) / articles.length) * 100
       ),
@@ -503,6 +548,24 @@ export default function HighlightedScreen() {
     },
   };
   const renderCarouselItem = ({ item }: { item: Article }) => {
+    // Render recommended badge for Miso articles
+    const renderRecommendedBadge = () => {
+      if (!item.isRecommended) return null;
+
+      return (
+        <View style={[styles.recommendedBadge, { top: insets.top + 60 }]}>
+          <ThemedText
+            style={[
+              styles.recommendedBadgeText,
+              { fontFamily: brandConfig?.theme.fonts.primarySemiBold },
+            ]}
+          >
+            Recommended for you
+          </ThemedText>
+        </View>
+      );
+    };
+
     // For landscape images, choose between blurred background or color gradient
     if (item.isLandscape) {
       if (useColorGradient) {
@@ -541,6 +604,7 @@ export default function HighlightedScreen() {
               contentFit="contain"
               contentPosition="center"
             />
+            {renderRecommendedBadge()}
             <LinearGradient
               colors={
                 [
@@ -609,6 +673,7 @@ export default function HighlightedScreen() {
               contentFit="contain"
               contentPosition="center"
             />
+            {renderRecommendedBadge()}
             <LinearGradient
               colors={
                 [
@@ -670,6 +735,7 @@ export default function HighlightedScreen() {
           contentFit="cover"
           contentPosition="center"
         />
+        {renderRecommendedBadge()}
         <LinearGradient
           colors={
             [
@@ -717,6 +783,8 @@ export default function HighlightedScreen() {
   };
 
   if (loading) {
+    // During loading, show progress bars (assume WordPress content)
+    // so logo and icon stay at top: 80
     return (
       <ThemedView style={styles.container}>
         <CarouselProgressIndicator
@@ -725,9 +793,17 @@ export default function HighlightedScreen() {
           duration={SLIDE_DURATION}
           isPlaying={false}
           onProgressComplete={() => {}}
+          wordpressItemCount={3}
         />
-        <BrandLogo style={styles.brandLogo} width={100} height={35} />
-        <TouchableOpacity style={styles.userButton} disabled>
+        <BrandLogo
+          style={[styles.brandLogo, { top: insets.top + 30 }]}
+          width={100}
+          height={35}
+        />
+        <TouchableOpacity
+          style={[styles.userButton, { top: insets.top + 20 }]} // Keep at top: 80 during loading
+          disabled
+        >
           <FadeInImage
             source={require("@/assets/images/user-icon.png")}
             style={{ width: 24, height: 24, opacity: 0.5 }}
@@ -752,6 +828,10 @@ export default function HighlightedScreen() {
     );
   }
 
+  // Determine if we should show progress (viewing WordPress article)
+  const showingProgress =
+    currentIndex < wordpressArticleCount && wordpressArticleCount > 0;
+
   return (
     <ThemedView style={styles.container}>
       <CarouselProgressIndicator
@@ -760,12 +840,25 @@ export default function HighlightedScreen() {
         duration={SLIDE_DURATION}
         isPlaying={isPlaying && isCarouselVisible}
         onProgressComplete={handleProgressComplete}
+        wordpressItemCount={wordpressArticleCount}
       />
-      <BrandLogo style={styles.brandLogo} width={100} height={35} />
+      <BrandLogo
+        style={[
+          styles.brandLogo,
+          !showingProgress && styles.brandLogoNoProgress,
+          { top: !showingProgress ? insets.top + 10 : insets.top + 30 },
+        ]}
+        width={100}
+        height={35}
+      />
 
       {/* User Settings Button */}
       <TouchableOpacity
-        style={styles.userButton}
+        style={[
+          styles.userButton,
+          !showingProgress && styles.userButtonNoProgress,
+          { top: !showingProgress ? insets.top + 10 : insets.top + 20 },
+        ]}
         onPress={() => setSettingsDrawerVisible(true)}
       >
         <FadeInImage
@@ -812,12 +905,14 @@ export default function HighlightedScreen() {
 const staticStyles = StyleSheet.create({
   brandLogo: {
     position: "absolute",
-    top: 80,
+    top: 20,
     left: 12,
     zIndex: 10,
-    // backgroundColor: "rgba(0, 0, 0, 0.3)",
     borderRadius: 8,
     padding: 8,
+  },
+  brandLogoNoProgress: {
+    top: 60, // Move up when no progress indicator
   },
   carouselItem: {
     width: screenWidth,
@@ -932,15 +1027,32 @@ const staticStyles = StyleSheet.create({
     top: 80,
     right: 16,
     zIndex: 10,
-    // backgroundColor: "rgba(0, 0, 0, 0.3)",
     borderRadius: 20,
     width: 40,
     height: 40,
     justifyContent: "center",
     alignItems: "center",
   },
+  userButtonNoProgress: {
+    top: 60, // Move up when no progress indicator
+  },
   userIcon: {
     fontSize: 20,
     color: "white",
+  },
+  recommendedBadge: {
+    position: "absolute",
+    top: 80,
+    left: 16,
+    backgroundColor: "rgba(16, 209, 240, 0.9)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    zIndex: 20,
+  },
+  recommendedBadgeText: {
+    color: "#011620",
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

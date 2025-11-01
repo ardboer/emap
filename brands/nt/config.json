@@ -129,6 +129,10 @@
     "brandFilter": "Nursing Times",
     "baseUrl": "https://api.askmiso.com/v1"
   },
+  "highlightsRecommendations": {
+    "enabled": true,
+    "misoItemCount": 10
+  },
   "testArticleId": "345162",
   "keystoreStatus": {
     "configured": true,

@@ -8,6 +8,8 @@ export interface Article {
   timestamp: string;
   category: string;
   isLandscape?: boolean;
+  source?: "wordpress" | "miso"; // Article source
+  isRecommended?: boolean; // Flag for recommended articles
 }
 
 export interface StructuredContentNode {

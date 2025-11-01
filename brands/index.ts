@@ -105,6 +105,10 @@ export interface BrandConfig {
   misoConfig?: MisoConfig;
   testArticleId?: string;
   podcastFeeds?: PodcastFeed[];
+  highlightsRecommendations?: {
+    enabled: boolean;
+    misoItemCount: number;
+  };
   trendingBlockListView?: {
     enabled: boolean;
     position: number;
