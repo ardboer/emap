@@ -1,7 +1,9 @@
 import { FadeInImage } from "@/components/FadeInImage";
+import RelatedArticlesBlock from "@/components/RelatedArticlesBlock";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useImageViewer } from "@/hooks/useImageViewer";
+import { brandManager } from "@/services/api";
 import { StructuredContentNode } from "@/types";
 import React from "react";
 import {
@@ -125,6 +127,7 @@ const extractGalleryImage = (
 interface RichContentRendererProps {
   content: StructuredContentNode[];
   style?: any;
+  articleId?: string;
 }
 
 interface RichContentNodeProps {
@@ -934,24 +937,64 @@ const RichContentRendererInternal: React.FC<
 > = ({
   content,
   style,
+  articleId,
   onImagePress,
   forceHighlightBoxText = false,
   isBlockquote = false,
   isLink = false,
 }) => {
+  // Get brand configuration for related articles block
+  const brandConfig = brandManager.getCurrentBrand();
+  const relatedArticlesConfig = brandConfig.relatedArticlesBlock;
+
+  // Count paragraphs to determine where to inject related articles
+  let paragraphCount = 0;
+  const shouldInjectRelatedArticles =
+    relatedArticlesConfig?.enabled &&
+    relatedArticlesConfig?.afterParagraph !== null &&
+    relatedArticlesConfig?.afterParagraph !== undefined &&
+    articleId;
+
   return (
     <View style={style}>
-      {content.map((node, index) => (
-        <RichContentNode
-          key={index}
-          node={node}
-          index={index}
-          onImagePress={onImagePress}
-          forceHighlightBoxText={forceHighlightBoxText}
-          isBlockquote={isBlockquote}
-          isLink={isLink}
-        />
-      ))}
+      {content.map((node, index) => {
+        // Count paragraphs
+        if (node.typename === "HTMLElement" && node.type === "p") {
+          paragraphCount++;
+
+          // Check if we should inject related articles after this paragraph
+          if (
+            shouldInjectRelatedArticles &&
+            paragraphCount === relatedArticlesConfig.afterParagraph
+          ) {
+            return (
+              <React.Fragment key={index}>
+                <RichContentNode
+                  node={node}
+                  index={index}
+                  onImagePress={onImagePress}
+                  forceHighlightBoxText={forceHighlightBoxText}
+                  isBlockquote={isBlockquote}
+                  isLink={isLink}
+                />
+                <RelatedArticlesBlock articleId={articleId} />
+              </React.Fragment>
+            );
+          }
+        }
+
+        return (
+          <RichContentNode
+            key={index}
+            node={node}
+            index={index}
+            onImagePress={onImagePress}
+            forceHighlightBoxText={forceHighlightBoxText}
+            isBlockquote={isBlockquote}
+            isLink={isLink}
+          />
+        );
+      })}
     </View>
   );
 };
@@ -959,6 +1002,7 @@ const RichContentRendererInternal: React.FC<
 export const RichContentRenderer: React.FC<RichContentRendererProps> = ({
   content,
   style,
+  articleId,
 }) => {
   const { imageViewer, openImageViewer, closeImageViewer } = useImageViewer();
 
@@ -971,6 +1015,7 @@ export const RichContentRenderer: React.FC<RichContentRendererProps> = ({
       <RichContentRendererInternal
         content={content}
         style={style}
+        articleId={articleId}
         onImagePress={handleImagePress}
       />
       <ImageViewer

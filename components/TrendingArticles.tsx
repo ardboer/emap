@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { fetchTrendingArticles } from "@/services/api";
 import { Article } from "@/types";
@@ -10,17 +11,29 @@ import ArticleTeaser from "./ArticleTeaser";
 
 export default function TrendingArticles() {
   const { user, isAuthenticated } = useAuth();
+  const { brandConfig } = useBrandConfig();
   const [trendingArticles, setTrendingArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const contentBackground = useThemeColor({}, "contentBackground");
+
+  // Check if trending articles detail is enabled
+  const isEnabled = brandConfig?.trendingArticlesDetail?.enabled ?? true;
+  const itemCount = brandConfig?.trendingArticlesDetail?.itemCount || 5;
+
   useEffect(() => {
+    // Don't load if disabled
+    if (!isEnabled) {
+      setLoading(false);
+      return;
+    }
+
     const loadTrendingArticles = async () => {
       try {
         setLoading(true);
         setError(null);
         const articles = await fetchTrendingArticles(
-          5,
+          itemCount,
           user?.userId,
           isAuthenticated
         );
@@ -34,7 +47,12 @@ export default function TrendingArticles() {
     };
 
     loadTrendingArticles();
-  }, [user?.userId, isAuthenticated]);
+  }, [isEnabled, itemCount, user?.userId, isAuthenticated]);
+
+  // Don't render if disabled
+  if (!isEnabled) {
+    return null;
+  }
 
   if (loading) {
     return (

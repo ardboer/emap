@@ -134,6 +134,16 @@
   "podcastFeeds": [],
   "trendingBlockListView": {
     "enabled": true,
-    "position": 1
+    "position": 1,
+    "itemCount": 5
+  },
+  "relatedArticlesBlock": {
+    "enabled": true,
+    "afterParagraph": 3,
+    "itemCount": 5
+  },
+  "trendingArticlesDetail": {
+    "enabled": true,
+    "itemCount": 5
   }
 }

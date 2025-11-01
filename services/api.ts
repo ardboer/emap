@@ -514,7 +514,7 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
     }
 
     const postData: PostApiResponse = await response.json();
-    console.log("Single article response:", postData);
+    // console.log("Single article response:", postData);
 
     // Extract image URL from featured_media if available
     let imageUrl = "https://picsum.photos/800/600?random=1";
@@ -822,10 +822,10 @@ export async function fetchRelatedArticles(
     limit,
     hash,
   });
-  if (cached) {
-    console.log(`Returning cached related articles for ${articleId}`);
-    return cached;
-  }
+  // if (false) {
+  //   console.log(`Returning cached related articles for ${articleId}`);
+  //   return cached;
+  // }
 
   try {
     // Get brand config to access Miso configuration
@@ -1004,10 +1004,10 @@ export async function fetchTrendingArticles(
 
   // Try to get from cache first
   const cached = await cacheService.get<Article[]>(cacheKey, { limit, hash });
-  if (cached) {
-    console.log("Returning cached trending articles");
-    return cached;
-  }
+  // if (cached) {
+  //   console.log("Returning cached trending articles");
+  //   return cached;
+  // }
 
   try {
     // Get brand config to access Miso configuration
@@ -1150,6 +1150,173 @@ export async function fetchTrendingArticles(
     const staleCache = await cacheService.get<Article[]>(cacheKey, { limit });
     if (staleCache) {
       console.log("Returning stale cached trending articles due to API error");
+      return staleCache;
+    }
+
+    // Return empty array instead of throwing to gracefully handle errors
+    return [];
+  }
+}
+// Fetch recommended articles for user using Miso's user_to_products API
+export async function fetchRecommendedArticles(
+  limit: number = 5,
+  userId?: string,
+  isAuthenticated: boolean = false
+): Promise<Article[]> {
+  const { cacheService } = await import("./cache");
+  const cacheKey = "recommended_articles";
+  const { hash } = getApiConfig();
+
+  // Try to get from cache first
+  const cached = await cacheService.get<Article[]>(cacheKey, { limit, hash });
+  // if (cached) {
+  //   console.log("Returning cached recommended articles");
+  //   return cached;
+  // }
+
+  try {
+    // Get brand config to access Miso configuration
+    const brandConfig = brandManager.getCurrentBrand();
+
+    if (!brandConfig.misoConfig) {
+      console.warn("Miso configuration not found for current brand");
+      return [];
+    }
+
+    const { apiKey, brandFilter, baseUrl } = brandConfig.misoConfig;
+    const endpoint = `${baseUrl}/recommendation/user_to_products`;
+
+    // Determine which ID to use based on authentication status
+    let misoUserId: string | undefined;
+    let misoAnonymousId: string | undefined;
+
+    if (isAuthenticated && userId) {
+      // Authenticated user: use "sub:" prefix for subscriber
+      misoUserId = `sub:${userId}`;
+      misoAnonymousId = undefined;
+    } else {
+      // Anonymous user: use anonymous_id only
+      misoUserId = undefined;
+      misoAnonymousId = await getAnonymousId();
+    }
+
+    // Calculate date one year ago for boost_fq
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const oneYearAgoISO = oneYearAgo.toISOString().split("T")[0] + "T00:00:00Z";
+
+    // Prepare request body with appropriate ID
+    const requestBody: any = {
+      fl: ["*"],
+      rows: limit,
+      // Date filter to get articles from the last year
+      boost_fq: `published_at:[${oneYearAgoISO} TO *]`,
+      // Brand filter with quotes for proper matching
+      fq: `brand:"${brandFilter}"`,
+    };
+
+    // Add only the appropriate ID
+    if (misoUserId) {
+      requestBody.user_id = misoUserId;
+    } else if (misoAnonymousId) {
+      requestBody.anonymous_id = misoAnonymousId;
+    }
+
+    console.log("Fetching recommended articles from Miso:", {
+      endpoint,
+      brand: brandConfig.name,
+      limit,
+      mode: isAuthenticated ? "AUTHENTICATED" : "ANONYMOUS",
+      userId: misoUserId || "N/A",
+      anonymousId: misoAnonymousId || "N/A",
+      requestBody,
+    });
+
+    // Generate curl command for debugging
+    const curlCommand = `curl -X POST '${endpoint}' \\
+  -H 'Content-Type: application/json' \\
+  -H 'x-api-key: ${apiKey}' \\
+  -d '${JSON.stringify(requestBody)}'`;
+
+    console.log(
+      "\n=== DEBUG: Copy this curl command to test Recommended Articles API ==="
+    );
+    console.log(curlCommand);
+    console.log(
+      "====================================================================\n"
+    );
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Miso API request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Miso API response for recommended articles:", data);
+
+    // Transform Miso response to Article interface
+    // Miso API returns products in data.data.products
+    const products = (data.data && data.data.products) || data.products || [];
+    const recommendedArticles: Article[] = products.map((product: any) => {
+      // Extract category - categories is an array of arrays, get the first category from the first array
+      let category = "News";
+      if (
+        product.categories &&
+        Array.isArray(product.categories) &&
+        product.categories.length > 0
+      ) {
+        const firstCategoryArray = product.categories[0];
+        if (
+          Array.isArray(firstCategoryArray) &&
+          firstCategoryArray.length > 0
+        ) {
+          category = firstCategoryArray[0];
+        } else if (typeof firstCategoryArray === "string") {
+          category = firstCategoryArray;
+        }
+      }
+
+      // Extract numeric ID from product_id (e.g., "NT-339716" -> "339716")
+      // The WordPress API expects just the numeric part
+      let articleId = product.product_id || "";
+      const idMatch = articleId.match(/\d+$/);
+      if (idMatch) {
+        articleId = idMatch[0];
+      }
+
+      return {
+        id: articleId,
+        title: decodeHtmlEntities(stripHtml(product.title || "")),
+        leadText: "", // Miso doesn't provide lead text
+        content: product.html || "",
+        imageUrl:
+          product.cover_image || "https://picsum.photos/800/600?random=1",
+        timestamp: formatDate(product.published_at || new Date().toISOString()),
+        category,
+      };
+    });
+
+    // Cache the result
+    await cacheService.set(cacheKey, recommendedArticles, { limit, hash });
+
+    return recommendedArticles;
+  } catch (error) {
+    console.error("Error fetching recommended articles from Miso:", error);
+
+    // Try to return stale cached data if available
+    const staleCache = await cacheService.get<Article[]>(cacheKey, { limit });
+    if (staleCache) {
+      console.log(
+        "Returning stale cached recommended articles due to API error"
+      );
       return staleCache;
     }
 

@@ -108,6 +108,16 @@ export interface BrandConfig {
   trendingBlockListView?: {
     enabled: boolean;
     position: number;
+    itemCount?: number;
+  };
+  relatedArticlesBlock?: {
+    enabled: boolean;
+    afterParagraph: number;
+    itemCount?: number;
+  };
+  trendingArticlesDetail?: {
+    enabled: boolean;
+    itemCount?: number;
   };
 }
 

@@ -229,10 +229,10 @@ class AnalyticsService {
       };
 
       // Log to console for debugging
-      console.log(`📊 Analytics Event: ${eventName}`, {
-        params: Object.keys(eventData).length,
-        brand: brandConfig.shortcode,
-      });
+      // console.log(`📊 Analytics Event: ${eventName}`, {
+      //   params: Object.keys(eventData).length,
+      //   brand: brandConfig.shortcode,
+      // });
 
       if (!this.analytics) return;
       await logEvent(this.analytics, eventName, eventData);

@@ -129,54 +129,38 @@ export default function ArticleScreen() {
     loadArticle();
   }, [id, isAuthenticated, user?.userId]);
 
-  // Fetch related articles for swipe navigation
+  // Fetch recommended articles for swipe navigation using Miso's user_to_products API
   useEffect(() => {
-    const loadRelatedArticles = async () => {
+    const loadRecommendedArticles = async () => {
       if (!id) {
-        console.log("No article ID for fetching related articles");
+        console.log("No article ID for fetching recommended articles");
         return;
       }
 
-      console.log("Fetching related articles for article ID:", id);
+      console.log("Fetching recommended articles for swipe navigation");
       try {
-        const { fetchRelatedArticles } = await import("@/services/api");
-        const related = await fetchRelatedArticles(
-          id,
+        const { fetchRecommendedArticles } = await import("@/services/api");
+        const recommended = await fetchRecommendedArticles(
           5,
           user?.userId,
           isAuthenticated
         );
         console.log(
-          "Related articles fetched:",
-          related?.length || 0,
+          "Recommended articles fetched:",
+          recommended?.length || 0,
           "articles"
         );
 
-        // Fallback to trending articles if no related articles found
-        // if (!related || related.length === 0) {
-        //   console.log(
-        //     "No related articles found, falling back to trending articles"
-        //   );
-        //   const { fetchTrendingArticles } = await import("@/services/api");
-        //   related = await fetchTrendingArticles(5);
-        //   console.log(
-        //     "Trending articles fetched:",
-        //     related?.length || 0,
-        //     "articles"
-        //   );
-        // }
-
-        console.log("Final articles data:", related);
-        setRelatedArticles(related);
+        setRelatedArticles(recommended);
         setCurrentRelatedIndex(-1); // Reset index when article changes
       } catch (err) {
-        console.error("Error loading related articles:", err);
+        console.error("Error loading recommended articles:", err);
         setRelatedArticles([]);
       }
     };
 
-    loadRelatedArticles();
-  }, [id]);
+    loadRecommendedArticles();
+  }, [id, user?.userId, isAuthenticated]);
 
   useEffect(() => {
     if (article && paywallEnabled) {
@@ -261,6 +245,7 @@ export default function ArticleScreen() {
         <RichContentRenderer
           content={article.content as StructuredContentNode[]}
           style={styles.richContent}
+          articleId={id}
         />
       );
     }
