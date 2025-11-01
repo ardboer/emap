@@ -7,9 +7,14 @@ import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TopicsTabBar from "@/components/TopicsTabBar";
+import TrendingBlockHorizontal from "@/components/TrendingBlockHorizontal";
 import { Colors } from "@/constants/Colors";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { fetchCategoryContent, fetchMenuItems } from "@/services/api";
+import {
+  brandManager,
+  fetchCategoryContent,
+  fetchMenuItems,
+} from "@/services/api";
 import { Article, CategoryContentResponse } from "@/types";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -146,6 +151,11 @@ export default function NewsScreen() {
     index: number;
     section: any;
   }) => {
+    // Don't render items for trending block (it has custom rendering)
+    if (section.isTrendingBlock) {
+      return null;
+    }
+
     // Check if this is the second block (index 1) - render horizontal scroll
     if (section.index === 1) {
       return null; // Horizontal items are rendered in renderSectionFooter
@@ -167,10 +177,16 @@ export default function NewsScreen() {
       description: string;
       data: Article[];
       index: number;
+      isTrendingBlock?: boolean;
     };
   }) => {
+    // Check if this is the trending block
+    if (section.isTrendingBlock) {
+      return <TrendingBlockHorizontal onArticlePress={handleArticlePress} />;
+    }
+
     // Only render horizontal scroll for the second block (index 1)
-    if (section.index !== 1 || section.data.length === 0) {
+    if (section.index !== 2 || section.data.length === 0) {
       return null;
     }
 
@@ -202,6 +218,7 @@ export default function NewsScreen() {
       layout: string;
       description: string;
       index: number;
+      isTrendingBlock?: boolean;
     };
   }) => {
     // Hide the first block's title
@@ -275,6 +292,7 @@ export default function NewsScreen() {
     description: string;
     data: Article[];
     index: number;
+    isTrendingBlock?: boolean;
   }[] = [];
 
   if (isCategoryContent) {
@@ -287,6 +305,41 @@ export default function NewsScreen() {
       data: block.articles,
       index,
     }));
+
+    // Check if trending block should be injected
+    const brandConfig = brandManager.getCurrentBrand();
+    const trendingConfig = brandConfig.trendingBlockListView;
+
+    if (
+      trendingConfig &&
+      trendingConfig.enabled &&
+      trendingConfig.position !== null &&
+      trendingConfig.position !== undefined
+    ) {
+      const position = trendingConfig.position;
+
+      // Only inject if position is valid (within bounds or at the end)
+      if (position >= 0 && position <= sections.length) {
+        // Create trending block section
+        const trendingSection = {
+          title: "Trending",
+          layout: "horizontal",
+          description: "",
+          data: [], // Empty data array since we render custom content
+          index: position,
+          isTrendingBlock: true,
+        };
+
+        // Insert at the specified position and update indices of following blocks
+        sections.splice(position, 0, trendingSection);
+
+        // Update indices for blocks after the trending block
+        sections = sections.map((section, idx) => ({
+          ...section,
+          index: idx,
+        }));
+      }
+    }
   }
 
   const hasContent =
