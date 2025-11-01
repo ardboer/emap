@@ -17,7 +17,7 @@ import React, {
   useEffect,
   useReducer,
 } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 
 // Types
 interface User {
@@ -318,20 +318,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("❌ URL accessibility test failed:", testError);
       }
 
+      // Add cache-busting parameter to ensure fresh session
+      // Use both query param and hash to bypass Chrome Custom Tabs caching
+      const timestamp = Date.now();
+      const cacheBustingUrl = `${loginUrl}${
+        loginUrl.includes("?") ? "&" : "?"
+      }_t=${timestamp}#t${timestamp}`;
+
+      console.log("🔄 Cache-busting URL:", cacheBustingUrl);
+
+      // On Android, we need to clear browser cache between login attempts
+      // because Chrome Custom Tabs caches the page response aggressively
+      if (Platform.OS === "android") {
+        console.log("🧹 Clearing Android browser cache...");
+        try {
+          // Dismiss any previous browser
+          await WebBrowser.dismissBrowser();
+          // Warm up and cool down to try to clear cache
+          await WebBrowser.warmUpAsync();
+          await WebBrowser.coolDownAsync();
+
+          // Add a small delay to ensure cache is cleared
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } catch (e) {
+          console.log("⚠️ Could not clear browser cache:", e);
+        }
+      }
+
       // Open authentication session in browser with explicit options
       console.log("🌐 Opening WebBrowser with options...");
       const result = await WebBrowser.openAuthSessionAsync(
-        loginUrl,
+        cacheBustingUrl,
         redirectUri,
         {
-          // Try with ephemeral session to avoid caching issues
+          // Use ephemeral session on both platforms to prevent caching
+          // This is critical to avoid JWT token reuse issues
           preferEphemeralSession: true,
           // Show title for debugging
-          showTitle: true,
+          showTitle: false,
           // Enable bar collapsing
           enableBarCollapsing: false,
-          // Create new context
-          createTask: true,
+          // On Android, don't create a new task - keep it in same context
+          ...(Platform.OS === "android" && { createTask: false }),
         }
       );
 
@@ -407,6 +435,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("🚪 Logging out...");
       dispatch({ type: "SET_LOADING", payload: true });
+
+      // On Android, clear browser cache on logout to prevent white screen on next login
+      if (Platform.OS === "android") {
+        try {
+          console.log("🧹 Clearing browser cache on logout...");
+          await WebBrowser.warmUpAsync();
+          await WebBrowser.coolDownAsync();
+        } catch (e) {
+          console.log("⚠️ Could not clear browser cache on logout:", e);
+        }
+      }
 
       // Clear stored auth data
       await authLogout();

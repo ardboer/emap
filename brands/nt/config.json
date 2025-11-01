@@ -124,8 +124,8 @@
     "enableMagazine": true
   },
   "misoConfig": {
-    "apiKey": "FcakM2bTHy0Sf0uaM6mYpwI9vnXWKdu4E9jO6Bx2",
-    "publishableKey": "4yxesK8tUzRGIz17RXDPgplM0c5ZAWnWjtD9cdcD",
+    "apiKey": "fAd2K3q1t6pw5SwzQcm0gPkHYvBpqFWkxBWwLvyL",
+    "publishableKey": "VNMnQW8LlARMf8TPdZvtidWCi8EljMSbPFppPgJo",
     "brandFilter": "Nursing Times",
     "endpoint": "https://api.askmiso.com/v1/recommendation/user_to_trending"
   },

@@ -148,6 +148,24 @@ if (!appJson.expo.android.intentFilters) {
   appJson.expo.android.intentFilters = [];
 }
 
+// Add intent filters for auth callback (must come first for priority)
+domainVariants.forEach((domainVariant) => {
+  const authCallbackFilter = {
+    action: "VIEW",
+    autoVerify: true,
+    data: [
+      {
+        scheme: "https",
+        host: domainVariant,
+        pathPrefix: "/auth/callback",
+      },
+    ],
+    category: ["BROWSABLE", "DEFAULT"],
+  };
+
+  appJson.expo.android.intentFilters.push(authCallbackFilter);
+});
+
 // Add intent filters for article and event paths for each domain variant
 domainVariants.forEach((domainVariant) => {
   const intentFilter = {
@@ -180,7 +198,7 @@ console.log(
   `✅ Configured Android App Links for ${domainVariants.length} domain variants`
 );
 console.log(`   Domains: ${domainVariants.join(", ")}`);
-console.log(`   Paths: /article/*, /event/*, /*`);
+console.log(`   Paths: /auth/callback, /article/*, /event/*, /*`);
 
 // Get bundle identifier from brand config
 const bundleId = brandConfig.bundleId;
@@ -1478,6 +1496,82 @@ export function getBrandEditorImage(shortcode: string): any | null {
   }
 };
 
+// Enable Android App Links for development
+const enableAndroidAppLinks = () => {
+  console.log(`🔗 Checking Android App Links configuration...`);
+
+  const { execSync } = require("child_process");
+
+  try {
+    // Check if adb is available
+    execSync("adb version", { stdio: "ignore" });
+
+    // Check if device is connected
+    const devices = execSync("adb devices", { encoding: "utf8" });
+    const deviceLines = devices
+      .split("\n")
+      .filter((line) => line.includes("\t"));
+
+    if (deviceLines.length === 0) {
+      console.log(
+        `ℹ️  No Android devices connected - skipping App Links setup`
+      );
+      console.log(`   Run this command manually after connecting device:`);
+      console.log(
+        `   adb shell pm set-app-links --package ${bundleId} 0 ${domainVariants.join(
+          " "
+        )}`
+      );
+      return;
+    }
+
+    console.log(`📱 Found ${deviceLines.length} connected Android device(s)`);
+    console.log(`🔧 Enabling App Links for development...`);
+
+    // Enable App Links for the brand's domains
+    const command = `adb shell pm set-app-links --package ${bundleId} 0 ${domainVariants.join(
+      " "
+    )}`;
+    execSync(command, { stdio: "inherit" });
+
+    console.log(
+      `✅ Enabled App Links for domains: ${domainVariants.join(", ")}`
+    );
+    console.log(`   Package: ${bundleId}`);
+    console.log(
+      `   Note: This is for development only. Production apps need assetlinks.json on the server.`
+    );
+  } catch (error) {
+    console.log(
+      `ℹ️  Could not automatically enable App Links: ${error.message}`
+    );
+    console.log(
+      `   This is normal if no device is connected or adb is not available`
+    );
+    console.log(`   Run this command manually after connecting device:`);
+    console.log(
+      `   adb shell pm set-app-links --package ${bundleId} 0 ${domainVariants.join(
+        " "
+      )}`
+    );
+  }
+};
+
+// Only run App Links setup if building for Android
+if (
+  process.argv.includes("--android") ||
+  process.env.EAS_BUILD_PLATFORM === "android"
+) {
+  enableAndroidAppLinks();
+} else {
+  console.log(`ℹ️  Skipping App Links setup (not an Android build)`);
+  console.log(`   To enable App Links for development, run:`);
+  console.log(
+    `   adb shell pm set-app-links --package ${bundleId} 0 ${domainVariants.join(
+      " "
+    )}`
+  );
+}
 generateLogoRegistry();
 generateEditorImageRegistry();
 

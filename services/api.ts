@@ -1157,7 +1157,7 @@ export async function fetchCategoryContent(
     categoryId,
     hash,
   });
-  if (cached) {
+  if (false) {
     console.log(`Returning cached category content for ${categoryId}`);
     return cached;
   }
