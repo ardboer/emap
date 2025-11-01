@@ -67,11 +67,14 @@ export default function ArticleTeaser({
       </ThemedView>
       <ThemedView style={styles.contentContainer}>
         <ThemedView style={styles.metaContainer}>
-          <ThemedText style={styles.category}>{article.category}</ThemedText>
+          <ThemedText style={styles.category} numberOfLines={1}>
+            {article.category}
+          </ThemedText>
           {/* <ThemedText style={styles.timestamp}>{article.timestamp}</ThemedText> */}
         </ThemedView>
         <ThemedText
           type="defaultSemiBold"
+          numberOfLines={4}
           style={[
             styles.title,
             { color: Colors[colorScheme].articleTeaserTitleText },

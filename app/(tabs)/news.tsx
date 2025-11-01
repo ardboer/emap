@@ -1,5 +1,6 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
 import ArticleTeaserHero from "@/components/ArticleTeaserHero";
+import ArticleTeaserHorizontal from "@/components/ArticleTeaserHorizontal";
 import { BlockHeader } from "@/components/BlockHeader";
 import GradientHeader from "@/components/GradientHeader";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
@@ -13,12 +14,16 @@ import { Article, CategoryContentResponse } from "@/types";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  Dimensions,
+  FlatList,
   RefreshControl,
   SectionList,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
 } from "react-native";
+
+const { width: screenWidth } = Dimensions.get("window");
 
 export default function NewsScreen() {
   const colorScheme = useColorScheme() ?? "light";
@@ -132,12 +137,61 @@ export default function NewsScreen() {
     }
   };
 
-  const renderArticle = ({ item, index }: { item: Article; index: number }) => {
+  const renderArticle = ({
+    item,
+    index,
+    section,
+  }: {
+    item: Article;
+    index: number;
+    section: any;
+  }) => {
+    // Check if this is the second block (index 1) - render horizontal scroll
+    if (section.index === 1) {
+      return null; // Horizontal items are rendered in renderSectionFooter
+    }
+
     // Use hero variant for the first article in each block (index 0)
     if (index === 0) {
       return <ArticleTeaserHero article={item} onPress={handleArticlePress} />;
     }
     return <ArticleTeaser article={item} onPress={handleArticlePress} />;
+  };
+
+  const renderSectionFooter = ({
+    section,
+  }: {
+    section: {
+      title: string;
+      layout: string;
+      description: string;
+      data: Article[];
+      index: number;
+    };
+  }) => {
+    // Only render horizontal scroll for the second block (index 1)
+    if (section.index !== 1 || section.data.length === 0) {
+      return null;
+    }
+
+    return (
+      <FlatList
+        data={section.data}
+        renderItem={({ item }) => (
+          <ArticleTeaserHorizontal
+            article={item}
+            onPress={handleArticlePress}
+          />
+        )}
+        keyExtractor={(item, index) => `horizontal-${item.id}-${index}`}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.horizontalScrollContent}
+        snapToInterval={screenWidth * 0.7 + 12} // Card width + spacing
+        decelerationRate="fast"
+        snapToAlignment="start"
+      />
+    );
   };
 
   const renderSectionHeader = ({
@@ -166,7 +220,9 @@ export default function NewsScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView
+        style={[styles.container, { backgroundColor: contentBackground }]}
+      >
         <GradientHeader onSearchPress={handleSearchPress} />
         <SkeletonLoader variant="list" count={8} />
       </ThemedView>
@@ -237,7 +293,9 @@ export default function NewsScreen() {
     sections.length > 0 && sections.some((s) => s.data.length > 0);
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: contentBackground }]}
+    >
       <GradientHeader onSearchPress={handleSearchPress} />
       <TopicsTabBar
         tabs={tabs}
@@ -251,6 +309,7 @@ export default function NewsScreen() {
           sections={sections}
           renderItem={renderArticle}
           renderSectionHeader={renderSectionHeader}
+          renderSectionFooter={renderSectionFooter}
           keyExtractor={(item, index) => item.id + index.toString()}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -280,15 +339,22 @@ export default function NewsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingBottom: 45,
+    backgroundColor: "transparent",
   },
   listContainer: {
     padding: 16,
+  },
+  horizontalScrollContent: {
+    paddingRight: 16,
+    paddingBottom: 16,
   },
   centerContent: {
     justifyContent: "center",
     alignItems: "center",
     flex: 1,
     padding: 20,
+    backgroundColor: "transparent",
   },
   loadingText: {
     marginTop: 16,

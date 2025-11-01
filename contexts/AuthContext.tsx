@@ -300,8 +300,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Test if URL is accessible first
       console.log("🧪 Testing URL accessibility...");
+      console.log("add date now string to url");
+      const now = Date.now();
       try {
-        const testResponse = await fetch(loginUrl, {
+        const testResponse = await fetch(loginUrl + "&key=" + now, {
           method: "HEAD",
           headers: {
             "User-Agent":
