@@ -108,8 +108,7 @@
     ],
     "primaryButtonText": "Subscribe Now",
     "primaryButtonUrl": "https://jnl.nursingtimes.net/subscribe",
-    "secondaryButtonText": "Sign In",
-    "secondaryButtonUrl": "https://jnl.nursingtimes.net/login"
+    "secondaryButtonText": "Sign In"
   },
   "features": {
     "enablePodcasts": false,

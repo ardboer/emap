@@ -174,14 +174,52 @@ export default function ArticleScreen() {
 
   useEffect(() => {
     if (article && paywallEnabled) {
-      // Show paywall after 2 seconds
+      // Check if user is authenticated before showing paywall
+      if (isAuthenticated) {
+        console.log(
+          "[ArticleScreen] Paywall NOT shown - User is authenticated",
+          {
+            articleId: id,
+            userId: user?.userId,
+            userEmail: user?.email,
+          }
+        );
+        return;
+      }
+
+      console.log(
+        "[ArticleScreen] Scheduling paywall to show in 2 seconds - User not authenticated",
+        {
+          articleId: id,
+          paywallEnabled,
+        }
+      );
+
+      // Show paywall after 2 seconds for unauthenticated users
       const timer = setTimeout(() => {
+        console.log("[ArticleScreen] Showing paywall now", {
+          articleId: id,
+        });
         setShowPaywall(true);
       }, 2000);
 
-      return () => clearTimeout(timer);
+      return () => {
+        console.log("[ArticleScreen] Clearing paywall timer", {
+          articleId: id,
+        });
+        clearTimeout(timer);
+      };
+    } else {
+      if (!article) {
+        console.log("[ArticleScreen] Paywall NOT shown - No article loaded");
+      }
+      if (!paywallEnabled) {
+        console.log(
+          "[ArticleScreen] Paywall NOT shown - Paywall disabled in debug settings"
+        );
+      }
     }
-  }, [article, paywallEnabled]);
+  }, [article, paywallEnabled, isAuthenticated, id, user]);
 
   const handleClosePaywall = () => {
     setShowPaywall(false);

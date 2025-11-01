@@ -109,8 +109,7 @@
     ],
     "primaryButtonText": "Subscribe Now",
     "primaryButtonUrl": "https://www.constructionnews.co.uk/subscribe",
-    "secondaryButtonText": "Sign In",
-    "secondaryButtonUrl": "https://www.constructionnews.co.uk/login"
+    "secondaryButtonText": "Sign In"
   },
   "features": {
     "enablePodcasts": true,

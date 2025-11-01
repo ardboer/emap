@@ -114,8 +114,7 @@
     ],
     "primaryButtonText": "Subscribe Now",
     "primaryButtonUrl": "https://www.nursingtimes.net/subscribe",
-    "secondaryButtonText": "Sign In",
-    "secondaryButtonUrl": "https://www.nursingtimes.net/login"
+    "secondaryButtonText": "Sign In"
   },
   "features": {
     "enablePodcasts": true,

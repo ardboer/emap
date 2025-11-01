@@ -2,6 +2,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
+import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { analyticsService } from "@/services/analytics";
@@ -22,7 +23,7 @@ import {
 } from "react-native-safe-area-context";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const SHEET_HEIGHT = SCREEN_HEIGHT * 0.7;
+const SHEET_HEIGHT = 600;
 
 interface PaywallBottomSheetProps {
   visible: boolean;
@@ -39,9 +40,18 @@ export function PaywallBottomSheet({
 }: PaywallBottomSheetProps) {
   const colorScheme = useColorScheme();
   const { colors, paywall } = useBrandConfig();
+  const { login, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const translateY = React.useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
+
+  // Automatically close paywall when user successfully logs in
+  React.useEffect(() => {
+    if (isAuthenticated && visible) {
+      console.log("[PaywallBottomSheet] User authenticated, closing paywall");
+      onClose();
+    }
+  }, [isAuthenticated, visible, onClose]);
 
   // Log safe area insets for debugging
   React.useEffect(() => {
@@ -89,24 +99,17 @@ export function PaywallBottomSheet({
     }
   }, [paywallConfig, onSubscribe]);
 
-  // Handle secondary button press - use URL if configured, otherwise callback
+  // Handle secondary button press - use auth context login (same as settings)
   const handleSecondaryButtonPress = React.useCallback(() => {
     // Log analytics event
     analyticsService.logEvent("paywall_signin_clicked", {
       button_text: paywallConfig.secondaryButtonText,
-      has_url: !!paywallConfig.secondaryButtonUrl,
-      url: paywallConfig.secondaryButtonUrl || "callback",
       headline: paywallConfig.headline,
     });
 
-    if (paywallConfig.secondaryButtonUrl) {
-      Linking.openURL(paywallConfig.secondaryButtonUrl).catch((err) =>
-        console.error("Failed to open sign in URL:", err)
-      );
-    } else {
-      onSignIn();
-    }
-  }, [paywallConfig, onSignIn]);
+    // Use the same login flow as settings menu
+    login();
+  }, [paywallConfig, login]);
 
   React.useEffect(() => {
     if (visible) {
@@ -178,11 +181,7 @@ export function PaywallBottomSheet({
           },
         ]}
       >
-        <TouchableOpacity
-          style={styles.backdropTouchable}
-          onPress={onClose}
-          activeOpacity={1}
-        />
+        <View style={styles.backdropTouchable} />
       </Animated.View>
 
       {/* Bottom Sheet */}
