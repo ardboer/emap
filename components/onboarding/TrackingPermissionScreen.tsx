@@ -180,6 +180,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     gap: 12,
     paddingBottom: 32,
+    backgroundColor: "transparent",
   },
   primaryButton: {
     paddingVertical: 16,

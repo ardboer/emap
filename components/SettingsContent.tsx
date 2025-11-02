@@ -714,6 +714,18 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             icon="arrow.counterclockwise"
             onPress={handleResetOnboarding}
           />
+          {/* Crashlytics Debug Button - Only in DEV mode */}
+          {__DEV__ && (
+            <SettingsItem
+              title="Crashlytics Debug"
+              subtitle="Test crash reporting and error logging"
+              icon="flame.fill"
+              onPress={() => {
+                router.push("/debug-crashlytics");
+                onClose?.();
+              }}
+            />
+          )}
         </ThemedView>
         <SettingsItem
           title="Show Paywall"

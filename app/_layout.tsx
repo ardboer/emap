@@ -11,6 +11,7 @@ import { AppState, AppStateStatus } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OnboardingContainer } from "@/components/onboarding";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -18,6 +19,7 @@ import { ColorSchemeProvider } from "@/contexts/ColorSchemeContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { analyticsService } from "@/services/analytics";
+import { crashlyticsService } from "@/services/crashlytics";
 import { initializeFirebase } from "@/services/firebaseInit";
 import {
   getInitialNotification,
@@ -56,20 +58,25 @@ function RootLayoutContent() {
         const firebaseInitialized = await initializeFirebase();
 
         if (firebaseInitialized) {
-          console.log(
-            "✅ Firebase initialized, setting up notification handlers and analytics..."
-          );
+          console.log("✅ Firebase initialized, setting up services...");
+
+          // Initialize Crashlytics
+          await crashlyticsService.initialize();
+
+          // Setup notification handlers
           await setupNotificationHandlers();
 
           // Initialize Firebase Analytics
           await analyticsService.initialize();
         } else {
           console.warn(
-            "⚠️ Firebase initialization failed - notifications and analytics will not work"
+            "⚠️ Firebase initialization failed - services will not work"
           );
         }
       } catch (error) {
         console.error("❌ Error during app initialization:", error);
+        // Log to Crashlytics if available
+        crashlyticsService.recordError(error as Error, "App Initialization");
       }
     };
 
@@ -255,55 +262,59 @@ function RootLayoutContent() {
   };
 
   return (
-    <GestureHandlerRootView
-      style={{
-        flex: 1,
-        backgroundColor:
-          themeColors?.background ||
-          (colorScheme === "dark" ? "#151718" : "#fff"),
-      }}
-    >
-      <AuthProvider>
-        <AudioProvider>
-          <ThemeProvider
-            value={colorScheme === "dark" ? customDarkTheme : customLightTheme}
-          >
-            <Stack>
-              <Stack.Screen
-                name="(tabs)"
-                options={{ headerShown: false, title: "" }}
-              />
-              <Stack.Screen
-                name="article/[id]"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="event/[id]"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="pdf/[id]"
-                options={{
-                  headerBackTitle: " ",
-                }}
-              />
-              <Stack.Screen
-                name="search"
-                options={{
-                  presentation: "modal",
-                  headerShown: false,
-                }}
-              />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="auto" />
-            {showOnboarding && (
-              <OnboardingContainer onComplete={handleOnboardingComplete} />
-            )}
-          </ThemeProvider>
-        </AudioProvider>
-      </AuthProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView
+        style={{
+          flex: 1,
+          backgroundColor:
+            themeColors?.background ||
+            (colorScheme === "dark" ? "#151718" : "#fff"),
+        }}
+      >
+        <AuthProvider>
+          <AudioProvider>
+            <ThemeProvider
+              value={
+                colorScheme === "dark" ? customDarkTheme : customLightTheme
+              }
+            >
+              <Stack>
+                <Stack.Screen
+                  name="(tabs)"
+                  options={{ headerShown: false, title: "" }}
+                />
+                <Stack.Screen
+                  name="article/[id]"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="event/[id]"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="pdf/[id]"
+                  options={{
+                    headerBackTitle: " ",
+                  }}
+                />
+                <Stack.Screen
+                  name="search"
+                  options={{
+                    presentation: "modal",
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="auto" />
+              {showOnboarding && (
+                <OnboardingContainer onComplete={handleOnboardingComplete} />
+              )}
+            </ThemeProvider>
+          </AudioProvider>
+        </AuthProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

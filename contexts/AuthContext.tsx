@@ -9,6 +9,7 @@ import {
   parseTokensFromUrl,
   UserInfo,
 } from "@/services/auth";
+import { crashlyticsService } from "@/services/crashlytics";
 import * as WebBrowser from "expo-web-browser";
 import React, {
   createContext,
@@ -153,7 +154,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           refreshToken: tokens.refresh_token,
         },
       });
-      dispatch({ type: "SET_USER", payload: convertUserInfo(userInfo) });
+      const user = convertUserInfo(userInfo);
+      dispatch({ type: "SET_USER", payload: user });
+
+      // Set Crashlytics user ID
+      await crashlyticsService.setUserId(user.userId);
+      await crashlyticsService.setUserAttributes({
+        email: user.email,
+        subscription_type: user.subscriptionType || "unknown",
+      });
 
       console.log("✅ Authentication status restored from storage");
     } catch (error) {
@@ -403,7 +412,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             refreshToken: tokens.refresh_token,
           },
         });
-        dispatch({ type: "SET_USER", payload: convertUserInfo(userInfo) });
+        const user = convertUserInfo(userInfo);
+        dispatch({ type: "SET_USER", payload: user });
+
+        // Set Crashlytics user ID and attributes
+        await crashlyticsService.setUserId(user.userId);
+        await crashlyticsService.setUserAttributes({
+          email: user.email,
+          subscription_type: user.subscriptionType || "unknown",
+        });
 
         console.log("✅ Login successful");
       } else if (result.type === "cancel") {
@@ -451,6 +468,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Clear stored auth data
       await authLogout();
+
+      // Clear Crashlytics user ID
+      await crashlyticsService.setUserId("anonymous");
 
       // Reset state
       dispatch({ type: "LOGOUT" });
