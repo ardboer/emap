@@ -134,6 +134,7 @@
     "misoItemCount": 10
   },
   "testArticleId": "345162",
+  "termsOfServiceUrl": "https://www.nursingtimes.net/consents/terms-and-conditions/",
   "keystoreStatus": {
     "configured": true,
     "details": "Keystore alias found: nursing-times-key",

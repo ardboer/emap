@@ -27,12 +27,12 @@ export function BlockHeader({ title, description, layout }: BlockHeaderProps) {
 const styles = StyleSheet.create({
   container: {
     paddingRight: 16,
-    paddingTop: 24,
-    paddingBottom: 12,
+    paddingTop: 16,
+    paddingBottom: 8,
     backgroundColor: "transparent",
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 4,
   },

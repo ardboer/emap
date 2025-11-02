@@ -124,6 +124,7 @@
     "baseUrl": "https://api.askmiso.com/v1"
   },
   "testArticleId": "528406",
+  "termsOfServiceUrl": "https://jnl.nursingtimes.net/consents/terms-and-conditions/",
   "keystoreStatus": {
     "configured": false,
     "details": "No keystore alias found for jnl",

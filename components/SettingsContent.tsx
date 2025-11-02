@@ -630,7 +630,12 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           title="Terms of Service"
           subtitle="Read our terms and conditions"
           icon="doc.text.fill"
-          onPress={() => {}}
+          onPress={() => {
+            const termsUrl = brandConfig?.termsOfServiceUrl;
+            if (termsUrl) {
+              Linking.openURL(termsUrl);
+            }
+          }}
         />
         <SettingsItem
           title="Version"

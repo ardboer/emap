@@ -104,6 +104,7 @@ export interface BrandConfig {
   };
   misoConfig?: MisoConfig;
   testArticleId?: string;
+  termsOfServiceUrl?: string;
   podcastFeeds?: PodcastFeed[];
   highlightsRecommendations?: {
     enabled: boolean;

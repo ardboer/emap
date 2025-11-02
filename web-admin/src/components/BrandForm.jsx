@@ -545,6 +545,22 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                   </div>
                 </div>
 
+                <div className="form-group">
+                  <label className="form-label">Terms of Service URL</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={config.termsOfServiceUrl || ""}
+                    onChange={(e) =>
+                      updateConfig({ termsOfServiceUrl: e.target.value })
+                    }
+                    placeholder="e.g., https://www.nursingtimes.net/consents/terms-and-conditions/"
+                  />
+                  <div className="form-help">
+                    URL to the brand&apos;s terms of service page
+                  </div>
+                </div>
+
                 <div className="form-section">
                   <h3 className="form-section-title">API Configuration</h3>
 
