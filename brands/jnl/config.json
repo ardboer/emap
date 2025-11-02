@@ -145,5 +145,41 @@
   "trendingArticlesDetail": {
     "enabled": true,
     "itemCount": 5
+  },
+  "displayAds": {
+    "enabled": true,
+    "testMode": true,
+    "articleDetail": {
+      "enabled": true,
+      "maxAdsPerPage": 2,
+      "paragraphInterval": 5,
+      "allowedSizes": ["BANNER"],
+      "positions": [
+        {
+          "type": "in_content",
+          "size": "BANNER",
+          "enabled": true,
+          "afterParagraph": 5
+        }
+      ]
+    },
+    "listView": {
+      "enabled": true,
+      "maxAdsPerPage": 3,
+      "blockInterval": 4,
+      "allowedSizes": ["BANNER"],
+      "positions": [
+        {
+          "type": "between_blocks",
+          "size": "BANNER",
+          "enabled": true,
+          "afterBlock": 4
+        }
+      ]
+    },
+    "adUnitIds": {
+      "ios": "ca-app-pub-3940256099942544/2934735716",
+      "android": "ca-app-pub-3940256099942544/6300978111"
+    }
   }
 }

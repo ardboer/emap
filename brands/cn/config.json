@@ -157,5 +157,46 @@
       "ios": "ca-app-pub-3940256099942544/3986624511",
       "android": "ca-app-pub-3940256099942544/2247696110"
     }
+  },
+  "displayAds": {
+    "enabled": true,
+    "testMode": true,
+    "articleDetail": {
+      "enabled": true,
+      "maxAdsPerPage": 4,
+      "paragraphInterval": 3,
+      "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER", "LARGE_BANNER"],
+      "positions": [
+        {
+          "type": "after_lead",
+          "size": "MEDIUM_RECTANGLE",
+          "enabled": true
+        },
+        {
+          "type": "in_content",
+          "size": "BANNER",
+          "enabled": true,
+          "afterParagraph": 3
+        }
+      ]
+    },
+    "listView": {
+      "enabled": true,
+      "maxAdsPerPage": 5,
+      "blockInterval": 2,
+      "allowedSizes": ["BANNER", "LARGE_BANNER"],
+      "positions": [
+        {
+          "type": "between_blocks",
+          "size": "BANNER",
+          "enabled": true,
+          "afterBlock": 2
+        }
+      ]
+    },
+    "adUnitIds": {
+      "ios": "ca-app-pub-3940256099942544/2934735716",
+      "android": "ca-app-pub-3940256099942544/6300978111"
+    }
   }
 }

@@ -1,4 +1,5 @@
 // Brand registry and management
+import { DisplayAdsConfig } from "@/types/ads";
 import { discoverBrandsSync, type BrandsRegistry } from "./brandDiscovery";
 
 export interface MisoConfig {
@@ -135,6 +136,7 @@ export interface BrandConfig {
       android: string;
     };
   };
+  displayAds?: DisplayAdsConfig;
 }
 
 export interface PodcastFeed {

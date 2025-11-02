@@ -254,6 +254,80 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
     }));
   };
 
+  // Update display ads configuration
+  const updateDisplayAds = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      displayAds: {
+        ...prev.displayAds,
+        [field]: value,
+      },
+    }));
+  };
+
+  const updateDisplayAdsArticleDetail = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      displayAds: {
+        ...prev.displayAds,
+        articleDetail: {
+          ...prev.displayAds?.articleDetail,
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const updateDisplayAdsListView = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      displayAds: {
+        ...prev.displayAds,
+        listView: {
+          ...prev.displayAds?.listView,
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const updateDisplayAdsAdUnitIds = (platform, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      displayAds: {
+        ...prev.displayAds,
+        adUnitIds: {
+          ...prev.displayAds?.adUnitIds,
+          [platform]: value,
+        },
+      },
+    }));
+  };
+
+  // Update native ads configuration
+  const updateNativeAds = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      nativeAds: {
+        ...prev.nativeAds,
+        [field]: value,
+      },
+    }));
+  };
+
+  const updateNativeAdsAdUnitIds = (platform, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      nativeAds: {
+        ...prev.nativeAds,
+        adUnitIds: {
+          ...prev.nativeAds?.adUnitIds,
+          [platform]: value,
+        },
+      },
+    }));
+  };
+
   const onSubmit = async (formData) => {
     setSubmitting(true);
     try {
@@ -446,6 +520,12 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
             onClick={() => setActiveTab("assets")}
           >
             Assets
+          </button>
+          <button
+            className={`tab ${activeTab === "ads" ? "active" : ""}`}
+            onClick={() => setActiveTab("ads")}
+          >
+            Ads
           </button>
           <button
             className={`tab ${activeTab === "config" ? "active" : ""}`}
@@ -1406,6 +1486,507 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                       article
                     </div>
                   </div>
+                </div>
+              </>
+            )}
+
+            {activeTab === "ads" && (
+              <>
+                <div className="form-help" style={{ marginBottom: "1.5rem" }}>
+                  Configure display ads (banner ads) and native ads (carousel
+                  ads) for this brand.
+                </div>
+
+                {/* Display Ads Section */}
+                <div className="form-section">
+                  <h3 className="form-section-title">
+                    Display Ads (Banner Ads)
+                  </h3>
+
+                  <div className="form-group">
+                    <div className="checkbox-group">
+                      <input
+                        type="checkbox"
+                        id="displayAdsEnabled"
+                        checked={config.displayAds?.enabled || false}
+                        onChange={(e) =>
+                          updateDisplayAds("enabled", e.target.checked)
+                        }
+                      />
+                      <label
+                        htmlFor="displayAdsEnabled"
+                        style={{ cursor: "pointer", userSelect: "none" }}
+                      >
+                        Enable Display Ads
+                      </label>
+                    </div>
+                    <div className="form-help">
+                      Master switch for all display banner ads throughout the
+                      app
+                    </div>
+                  </div>
+
+                  {config.displayAds?.enabled && (
+                    <>
+                      <div className="form-group">
+                        <div className="checkbox-group">
+                          <input
+                            type="checkbox"
+                            id="displayAdsTestMode"
+                            checked={config.displayAds?.testMode || false}
+                            onChange={(e) =>
+                              updateDisplayAds("testMode", e.target.checked)
+                            }
+                          />
+                          <label
+                            htmlFor="displayAdsTestMode"
+                            style={{ cursor: "pointer", userSelect: "none" }}
+                          >
+                            Test Mode
+                          </label>
+                        </div>
+                        <div className="form-help">
+                          Use Google test ad units for testing (recommended
+                          during development)
+                        </div>
+                      </div>
+
+                      {/* Article Detail Configuration */}
+                      <div
+                        style={{ marginTop: "1.5rem", marginBottom: "1.5rem" }}
+                      >
+                        <h4 style={{ marginBottom: "1rem", color: "#2c3e50" }}>
+                          Article Detail Ads
+                        </h4>
+
+                        <div className="form-group">
+                          <div className="checkbox-group">
+                            <input
+                              type="checkbox"
+                              id="displayAdsArticleDetailEnabled"
+                              checked={
+                                config.displayAds?.articleDetail?.enabled ||
+                                false
+                              }
+                              onChange={(e) =>
+                                updateDisplayAdsArticleDetail(
+                                  "enabled",
+                                  e.target.checked
+                                )
+                              }
+                            />
+                            <label
+                              htmlFor="displayAdsArticleDetailEnabled"
+                              style={{ cursor: "pointer", userSelect: "none" }}
+                            >
+                              Enable ads in article detail pages
+                            </label>
+                          </div>
+                        </div>
+
+                        {config.displayAds?.articleDetail?.enabled && (
+                          <>
+                            <div className="form-group">
+                              <label className="form-label">
+                                Max Ads Per Page
+                              </label>
+                              <input
+                                type="number"
+                                className="form-input"
+                                min="1"
+                                max="10"
+                                value={
+                                  config.displayAds?.articleDetail
+                                    ?.maxAdsPerPage || 3
+                                }
+                                onChange={(e) =>
+                                  updateDisplayAdsArticleDetail(
+                                    "maxAdsPerPage",
+                                    parseInt(e.target.value) || 3
+                                  )
+                                }
+                                placeholder="3"
+                              />
+                              <div className="form-help">
+                                Maximum number of ads per article (prevents
+                                overload)
+                              </div>
+                            </div>
+
+                            <div className="form-group">
+                              <label className="form-label">
+                                Paragraph Interval
+                              </label>
+                              <input
+                                type="number"
+                                className="form-input"
+                                min="1"
+                                max="20"
+                                value={
+                                  config.displayAds?.articleDetail
+                                    ?.paragraphInterval || 4
+                                }
+                                onChange={(e) =>
+                                  updateDisplayAdsArticleDetail(
+                                    "paragraphInterval",
+                                    parseInt(e.target.value) || 4
+                                  )
+                                }
+                                placeholder="4"
+                              />
+                              <div className="form-help">
+                                Minimum paragraphs between ads
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* List View Configuration */}
+                      <div
+                        style={{ marginTop: "1.5rem", marginBottom: "1.5rem" }}
+                      >
+                        <h4 style={{ marginBottom: "1rem", color: "#2c3e50" }}>
+                          List View Ads
+                        </h4>
+
+                        <div className="form-group">
+                          <div className="checkbox-group">
+                            <input
+                              type="checkbox"
+                              id="displayAdsListViewEnabled"
+                              checked={
+                                config.displayAds?.listView?.enabled || false
+                              }
+                              onChange={(e) =>
+                                updateDisplayAdsListView(
+                                  "enabled",
+                                  e.target.checked
+                                )
+                              }
+                            />
+                            <label
+                              htmlFor="displayAdsListViewEnabled"
+                              style={{ cursor: "pointer", userSelect: "none" }}
+                            >
+                              Enable ads in list views
+                            </label>
+                          </div>
+                        </div>
+
+                        {config.displayAds?.listView?.enabled && (
+                          <>
+                            <div className="form-group">
+                              <label className="form-label">
+                                Max Ads Per Page
+                              </label>
+                              <input
+                                type="number"
+                                className="form-input"
+                                min="1"
+                                max="10"
+                                value={
+                                  config.displayAds?.listView?.maxAdsPerPage ||
+                                  4
+                                }
+                                onChange={(e) =>
+                                  updateDisplayAdsListView(
+                                    "maxAdsPerPage",
+                                    parseInt(e.target.value) || 4
+                                  )
+                                }
+                                placeholder="4"
+                              />
+                              <div className="form-help">
+                                Maximum number of ads per list page
+                              </div>
+                            </div>
+
+                            <div className="form-group">
+                              <label className="form-label">
+                                Block Interval
+                              </label>
+                              <input
+                                type="number"
+                                className="form-input"
+                                min="1"
+                                max="20"
+                                value={
+                                  config.displayAds?.listView?.blockInterval ||
+                                  3
+                                }
+                                onChange={(e) =>
+                                  updateDisplayAdsListView(
+                                    "blockInterval",
+                                    parseInt(e.target.value) || 3
+                                  )
+                                }
+                                placeholder="3"
+                              />
+                              <div className="form-help">
+                                Minimum blocks/items between ads
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Ad Unit IDs */}
+                      <div style={{ marginTop: "1.5rem" }}>
+                        <h4 style={{ marginBottom: "1rem", color: "#2c3e50" }}>
+                          Display Ad Unit IDs
+                        </h4>
+                        <div
+                          className="form-help"
+                          style={{ marginBottom: "1rem" }}
+                        >
+                          {config.displayAds?.testMode
+                            ? "Test mode is enabled - these IDs will be ignored and Google test units will be used"
+                            : "Production ad unit IDs from Google AdMob"}
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">iOS Ad Unit ID</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={config.displayAds?.adUnitIds?.ios || ""}
+                            onChange={(e) =>
+                              updateDisplayAdsAdUnitIds("ios", e.target.value)
+                            }
+                            placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY"
+                            disabled={config.displayAds?.testMode}
+                          />
+                          <div className="form-help">
+                            Google AdMob ad unit ID for iOS
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            Android Ad Unit ID
+                          </label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={config.displayAds?.adUnitIds?.android || ""}
+                            onChange={(e) =>
+                              updateDisplayAdsAdUnitIds(
+                                "android",
+                                e.target.value
+                              )
+                            }
+                            placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ"
+                            disabled={config.displayAds?.testMode}
+                          />
+                          <div className="form-help">
+                            Google AdMob ad unit ID for Android
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Native Ads Section */}
+                <div className="form-section" style={{ marginTop: "2rem" }}>
+                  <h3 className="form-section-title">
+                    Native Ads (Highlight Carousel)
+                  </h3>
+
+                  <div className="form-group">
+                    <div className="checkbox-group">
+                      <input
+                        type="checkbox"
+                        id="nativeAdsEnabled"
+                        checked={config.nativeAds?.enabled || false}
+                        onChange={(e) =>
+                          updateNativeAds("enabled", e.target.checked)
+                        }
+                      />
+                      <label
+                        htmlFor="nativeAdsEnabled"
+                        style={{ cursor: "pointer", userSelect: "none" }}
+                      >
+                        Enable Native Ads in Highlights
+                      </label>
+                    </div>
+                    <div className="form-help">
+                      Show native ads in the highlights carousel (full-screen
+                      ads between articles)
+                    </div>
+                  </div>
+
+                  {config.nativeAds?.enabled && (
+                    <>
+                      <div className="form-group">
+                        <div className="checkbox-group">
+                          <input
+                            type="checkbox"
+                            id="nativeAdsTestMode"
+                            checked={config.nativeAds?.testMode || false}
+                            onChange={(e) =>
+                              updateNativeAds("testMode", e.target.checked)
+                            }
+                          />
+                          <label
+                            htmlFor="nativeAdsTestMode"
+                            style={{ cursor: "pointer", userSelect: "none" }}
+                          >
+                            Test Mode
+                          </label>
+                        </div>
+                        <div className="form-help">
+                          Use Google test ad units for testing (recommended
+                          during development)
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Ad Frequency</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min="1"
+                          max="20"
+                          value={config.nativeAds?.frequency || 5}
+                          onChange={(e) =>
+                            updateNativeAds(
+                              "frequency",
+                              parseInt(e.target.value) || 5
+                            )
+                          }
+                          placeholder="5"
+                        />
+                        <div className="form-help">
+                          Show a native ad after every N highlight articles
+                          (e.g., 5 = show ad after every 5 articles)
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">
+                          Max Ads Per Session
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min="1"
+                          max="10"
+                          value={config.nativeAds?.maxAdsPerSession || 3}
+                          onChange={(e) =>
+                            updateNativeAds(
+                              "maxAdsPerSession",
+                              parseInt(e.target.value) || 3
+                            )
+                          }
+                          placeholder="3"
+                        />
+                        <div className="form-help">
+                          Maximum number of native ads to show in a single
+                          browsing session
+                        </div>
+                      </div>
+
+                      {/* Native Ad Unit IDs */}
+                      <div style={{ marginTop: "1.5rem" }}>
+                        <h4 style={{ marginBottom: "1rem", color: "#2c3e50" }}>
+                          Native Ad Unit IDs
+                        </h4>
+                        <div
+                          className="form-help"
+                          style={{ marginBottom: "1rem" }}
+                        >
+                          {config.nativeAds?.testMode
+                            ? "Test mode is enabled - these IDs will be ignored and Google test units will be used"
+                            : "Production native ad unit IDs from Google AdMob"}
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            iOS Native Ad Unit ID
+                          </label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={config.nativeAds?.adUnitIds?.ios || ""}
+                            onChange={(e) =>
+                              updateNativeAdsAdUnitIds("ios", e.target.value)
+                            }
+                            placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY"
+                            disabled={config.nativeAds?.testMode}
+                          />
+                          <div className="form-help">
+                            Google AdMob native ad unit ID for iOS
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            Android Native Ad Unit ID
+                          </label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={config.nativeAds?.adUnitIds?.android || ""}
+                            onChange={(e) =>
+                              updateNativeAdsAdUnitIds(
+                                "android",
+                                e.target.value
+                              )
+                            }
+                            placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ"
+                            disabled={config.nativeAds?.testMode}
+                          />
+                          <div className="form-help">
+                            Google AdMob native ad unit ID for Android
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: "2rem",
+                    padding: "1rem",
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "6px",
+                    border: "1px solid #dee2e6",
+                  }}
+                >
+                  <h4 style={{ marginTop: 0, marginBottom: "0.5rem" }}>
+                    Ad Configuration Notes
+                  </h4>
+                  <ul
+                    style={{
+                      marginBottom: 0,
+                      paddingLeft: "1.5rem",
+                      lineHeight: "1.8",
+                    }}
+                  >
+                    <li>
+                      <strong>Display Ads:</strong> Banner ads shown within
+                      article content and list views
+                    </li>
+                    <li>
+                      <strong>Native Ads:</strong> Full-screen carousel ads
+                      between highlight articles
+                    </li>
+                    <li>
+                      <strong>Test Mode:</strong> Always enable during
+                      development to use Google&apos;s test ad units
+                    </li>
+                    <li>
+                      <strong>Production:</strong> Disable test mode and provide
+                      your AdMob ad unit IDs before release
+                    </li>
+                    <li>
+                      Both ad types can be enabled simultaneously without
+                      conflict
+                    </li>
+                  </ul>
                 </div>
               </>
             )}

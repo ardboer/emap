@@ -1,4 +1,4 @@
-import { BannerAd } from "@/components/BannerAd";
+import { DisplayAd } from "@/components/DisplayAd";
 import { FadeInImage } from "@/components/FadeInImage";
 import { PaywallBottomSheet } from "@/components/PaywallBottomSheet";
 import { RichContentRenderer } from "@/components/RichContentRenderer";
@@ -9,8 +9,8 @@ import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { AdSizes } from "@/services/admob";
 import { getAnonymousId } from "@/services/anonymousId";
+import { displayAdManager } from "@/services/displayAdManager";
 import { trackArticleView } from "@/services/miso";
 import { Article, StructuredContentNode } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -50,6 +50,19 @@ export default function ArticleScreen() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallEnabled, setPaywallEnabled] = useState(true);
   const contentBackground = useThemeColor({}, "contentBackground");
+
+  // Initialize display ad manager
+  useEffect(() => {
+    if (brandConfig?.displayAds) {
+      displayAdManager.initialize(brandConfig.displayAds);
+    }
+  }, [brandConfig]);
+
+  // Check if after_lead ad should be shown
+  const afterLeadAdPosition =
+    brandConfig?.displayAds?.articleDetail?.positions?.find(
+      (pos) => pos.type === "after_lead" && pos.enabled
+    );
 
   // Related articles state for swipe navigation
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
@@ -492,21 +505,16 @@ export default function ArticleScreen() {
               {article.leadText}
             </Text>
 
-            {/* Banner Ad below lead text */}
-            <BannerAd
-              showLoadingIndicator={true}
-              showErrorMessage={false}
-              onAdLoaded={() => console.log("Banner ad loaded successfully")}
-              onAdFailedToLoad={(error) =>
-                console.log("Banner ad failed to load:", error)
-              }
-              size={AdSizes.MEDIUM_RECTANGLE}
-              style={styles.bannerAd}
-            />
+            {/* Display ad after lead text if configured */}
+            {afterLeadAdPosition && (
+              <DisplayAd
+                context="article_detail"
+                size={afterLeadAdPosition.size}
+                onAdLoaded={() => console.log("After-lead ad loaded")}
+              />
+            )}
 
-            <ThemedView style={styles.divider} />
-
-            {/* Render content based on type */}
+            {/* Render content - in-content ads are injected by RichContentRenderer */}
             {renderContent()}
 
             {/* Trending Articles Section */}

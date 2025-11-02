@@ -171,5 +171,46 @@
       "ios": "ca-app-pub-3940256099942544/3986624511",
       "android": "ca-app-pub-3940256099942544/2247696110"
     }
+  },
+  "displayAds": {
+    "enabled": true,
+    "testMode": true,
+    "articleDetail": {
+      "enabled": true,
+      "maxAdsPerPage": 3,
+      "paragraphInterval": 4,
+      "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
+      "positions": [
+        {
+          "type": "after_lead",
+          "size": "MEDIUM_RECTANGLE",
+          "enabled": true
+        },
+        {
+          "type": "in_content",
+          "size": "BANNER",
+          "enabled": true,
+          "afterParagraph": 4
+        }
+      ]
+    },
+    "listView": {
+      "enabled": true,
+      "maxAdsPerPage": 4,
+      "blockInterval": 3,
+      "allowedSizes": ["BANNER"],
+      "positions": [
+        {
+          "type": "between_blocks",
+          "size": "BANNER",
+          "enabled": true,
+          "afterBlock": 1
+        }
+      ]
+    },
+    "adUnitIds": {
+      "ios": "ca-app-pub-3940256099942544/2934735716",
+      "android": "ca-app-pub-3940256099942544/6300978111"
+    }
   }
 }

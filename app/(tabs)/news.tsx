@@ -2,6 +2,7 @@ import ArticleTeaser from "@/components/ArticleTeaser";
 import ArticleTeaserHero from "@/components/ArticleTeaserHero";
 import ArticleTeaserHorizontal from "@/components/ArticleTeaserHorizontal";
 import { BlockHeader } from "@/components/BlockHeader";
+import { DisplayAd } from "@/components/DisplayAd";
 import GradientHeader from "@/components/GradientHeader";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
@@ -15,6 +16,7 @@ import {
   fetchCategoryContent,
   fetchMenuItems,
 } from "@/services/api";
+import { displayAdManager } from "@/services/displayAdManager";
 import { Article, CategoryContentResponse } from "@/types";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -40,6 +42,14 @@ export default function NewsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const contentBackground = useThemeColor({}, "contentBackground");
+
+  // Initialize display ad manager with brand config
+  useEffect(() => {
+    const brandConfig = brandManager.getCurrentBrand();
+    if (brandConfig.displayAds) {
+      displayAdManager.initialize(brandConfig.displayAds);
+    }
+  }, []);
   // Store content per tab - all tabs now use grouped blocks structure
   const [tabContent, setTabContent] = useState<{
     [key: string]: CategoryContentResponse;
@@ -229,12 +239,29 @@ export default function NewsScreen() {
       return null;
     }
 
+    // Check if we should show an ad before this block
+    const shouldShowAd = displayAdManager.shouldShowListAd(
+      section.index,
+      sections.length
+    );
+
     return (
-      <BlockHeader
-        title={section.title}
-        description={section.description}
-        layout={section.layout}
-      />
+      <>
+        {shouldShowAd && (
+          <DisplayAd
+            context="list_view"
+            size={shouldShowAd.size}
+            onAdLoaded={() =>
+              console.log(`List ad loaded at block ${section.index}`)
+            }
+          />
+        )}
+        <BlockHeader
+          title={section.title}
+          description={section.description}
+          layout={section.layout}
+        />
+      </>
     );
   };
 

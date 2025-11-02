@@ -1,11 +1,13 @@
+import { DisplayAd } from "@/components/DisplayAd";
 import { FadeInImage } from "@/components/FadeInImage";
 import RelatedArticlesBlock from "@/components/RelatedArticlesBlock";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useImageViewer } from "@/hooks/useImageViewer";
 import { brandManager } from "@/services/api";
+import { displayAdManager } from "@/services/displayAdManager";
 import { StructuredContentNode } from "@/types";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Dimensions,
   Linking,
@@ -943,11 +945,27 @@ const RichContentRendererInternal: React.FC<
   isBlockquote = false,
   isLink = false,
 }) => {
-  // Get brand configuration for related articles block
+  // Get brand configuration for related articles block and display ads
   const brandConfig = brandManager.getCurrentBrand();
   const relatedArticlesConfig = brandConfig.relatedArticlesBlock;
 
-  // Count paragraphs to determine where to inject related articles
+  // Initialize display ad manager with brand config
+  useEffect(() => {
+    if (brandConfig.displayAds) {
+      displayAdManager.initialize(brandConfig.displayAds);
+    }
+  }, [brandConfig]);
+
+  // Count total paragraphs first
+  const totalParagraphs = content.filter(
+    (node) => node.typename === "HTMLElement" && node.type === "p"
+  ).length;
+
+  // Calculate ad placements
+  const adPlacements =
+    displayAdManager.calculateArticleAdPlacements(totalParagraphs);
+
+  // Count paragraphs to determine where to inject related articles and ads
   let paragraphCount = 0;
   const shouldInjectRelatedArticles =
     relatedArticlesConfig?.enabled &&
@@ -962,11 +980,17 @@ const RichContentRendererInternal: React.FC<
         if (node.typename === "HTMLElement" && node.type === "p") {
           paragraphCount++;
 
+          // Check if we should inject an ad after this paragraph
+          const adPlacement = adPlacements.find(
+            (placement) => placement.position === paragraphCount
+          );
+
           // Check if we should inject related articles after this paragraph
-          if (
+          const shouldInjectRelatedHere =
             shouldInjectRelatedArticles &&
-            paragraphCount === relatedArticlesConfig.afterParagraph
-          ) {
+            paragraphCount === relatedArticlesConfig.afterParagraph;
+
+          if (adPlacement || shouldInjectRelatedHere) {
             return (
               <React.Fragment key={index}>
                 <RichContentNode
@@ -977,7 +1001,20 @@ const RichContentRendererInternal: React.FC<
                   isBlockquote={isBlockquote}
                   isLink={isLink}
                 />
-                <RelatedArticlesBlock articleId={articleId} />
+                {adPlacement && (
+                  <DisplayAd
+                    context="article_detail"
+                    size={adPlacement.size}
+                    onAdLoaded={() =>
+                      console.log(
+                        `Article ad loaded at paragraph ${paragraphCount}`
+                      )
+                    }
+                  />
+                )}
+                {shouldInjectRelatedHere && (
+                  <RelatedArticlesBlock articleId={articleId} />
+                )}
               </React.Fragment>
             );
           }
