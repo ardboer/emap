@@ -7,6 +7,7 @@ export interface Article {
   imageUrl: string;
   timestamp: string;
   category: string;
+  link?: string; // Shareable link from API
   isLandscape?: boolean;
   source?: "wordpress" | "miso" | "native-ad"; // Article source
   isRecommended?: boolean; // Flag for recommended articles

@@ -550,6 +550,7 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
       imageUrl,
       timestamp: formatDate(postData.date),
       category,
+      link: postData.link, // Include the shareable link from API
     };
 
     // Cache the result

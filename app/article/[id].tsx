@@ -2,6 +2,7 @@ import { DisplayAd } from "@/components/DisplayAd";
 import { FadeInImage } from "@/components/FadeInImage";
 import { PaywallBottomSheet } from "@/components/PaywallBottomSheet";
 import { RichContentRenderer } from "@/components/RichContentRenderer";
+import ShareButton from "@/components/ShareButton";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TrendingArticles from "@/components/TrendingArticles";
@@ -34,7 +35,10 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const HEADER_HEIGHT = screenHeight * 0.4;
@@ -48,6 +52,7 @@ export default function ArticleScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  const insets = useSafeAreaInsets();
   const [paywallEnabled, setPaywallEnabled] = useState(true);
   const contentBackground = useThemeColor({}, "contentBackground");
 
@@ -414,6 +419,43 @@ export default function ArticleScreen() {
           </TouchableOpacity>
         </Animated.View>
 
+        {/* Share Button */}
+        <Animated.View style={[styles.shareButtonTop, backButtonAnimatedStyle]}>
+          <View
+            style={[
+              styles.shareButtonContainer,
+              {
+                backgroundColor: Colors[colorScheme].contentBackButtonBg,
+                marginTop: insets.top,
+              },
+            ]}
+          >
+            <ShareButton
+              title={article.title}
+              message={article.leadText || article.subtitle || ""}
+              url={(() => {
+                // Use article.link from API, or construct fallback URL
+                const fallbackUrl = brandConfig?.domain
+                  ? `${brandConfig.domain}${
+                      brandConfig.domain.endsWith("/") ? "" : "/"
+                    }article/${id}`
+                  : `article/${id}`;
+                const shareUrl = article.link || fallbackUrl;
+                console.log("[ArticleScreen] Share URL:", {
+                  articleLink: article.link,
+                  brandDomain: brandConfig?.domain,
+                  articleId: id,
+                  fallbackUrl,
+                  finalUrl: shareUrl,
+                });
+                return shareUrl;
+              })()}
+              iconColor={Colors[colorScheme].contentBackButtonText}
+              iconSize={20}
+            />
+          </View>
+        </Animated.View>
+
         {/* Swipe Indicator */}
         {/* {relatedArticles.length > 0 &&
           currentRelatedIndex < relatedArticles.length - 1 && (
@@ -564,6 +606,21 @@ const styles = StyleSheet.create({
     top: 50,
     left: 16,
     zIndex: 10,
+  },
+  shareButtonTop: {
+    position: "absolute",
+    top: 8,
+    right: 16,
+    zIndex: 10,
+  },
+  shareButtonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+    marginTop: 16,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   backButtonText: {
     fontSize: 12,
