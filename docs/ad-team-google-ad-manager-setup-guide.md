@@ -109,9 +109,10 @@ The app expects these native ad components:
    - **Ad format**: Native Advanced
 
 3. **Configure Required Fields**
-   - Enable: Headline, Body, Image, Advertiser, Call-to-action
+   - Enable: Headline, Body, Media (Image/Video), Advertiser, Call-to-action
    - Set character limits as specified above
-   - Set image dimensions: 1200x628px (16:9 aspect ratio)
+   - **Image specs**: 1200x628px (16:9 aspect ratio)
+   - **Video specs**: MP4, 16:9 aspect ratio, max 30 seconds, auto-play muted
 
 ---
 

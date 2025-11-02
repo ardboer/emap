@@ -17,7 +17,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { NativeAd } from "react-native-google-mobile-ads";
+import {
+  NativeAd,
+  NativeAdView,
+  NativeAsset,
+  NativeAssetType,
+  NativeMediaView,
+} from "react-native-google-mobile-ads";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -97,6 +103,8 @@ export function NativeAdCarouselItem({
         imageCount: ad.images?.length || 0,
         hasIcon: !!ad.icon,
         hasMediaContent: !!ad.mediaContent,
+        hasVideo: ad.mediaContent?.hasVideoContent || false,
+        mediaAspectRatio: ad.mediaContent?.aspectRatio || "N/A",
       });
 
       // Track impression
@@ -187,116 +195,135 @@ export function NativeAdCarouselItem({
   const adAdvertiser = nativeAd.advertiser || "Advertiser";
   const adCallToAction = nativeAd.callToAction || "Learn More";
   const adImage = nativeAd.images?.[0]?.url || item.imageUrl;
+  const hasMediaContent = !!nativeAd.mediaContent;
+  const hasVideo = hasMediaContent && nativeAd.mediaContent?.hasVideoContent;
 
   return (
-    <TouchableOpacity
-      style={styles.carouselItem}
-      onPress={handleAdPress}
-      activeOpacity={0.9}
-    >
-      {/* Ad Image from Google */}
-      <FadeInImage
-        source={{ uri: adImage }}
-        style={styles.backgroundImage}
-        contentFit="cover"
-        contentPosition="center"
-      />
-
-      {/* Sponsored Badge */}
-      <View
-        style={[
-          styles.sponsoredBadge,
-          { top: showingProgress ? insets.top + 80 : insets.top + 60 },
-        ]}
+    <NativeAdView nativeAd={nativeAd} style={styles.carouselItem}>
+      <TouchableOpacity
+        style={styles.carouselItemInner}
+        onPress={handleAdPress}
+        activeOpacity={0.9}
       >
-        <ThemedText
+        {/* Ad Media - Video or Image */}
+        {hasMediaContent ? (
+          <NativeMediaView
+            style={styles.backgroundImage}
+            resizeMode="contain"
+          />
+        ) : (
+          <FadeInImage
+            source={{ uri: adImage }}
+            style={styles.backgroundImage}
+            contentFit="cover"
+            contentPosition="center"
+          />
+        )}
+
+        {/* Sponsored Badge */}
+        <View
           style={[
-            styles.sponsoredBadgeText,
-            { fontFamily: brandConfig?.theme.fonts.primarySemiBold },
+            styles.sponsoredBadge,
+            { top: showingProgress ? insets.top + 80 : insets.top + 60 },
           ]}
         >
-          Sponsored
-        </ThemedText>
-      </View>
-
-      {/* AdChoices Icon - Top Right (Clickable) */}
-      <TouchableOpacity
-        style={styles.adChoicesContainer}
-        onPress={handleAdChoicesPress}
-        activeOpacity={0.7}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <View style={styles.adChoicesIcon}>
-          <ThemedText style={styles.adChoicesText}>ⓘ</ThemedText>
-        </View>
-      </TouchableOpacity>
-
-      {/* Gradient Overlay */}
-      <LinearGradient
-        colors={
-          [
-            "transparent",
-            hexToRgba(
-              brandConfig?.theme.colors.light.overlayGradientEnd || "#011620",
-              0.7
-            ),
-          ] as const
-        }
-        style={styles.overlay}
-      >
-        <ThemedView transparant style={styles.contentContainer}>
-          {/* Ad Headline from Google */}
           <ThemedText
-            type="title"
             style={[
-              styles.headline,
-              { fontFamily: brandConfig?.theme.fonts.primaryBold },
+              styles.sponsoredBadgeText,
+              { fontFamily: brandConfig?.theme.fonts.primarySemiBold },
             ]}
           >
-            {adHeadline}
+            Sponsored
           </ThemedText>
+        </View>
 
-          {/* Ad Body from Google */}
-          {adBody && (
-            <ThemedText
-              numberOfLines={3}
-              style={[
-                styles.body,
-                { fontFamily: brandConfig?.theme.fonts.primaryMedium },
-              ]}
-            >
-              {adBody}
-            </ThemedText>
-          )}
-
-          {/* Advertiser from Google */}
-          <View style={styles.metaContainer}>
-            <ThemedText
-              style={[
-                styles.advertiser,
-                { fontFamily: brandConfig?.theme.fonts.primaryMedium },
-              ]}
-            >
-              {adAdvertiser}
-            </ThemedText>
+        {/* AdChoices Icon - Top Right (Clickable) */}
+        <TouchableOpacity
+          style={styles.adChoicesContainer}
+          onPress={handleAdChoicesPress}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <View style={styles.adChoicesIcon}>
+            <ThemedText style={styles.adChoicesText}>ⓘ</ThemedText>
           </View>
+        </TouchableOpacity>
 
-          {/* Call to Action from Google */}
-          <View style={styles.ctaButton}>
-            <View style={styles.ctaButtonInner}>
+        {/* Gradient Overlay */}
+        <LinearGradient
+          colors={
+            [
+              "transparent",
+              hexToRgba(
+                brandConfig?.theme.colors.light.overlayGradientEnd || "#011620",
+                0.7
+              ),
+            ] as const
+          }
+          style={styles.overlay}
+        >
+          <ThemedView transparant style={styles.contentContainer}>
+            {/* Ad Headline from Google */}
+            <NativeAsset assetType={NativeAssetType.HEADLINE}>
               <ThemedText
+                type="title"
                 style={[
-                  styles.ctaButtonText,
-                  { fontFamily: brandConfig?.theme.fonts.primarySemiBold },
+                  styles.headline,
+                  { fontFamily: brandConfig?.theme.fonts.primaryBold },
                 ]}
               >
-                {adCallToAction}
+                {adHeadline}
               </ThemedText>
+            </NativeAsset>
+
+            {/* Ad Body from Google */}
+            {adBody && (
+              <NativeAsset assetType={NativeAssetType.BODY}>
+                <ThemedText
+                  numberOfLines={3}
+                  style={[
+                    styles.body,
+                    { fontFamily: brandConfig?.theme.fonts.primaryMedium },
+                  ]}
+                >
+                  {adBody}
+                </ThemedText>
+              </NativeAsset>
+            )}
+
+            {/* Advertiser from Google */}
+            <View style={styles.metaContainer}>
+              <NativeAsset assetType={NativeAssetType.ADVERTISER}>
+                <ThemedText
+                  style={[
+                    styles.advertiser,
+                    { fontFamily: brandConfig?.theme.fonts.primaryMedium },
+                  ]}
+                >
+                  {adAdvertiser}
+                </ThemedText>
+              </NativeAsset>
             </View>
-          </View>
-        </ThemedView>
-      </LinearGradient>
-    </TouchableOpacity>
+
+            {/* Call to Action from Google */}
+            <View style={styles.ctaButton}>
+              <View style={styles.ctaButtonInner}>
+                <NativeAsset assetType={NativeAssetType.CALL_TO_ACTION}>
+                  <ThemedText
+                    style={[
+                      styles.ctaButtonText,
+                      { fontFamily: brandConfig?.theme.fonts.primarySemiBold },
+                    ]}
+                  >
+                    {adCallToAction}
+                  </ThemedText>
+                </NativeAsset>
+              </View>
+            </View>
+          </ThemedView>
+        </LinearGradient>
+      </TouchableOpacity>
+    </NativeAdView>
   );
 }
 
@@ -304,6 +331,13 @@ const styles = StyleSheet.create({
   carouselItem: {
     width: screenWidth,
     height: screenHeight,
+    position: "relative",
+    overflow: "hidden",
+    backgroundColor: "#011620",
+  },
+  carouselItemInner: {
+    width: "100%",
+    height: "100%",
     position: "relative",
   },
   loadingContainer: {
@@ -410,6 +444,10 @@ const styles = StyleSheet.create({
   adChoicesText: {
     fontSize: 16,
     color: "#666666",
+  },
+  mediaView: {
+    width: "100%",
+    height: "100%",
   },
 });
 
