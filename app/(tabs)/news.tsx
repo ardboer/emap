@@ -30,6 +30,9 @@ import {
 
 const { width: screenWidth } = Dimensions.get("window");
 
+// Configuration: Block index that should render horizontally
+const HORIZONTAL_BLOCK_INDEX = 3;
+
 export default function NewsScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -156,8 +159,8 @@ export default function NewsScreen() {
       return null;
     }
 
-    // Check if this is the second block (index 1) - render horizontal scroll
-    if (section.index === 1) {
+    // Check if this is the horizontal block - render horizontal scroll
+    if (section.index === HORIZONTAL_BLOCK_INDEX) {
       return null; // Horizontal items are rendered in renderSectionFooter
     }
 
@@ -185,8 +188,8 @@ export default function NewsScreen() {
       return <TrendingBlockHorizontal onArticlePress={handleArticlePress} />;
     }
 
-    // Only render horizontal scroll for the second block (index 1)
-    if (section.index !== 2 || section.data.length === 0) {
+    // Only render horizontal scroll for the configured block index
+    if (section.index !== HORIZONTAL_BLOCK_INDEX || section.data.length === 0) {
       return null;
     }
 
