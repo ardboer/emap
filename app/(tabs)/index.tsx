@@ -147,16 +147,52 @@ export default function HighlightedScreen() {
         isAuthenticated
       );
 
-      // Track WordPress count for progress bar logic
-      const wpCount = fetchedArticles.filter(
-        (a) => a.source === "wordpress"
-      ).length;
+      // Find the index where Miso articles start (first non-WordPress, non-native-ad article)
+      // Native ads within WordPress section should be counted as WordPress for progress
+      let lastWordPressIndex = -1;
+      for (let i = 0; i < fetchedArticles.length; i++) {
+        const article = fetchedArticles[i];
+        // Stop counting when we hit the first Miso article
+        if (article.source === "miso") {
+          break;
+        }
+        // Count WordPress articles and native ads that appear before Miso articles
+        if (article.source === "wordpress" || article.isNativeAd) {
+          lastWordPressIndex = i;
+        }
+      }
+
+      // WordPress count includes native ads in the WordPress section
+      const wpCount = lastWordPressIndex + 1;
       setWordpressArticleCount(wpCount);
 
+      const actualWpCount = fetchedArticles.filter(
+        (a) => a.source === "wordpress"
+      ).length;
+      const nativeAdCount = fetchedArticles.filter((a) => a.isNativeAd).length;
+
       console.log(
-        `Loaded ${fetchedArticles.length} articles: ${wpCount} WordPress, ${
-          fetchedArticles.length - wpCount
+        `📰 Loaded ${
+          fetchedArticles.length
+        } articles: ${actualWpCount} WordPress, ${nativeAdCount} Native Ads, ${
+          fetchedArticles.length - actualWpCount - nativeAdCount
         } Miso`
+      );
+      console.log(
+        `📊 Progress will show for first ${wpCount} items (WordPress + native ads in WP section)`
+      );
+
+      // DEBUG: Log article details
+      console.log(
+        "📋 Article order:",
+        fetchedArticles.map((a, i) => ({
+          index: i,
+          id: a.id,
+          title: a.title.substring(0, 30),
+          source: a.source,
+          isNativeAd: a.isNativeAd,
+          inProgressSection: i < wpCount,
+        }))
       );
 
       setArticles(fetchedArticles);
@@ -191,6 +227,18 @@ export default function HighlightedScreen() {
 
   const goToNextSlide = () => {
     const nextIndex = (currentIndex + 1) % articles.length;
+
+    // DEBUG: Log slide navigation
+    console.log("➡️ Going to next slide:", {
+      currentIndex,
+      nextIndex,
+      totalArticles: articles.length,
+      wordpressCount: wordpressArticleCount,
+      currentArticle: articles[currentIndex]?.title,
+      nextArticle: articles[nextIndex]?.title,
+      nextSource: articles[nextIndex]?.source,
+    });
+
     setCurrentIndex(nextIndex);
     flatListRef.current?.scrollToIndex({
       index: nextIndex,
@@ -199,19 +247,31 @@ export default function HighlightedScreen() {
   };
 
   const handleProgressComplete = () => {
-    // Only auto-advance if current article is from WordPress
+    // Auto-advance if current item is in the WordPress section (WordPress articles or native ads before Miso)
     const currentArticle = articles[currentIndex];
-    if (
-      !isUserInteracting &&
-      isCarouselVisible &&
-      currentArticle?.source === "wordpress"
-    ) {
+    const isInWordPressSection = currentIndex < wordpressArticleCount;
+
+    // DEBUG: Log progress completion details
+    console.log("🔄 Progress Complete:", {
+      currentIndex,
+      wordpressArticleCount,
+      isInWordPressSection,
+      isLastInSection: currentIndex === wordpressArticleCount - 1,
+      currentSource: currentArticle?.source,
+      isNativeAd: currentArticle?.isNativeAd,
+      nextIndex: (currentIndex + 1) % articles.length,
+      shouldAdvance:
+        !isUserInteracting && isCarouselVisible && isInWordPressSection,
+    });
+
+    if (!isUserInteracting && isCarouselVisible && isInWordPressSection) {
       analyticsService.logEvent("carousel_auto_advance", {
         from_position: currentIndex,
         to_position: (currentIndex + 1) % articles.length,
         total_articles: articles.length,
         max_index_reached: maxIndexReached,
-        article_source: currentArticle.source,
+        article_source: currentArticle?.source || "native-ad",
+        is_native_ad: currentArticle?.isNativeAd || false,
       });
       goToNextSlide();
     }
@@ -221,7 +281,16 @@ export default function HighlightedScreen() {
     const scrollPosition = event.nativeEvent.contentOffset.x;
     const index = Math.round(scrollPosition / screenWidth);
 
+    // DEBUG: Log scroll events to detect skipping
     if (index !== currentIndex) {
+      console.log("📜 Scroll detected:", {
+        scrollPosition,
+        calculatedIndex: index,
+        currentIndex,
+        skipped: Math.abs(index - currentIndex) > 1,
+        articleAtIndex: articles[index]?.title?.substring(0, 30),
+        isNativeAd: articles[index]?.isNativeAd,
+      });
       setCurrentIndex(index);
     }
   };
