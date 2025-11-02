@@ -396,6 +396,7 @@ export default function ArticleScreen() {
               styles.backButtonContainer,
               {
                 backgroundColor: Colors[colorScheme].contentBackButtonBg,
+                marginTop: insets.top,
               },
             ]}
             onPress={() => router.back()}
@@ -603,7 +604,7 @@ const styles = StyleSheet.create({
   },
   backButtonTop: {
     position: "absolute",
-    top: 50,
+    top: 8,
     left: 16,
     zIndex: 10,
   },
