@@ -1,6 +1,7 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { CarouselProgressIndicator } from "@/components/CarouselProgressIndicator";
 import { FadeInImage } from "@/components/FadeInImage";
+import { NativeAdCarouselItem } from "@/components/NativeAdCarouselItem";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -548,6 +549,24 @@ export default function HighlightedScreen() {
     },
   };
   const renderCarouselItem = ({ item }: { item: Article }) => {
+    // Determine if we should show progress for this item
+    const showingProgress =
+      currentIndex < wordpressArticleCount && wordpressArticleCount > 0;
+
+    // Handle native ad items
+    if (item.isNativeAd) {
+      return (
+        <NativeAdCarouselItem
+          item={item}
+          onAdClicked={() => {
+            console.log("Native ad clicked:", item.id);
+          }}
+          insets={insets}
+          showingProgress={showingProgress}
+        />
+      );
+    }
+
     // Render recommended badge for Miso articles
     const renderRecommendedBadge = () => {
       if (!item.isRecommended) return null;

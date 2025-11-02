@@ -8,8 +8,23 @@ export interface Article {
   timestamp: string;
   category: string;
   isLandscape?: boolean;
-  source?: "wordpress" | "miso"; // Article source
+  source?: "wordpress" | "miso" | "native-ad"; // Article source
   isRecommended?: boolean; // Flag for recommended articles
+  isNativeAd?: boolean; // Flag for native ad items
+  nativeAdData?: NativeAdData; // Ad-specific data
+}
+
+export interface NativeAdData {
+  headline: string;
+  body: string;
+  advertiser: string;
+  callToAction: string;
+  icon?: string;
+  images?: string[];
+  mediaView?: any; // Native ad media view component
+  starRating?: number;
+  store?: string;
+  price?: string;
 }
 
 export interface StructuredContentNode {

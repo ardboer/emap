@@ -1,6 +1,8 @@
 import { brandManager } from "@/config/BrandManager";
 import {
   Article,
+  ArticleBlock,
+  CategoryContentResponse,
   ClinicalArticlesResponse,
   ClinicalPost,
   MagazineArticleResponse,
@@ -1531,13 +1533,13 @@ export async function fetchHighlightsWithRecommendations(
       console.log(
         "Miso recommendations disabled for highlights, returning WordPress only"
       );
-      return markedWordpressArticles;
+      return injectNativeAds(markedWordpressArticles, brandConfig);
     }
 
     // 3. Check if Miso is configured
     if (!brandConfig.misoConfig) {
       console.warn("Miso not configured, returning WordPress highlights only");
-      return markedWordpressArticles;
+      return injectNativeAds(markedWordpressArticles, brandConfig);
     }
 
     try {
@@ -1574,18 +1576,80 @@ export async function fetchHighlightsWithRecommendations(
       );
 
       // 6. Combine: WordPress first, then Miso
-      return [...markedWordpressArticles, ...markedMisoArticles];
+      const combinedArticles = [
+        ...markedWordpressArticles,
+        ...markedMisoArticles,
+      ];
+
+      // 7. Inject native ads at configured positions
+      return injectNativeAds(combinedArticles, brandConfig);
     } catch (misoError) {
       console.error(
         "Error fetching Miso recommendations, falling back to WordPress only:",
         misoError
       );
-      return markedWordpressArticles;
+      return injectNativeAds(markedWordpressArticles, brandConfig);
     }
   } catch (error) {
     console.error("Error in fetchHighlightsWithRecommendations:", error);
     throw error;
   }
+}
+
+// Helper function to inject native ads into article array
+function injectNativeAds(articles: Article[], brandConfig: any): Article[] {
+  // Check if native ads are enabled
+  if (!brandConfig.nativeAds?.enabled) {
+    console.log("Native ads disabled, returning articles without ads");
+    return articles;
+  }
+
+  const { firstAdPosition, adFrequency } = brandConfig.nativeAds;
+  const result: Article[] = [];
+  let adCounter = 0;
+
+  for (let i = 0; i < articles.length; i++) {
+    // Check if we should insert an ad at this position
+    const shouldInsertAd =
+      i === firstAdPosition ||
+      (i > firstAdPosition && (i - firstAdPosition) % adFrequency === 0);
+
+    if (shouldInsertAd) {
+      // Create a mock native ad article
+      const nativeAd: Article = {
+        id: `native-ad-${adCounter}`,
+        title: "Discover Amazing Products",
+        leadText: "Find what you're looking for with our curated selection",
+        content: "https://www.example.com/ad-destination", // Store URL in content field
+        imageUrl: "https://picsum.photos/800/1200?random=" + adCounter,
+        timestamp: "Sponsored",
+        category: "Advertisement",
+        source: "native-ad",
+        isNativeAd: true,
+        nativeAdData: {
+          headline: "Discover Amazing Products",
+          body: "Find what you're looking for with our curated selection",
+          advertiser: "Sponsored Content",
+          callToAction: "Learn More",
+          images: ["https://picsum.photos/800/1200?random=" + adCounter],
+        },
+      };
+
+      result.push(nativeAd);
+      adCounter++;
+
+      console.log(`Injected native ad at position ${result.length - 1}`);
+    }
+
+    // Add the regular article
+    result.push(articles[i]);
+  }
+
+  console.log(
+    `Final article count: ${result.length} (${articles.length} articles + ${adCounter} native ads)`
+  );
+
+  return result;
 }
 
 // Get all news articles

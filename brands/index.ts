@@ -125,6 +125,16 @@ export interface BrandConfig {
     enabled: boolean;
     itemCount?: number;
   };
+  nativeAds?: {
+    enabled: boolean;
+    testMode: boolean;
+    firstAdPosition: number;
+    adFrequency: number;
+    adUnitIds: {
+      ios: string;
+      android: string;
+    };
+  };
 }
 
 export interface PodcastFeed {
