@@ -135,6 +135,7 @@
   },
   "testArticleId": "345162",
   "termsOfServiceUrl": "https://www.nursingtimes.net/consents/terms-and-conditions/",
+  "supportEmail": "support@nursingtimes.net",
   "keystoreStatus": {
     "configured": true,
     "details": "Keystore alias found: nursing-times-key",

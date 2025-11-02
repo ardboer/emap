@@ -357,7 +357,12 @@ export default function ArticleScreen() {
 
   return (
     <GestureDetector gesture={panGesture}>
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: Colors[colorScheme].contentBackground },
+        ]}
+      >
         {/* Fixed Header Image */}
         <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
           <FadeInImage
@@ -431,6 +436,7 @@ export default function ArticleScreen() {
               styles.contentContainer,
               {
                 backgroundColor: Colors[colorScheme].contentBackground,
+                paddingBottom: 40,
               },
             ]}
           >

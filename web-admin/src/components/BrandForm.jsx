@@ -561,6 +561,22 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                   </div>
                 </div>
 
+                <div className="form-group">
+                  <label className="form-label">Support Email</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    value={config.supportEmail || ""}
+                    onChange={(e) =>
+                      updateConfig({ supportEmail: e.target.value })
+                    }
+                    placeholder="e.g., support@example.com"
+                  />
+                  <div className="form-help">
+                    Contact email for user support and inquiries
+                  </div>
+                </div>
+
                 <div className="form-section">
                   <h3 className="form-section-title">API Configuration</h3>
 

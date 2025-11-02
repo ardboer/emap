@@ -89,6 +89,54 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleHelpAndSupport = async () => {
+    const supportEmail = brandConfig?.supportEmail;
+
+    if (!supportEmail) {
+      Alert.alert(
+        "Support Unavailable",
+        "Support email is not configured for this brand. Please contact us through our website.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    try {
+      const mailtoUrl = createSupportEmailUrl(
+        supportEmail,
+        brandConfig?.displayName || brandConfig?.name
+      );
+
+      const canOpen = await Linking.canOpenURL(mailtoUrl);
+
+      if (canOpen) {
+        await Linking.openURL(mailtoUrl);
+      } else {
+        Alert.alert(
+          "Email Client Not Available",
+          `Please send an email to ${supportEmail} with your device information and issue description.`,
+          [
+            {
+              text: "Copy Email",
+              onPress: async () => {
+                await Clipboard.setStringAsync(supportEmail);
+                Alert.alert("Copied!", "Support email copied to clipboard");
+              },
+            },
+            { text: "OK" },
+          ]
+        );
+      }
+    } catch (error) {
+      console.error("Error opening support email:", error);
+      Alert.alert(
+        "Error",
+        `Could not open email client. Please email us at ${supportEmail}`,
+        [{ text: "OK" }]
+      );
+    }
+  };
+
   const SettingsItem = ({
     title,
     subtitle,
@@ -235,7 +283,7 @@ export default function SettingsScreen() {
             title="Help & Support"
             subtitle="Get help and contact support"
             icon="questionmark.circle.fill"
-            onPress={() => {}}
+            onPress={handleHelpAndSupport}
           />
           <SettingsItem
             title="Terms of Service"

@@ -126,6 +126,7 @@
   },
   "testArticleId": "528406",
   "termsOfServiceUrl": "https://www.constructionnews.co.uk/consents/terms-and-conditions/",
+  "supportEmail": "support@constructionnews.co.uk",
   "keystoreStatus": {
     "configured": true,
     "details": "Keystore alias found: construction-news-key",
