@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -24,6 +25,7 @@ export function PodcastPlayer() {
   const { state, pauseAudio, resumeAudio, seekTo, hideFullscreenPlayer } =
     useAudio();
   const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
   const contentBackground = useThemeColor({}, "contentBackground");
   const formatTime = (milliseconds: number) => {
     const totalSeconds = Math.floor(milliseconds / 1000);
@@ -59,7 +61,10 @@ export function PodcastPlayer() {
       presentationStyle="fullScreen"
     >
       <SafeAreaView
-        style={[styles.container, { backgroundColor: contentBackground }]}
+        style={[
+          styles.container,
+          { backgroundColor: contentBackground, paddingTop: insets.top },
+        ]}
       >
         <ThemedView
           style={[styles.header, { backgroundColor: contentBackground }]}
@@ -78,10 +83,15 @@ export function PodcastPlayer() {
         <ThemedView
           style={[styles.content, { backgroundColor: contentBackground }]}
         >
-          <ThemedView style={styles.artworkContainer}>
+          <ThemedView
+            style={[
+              styles.artworkContainer,
+              { height: height / 4, width: height / 4 },
+            ]}
+          >
             <FadeInImage
               source={{ uri: state.currentEpisode.coverUrl }}
-              style={styles.artwork}
+              style={[styles.artwork]}
               contentFit="cover"
             />
           </ThemedView>
@@ -205,6 +215,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 20,
     alignItems: "center",
+    justifyContent: "center",
   },
   artworkContainer: {
     width: width * 0.75,
