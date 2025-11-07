@@ -56,6 +56,7 @@ export function BannerAdComponent({
 }: BannerAdProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [isNoFillError, setIsNoFillError] = useState(false);
   const [adUnitId, setAdUnitId] = useState<string>("");
   const { brandConfig } = useBrandConfig();
 
@@ -92,9 +93,20 @@ export function BannerAdComponent({
   };
 
   const handleAdFailedToLoad = (error: any) => {
-    console.error("Banner ad failed to load:", error);
+    // Check if this is a "no-fill" error (no ad available)
+    const noFill =
+      error?.message?.includes("no-fill") ||
+      error?.message?.includes("No ad to show") ||
+      error?.code === "no-fill";
+
+    // Only log non-no-fill errors as these are actual issues
+    if (!noFill) {
+      console.error("Banner ad failed to load:", error);
+    }
+
     setIsLoading(false);
     setHasError(true);
+    setIsNoFillError(noFill);
     onAdFailedToLoad?.(error);
   };
 
@@ -102,8 +114,8 @@ export function BannerAdComponent({
     onAdClicked?.();
   };
 
-  // Don't render anything if AdMob is not initialized or no ad unit ID
-  if (!adMobService.isInitialized() || !adUnitId) {
+  // Don't render anything if AdMob is not initialized, no ad unit ID, or no-fill error
+  if (!adMobService.isInitialized() || !adUnitId || isNoFillError) {
     return null;
   }
 

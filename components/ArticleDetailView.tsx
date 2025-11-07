@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { getCenteredContentStyle } from "@/constants/Layout";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { fetchPDFArticleDetail } from "@/services/api";
 import { PDFArticleDetail } from "@/types";
@@ -104,7 +105,7 @@ export default function ArticleDetailView({
     return (
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, getCenteredContentStyle()]}
       >
         {/* Article Meta */}
         <ThemedView style={styles.metaContainer}>

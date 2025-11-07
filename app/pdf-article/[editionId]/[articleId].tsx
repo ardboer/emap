@@ -2,6 +2,7 @@ import GradientHeader from "@/components/GradientHeader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
+import { getCenteredContentStyle } from "@/constants/Layout";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { fetchPDFArticleDetail } from "@/services/api";
 import { PDFArticleDetail } from "@/types";
@@ -146,6 +147,7 @@ export default function PDFArticleScreen() {
             style={[
               styles.contentContainer,
               { backgroundColor: Colors[colorScheme].contentBackground },
+              getCenteredContentStyle(),
             ]}
           >
             <ThemedView style={styles.metaContainer}>

@@ -113,7 +113,17 @@ export function DisplayAd({
           onAdLoaded?.();
         }}
         onAdFailedToLoad={(error) => {
-          console.log(`Display ad failed: ${context} - ${size}`, error);
+          // Check if this is a "no-fill" error (no ad available)
+          const isNoFillError =
+            error?.message?.includes("no-fill") ||
+            error?.message?.includes("No ad to show") ||
+            error?.code === "no-fill";
+
+          // Only log non-no-fill errors as these are expected and not actual issues
+          if (!isNoFillError) {
+            console.log(`Display ad failed: ${context} - ${size}`, error);
+          }
+
           onAdFailedToLoad?.(error);
         }}
         onAdClicked={() => {

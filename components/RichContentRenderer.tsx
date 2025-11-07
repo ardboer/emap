@@ -1,5 +1,6 @@
 import { DisplayAd } from "@/components/DisplayAd";
 import { FadeInImage } from "@/components/FadeInImage";
+import { getMaxContentWidth, isTablet } from "@/constants/Layout";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useImageViewer } from "@/hooks/useImageViewer";
@@ -35,23 +36,27 @@ const HighlightBoxText: React.FC<{
 const calculateImageDimensions = (
   originalWidth?: number,
   originalHeight?: number,
-  maxWidth: number = screenWidth - 32
+  maxWidth?: number
 ) => {
+  // Determine the appropriate max width based on device type
+  const effectiveMaxWidth =
+    maxWidth ?? (isTablet ? getMaxContentWidth() - 32 : screenWidth - 32);
+
   // Fallback dimensions if not provided
   if (!originalWidth || !originalHeight) {
-    return { width: maxWidth, height: 200 };
+    return { width: effectiveMaxWidth, height: 200 };
   }
 
   // If image fits within max width, use original dimensions
-  if (originalWidth <= maxWidth) {
+  if (originalWidth <= effectiveMaxWidth) {
     return { width: originalWidth, height: originalHeight };
   }
 
   // Scale down proportionally if image is too wide
   const aspectRatio = originalHeight / originalWidth;
   return {
-    width: maxWidth,
-    height: Math.round(maxWidth * aspectRatio),
+    width: effectiveMaxWidth,
+    height: Math.round(effectiveMaxWidth * aspectRatio),
   };
 };
 
