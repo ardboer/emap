@@ -41,8 +41,8 @@ export default function DeepLinkHandler() {
         console.log("🔗 Current slug from URL:", slug);
         console.log("🔗 ========================================");
 
-        // Check if this is an authentication-related path
-        const authPaths = [
+        // Check if this is an authentication-related path or tab route
+        const excludedPaths = [
           "auth",
           "login",
           "register",
@@ -52,16 +52,47 @@ export default function DeepLinkHandler() {
           "signin",
           "signup",
           "mobile-app-login",
+          // Tab routes that should not be treated as deep links
+          "(tabs)",
+          "index",
+          "news",
+          "clinical",
+          "events",
+          "ask",
+          "magazine",
+          "podcasts",
+          "search",
+          "settings",
         ];
         const firstSegment = slug.split("/")[0].toLowerCase();
 
-        if (authPaths.includes(firstSegment)) {
-          console.log("🔗 Auth path detected, opening in browser:", slug);
-          const brandConfig = brandManager.getCurrentBrand();
-          await Linking.openURL(`https://${brandConfig.domain}/${slug}`);
-          console.log(
-            "🔗 Redirecting back to home after opening auth URL in browser"
-          );
+        if (excludedPaths.includes(firstSegment)) {
+          // Check if it's an auth path that needs to open in browser
+          const authPaths = [
+            "auth",
+            "login",
+            "register",
+            "account",
+            "callback",
+            "oauth",
+            "signin",
+            "signup",
+            "mobile-app-login",
+          ];
+
+          if (authPaths.includes(firstSegment)) {
+            console.log("🔗 Auth path detected, opening in browser:", slug);
+            const brandConfig = brandManager.getCurrentBrand();
+            await Linking.openURL(`https://${brandConfig.domain}/${slug}`);
+            console.log(
+              "🔗 Redirecting back to home after opening auth URL in browser"
+            );
+            router.replace("/");
+            return;
+          }
+
+          // For tab routes, just redirect to home without trying to resolve
+          console.log("🔗 Tab route detected, redirecting to home:", slug);
           router.replace("/");
           return;
         }

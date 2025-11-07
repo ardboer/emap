@@ -349,12 +349,8 @@ export default function HighlightedScreen() {
     }
   };
 
-  // Redirect to news/articles tab if highlights are disabled
-  useEffect(() => {
-    if (!features?.enableHighlights) {
-      router.replace("/(tabs)/news");
-    }
-  }, [features?.enableHighlights]);
+  // Note: Tab visibility is already controlled by the href prop in _layout.tsx
+  // No redirect needed here - let the tab render normally like other tabs
 
   // Load articles when auth is ready
   useEffect(() => {

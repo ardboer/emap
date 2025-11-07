@@ -57,7 +57,7 @@ export default function TabLayout() {
           options={{
             title: "Highlights",
             headerShown: false, // No header for highlighted tab (full-screen carousel)
-            href: features?.enableHighlights ? "/(tabs)/index" : null,
+            href: !features?.enableHighlights ? null : undefined,
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="star.fill" color={color} />
             ),
