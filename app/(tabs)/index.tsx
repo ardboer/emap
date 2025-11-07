@@ -16,9 +16,13 @@ import {
 } from "@/services/api";
 import { Article } from "@/types";
 import { hexToRgba } from "@/utils/colors";
-import { useNavigation } from "@react-navigation/native";
+import {
+  useIsFocused,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -38,6 +42,9 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 export default function HighlightedScreen() {
   const { features } = useBrandConfig();
   const navigation = useNavigation();
+  const route = useRoute();
+  const isFocused = useIsFocused();
+  const params = useLocalSearchParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
@@ -818,6 +825,41 @@ export default function HighlightedScreen() {
     }, [isUserInteracting])
   );
 
+  // Handle tab press to scroll to top when already in view
+  // Listen for route params to detect when tab is pressed while already focused
+  useEffect(() => {
+    // Check if scrollToTop param is present (set by tab press listener)
+    if (params.scrollToTop && isCarouselVisible && currentIndex !== 0) {
+      // Scroll to index 0 instantly (no animation)
+      flatListRef.current?.scrollToIndex({
+        index: 0,
+        animated: false,
+      });
+
+      // Update state
+      setCurrentIndex(0);
+
+      // Analytics
+      analyticsService.logEvent("carousel_tab_press_scroll_to_top", {
+        previous_index: currentIndex,
+        total_articles: articles.length,
+        scroll_distance: currentIndex,
+      });
+
+      // Clear the param by navigating without it to prevent re-triggering
+      // Use a small timeout to ensure the scroll completes first
+      setTimeout(() => {
+        router.setParams({ scrollToTop: undefined, timestamp: undefined });
+      }, 100);
+    }
+  }, [
+    params.scrollToTop,
+    params.timestamp,
+    isCarouselVisible,
+    currentIndex,
+    articles.length,
+  ]);
+
   // Handle focus/blur events to pause/resume when screen is not active
   useEffect(() => {
     return () => {
@@ -1174,7 +1216,7 @@ export default function HighlightedScreen() {
         horizontal={false}
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}
+        //showsVerticalScrollIndicator={false}
         snapToInterval={screenHeight}
         snapToAlignment="start"
         disableIntervalMomentum={true}

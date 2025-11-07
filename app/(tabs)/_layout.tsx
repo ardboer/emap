@@ -63,6 +63,23 @@ export default function TabLayout() {
               <IconSymbol size={28} name="star.fill" color={color} />
             ),
           }}
+          listeners={({ navigation }) => ({
+            tabPress: (e) => {
+              // Get the current route
+              const state = navigation.getState();
+              const currentRoute = state.routes[state.index];
+
+              // If we're already on the index route, emit a custom event
+              if (currentRoute.name === "index") {
+                e.preventDefault();
+                // Navigate to the same route to trigger the screen
+                navigation.navigate("index", {
+                  scrollToTop: true,
+                  timestamp: Date.now(),
+                });
+              }
+            },
+          })}
         />
         <Tabs.Screen
           name="news"
