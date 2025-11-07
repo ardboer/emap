@@ -51,6 +51,7 @@ export default function TabLayout() {
             fontSize: 9,
           },
         }}
+        initialRouteName={features?.enableHighlights ? "index" : "news"}
       >
         <Tabs.Screen
           name="index"

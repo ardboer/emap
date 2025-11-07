@@ -122,7 +122,7 @@
     "enableEvents": true,
     "enableAsk": true,
     "enableMagazine": false,
-    "enableHighlights": true
+    "enableHighlights": false
   },
   "misoConfig": {
     "apiKey": "fAd2K3q1t6pw5SwzQcm0gPkHYvBpqFWkxBWwLvyL",
