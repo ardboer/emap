@@ -10,13 +10,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { analyticsService } from "@/services/analytics";
-import { fetchHighlightsWithRecommendations } from "@/services/api";
+import {
+  fetchHighlightsWithRecommendations,
+  fetchRecommendedArticlesWithExclude,
+} from "@/services/api";
 import { Article } from "@/types";
 import { hexToRgba } from "@/utils/colors";
+import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   NativeScrollEvent,
@@ -32,6 +37,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 export default function HighlightedScreen() {
   const { features } = useBrandConfig();
+  const navigation = useNavigation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
@@ -46,6 +52,13 @@ export default function HighlightedScreen() {
   );
   const [isCarouselVisible, setIsCarouselVisible] = useState(true);
   const [wordpressArticleCount, setWordpressArticleCount] = useState(0);
+
+  // Endless scroll state
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreItems, setHasMoreItems] = useState(true);
+  const [loadedMisoIds, setLoadedMisoIds] = useState<Set<string>>(new Set());
+  const [totalMisoItemsLoaded, setTotalMisoItemsLoaded] = useState(0);
+
   const flatListRef = useRef<FlatList>(null);
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { state: audioState } = useAudio();
@@ -80,6 +93,7 @@ export default function HighlightedScreen() {
 
   const previousIndexRef = useRef(0);
   const indexChangeTimeRef = useRef<number>(Date.now());
+  const wasUnfocusedRef = useRef(false);
 
   const handleArticlePress = (article: Article) => {
     const dwellTime = articleViewStartTime
@@ -142,6 +156,12 @@ export default function HighlightedScreen() {
       setLoading(true);
       setError(null);
 
+      // Reset endless scroll state
+      setIsLoadingMore(false);
+      setHasMoreItems(true);
+      setLoadedMisoIds(new Set());
+      setTotalMisoItemsLoaded(0);
+
       // Fetch combined articles (WordPress + Miso recommendations)
       // Uses authenticated user ID when logged in, otherwise anonymous
       const fetchedArticles = await fetchHighlightsWithRecommendations(
@@ -197,6 +217,27 @@ export default function HighlightedScreen() {
         }))
       );
 
+      // Track initial Miso IDs for exclusion in endless scroll
+      const brandPrefix = brandConfig?.shortcode.toUpperCase() || "NT";
+      const initialMisoIds = new Set<string>();
+
+      fetchedArticles.forEach((article) => {
+        if (article.source === "miso") {
+          initialMisoIds.add(`${brandPrefix}-${article.id}`);
+        }
+      });
+
+      setLoadedMisoIds(initialMisoIds);
+      setTotalMisoItemsLoaded(initialMisoIds.size);
+
+      console.log("📊 Initial load complete:", {
+        totalArticles: fetchedArticles.length,
+        wordpressCount: wpCount,
+        initialMisoCount: initialMisoIds.size,
+        endlessScrollEnabled:
+          brandConfig?.highlightsRecommendations?.endlessScroll?.enabled,
+      });
+
       setArticles(fetchedArticles);
 
       // Load color gradient setting
@@ -227,6 +268,135 @@ export default function HighlightedScreen() {
     }
   };
 
+  const loadMoreRecommendations = async () => {
+    if (isLoadingMore || !hasMoreItems) {
+      console.log("⏸️ Skipping load more:", { isLoadingMore, hasMoreItems });
+      return;
+    }
+
+    // Check if endless scroll is enabled
+    if (!brandConfig?.highlightsRecommendations?.endlessScroll?.enabled) {
+      return;
+    }
+
+    try {
+      setIsLoadingMore(true);
+
+      const brandPrefix = brandConfig?.shortcode.toUpperCase() || "NT";
+
+      // Build comprehensive exclude list:
+      // 1. All WordPress article IDs
+      // 2. All previously loaded Miso article IDs
+      const wordpressIds = articles
+        .filter((a) => a.source === "wordpress")
+        .map((a) => `${brandPrefix}-${a.id}`);
+
+      const misoIds = Array.from(loadedMisoIds);
+      const excludeIds = [...wordpressIds, ...misoIds];
+
+      console.log("📥 Fetching more recommendations:", {
+        excludeCount: excludeIds.length,
+        wordpressCount: wordpressIds.length,
+        misoCount: misoIds.length,
+        requestingItems:
+          brandConfig?.highlightsRecommendations?.endlessScroll?.itemsPerLoad ||
+          5,
+      });
+
+      // Fetch more items
+      const itemsPerLoad =
+        brandConfig?.highlightsRecommendations?.endlessScroll?.itemsPerLoad ||
+        5;
+      const newArticles = await fetchRecommendedArticlesWithExclude(
+        itemsPerLoad,
+        excludeIds,
+        user?.userId,
+        isAuthenticated
+      );
+
+      if (newArticles.length === 0) {
+        console.log("✅ No more recommendations available");
+        setHasMoreItems(false);
+
+        analyticsService.logEvent("carousel_endless_scroll_exhausted", {
+          total_items_loaded: articles.length,
+          total_miso_items: totalMisoItemsLoaded,
+          wordpress_count: wordpressArticleCount,
+        });
+        return;
+      }
+
+      // Mark as Miso source and recommended
+      const markedNewArticles = newArticles.map((article) => ({
+        ...article,
+        source: "miso" as const,
+        isRecommended: true,
+      }));
+
+      // Track new Miso IDs
+      const newMisoIds = new Set(loadedMisoIds);
+      markedNewArticles.forEach((article) => {
+        newMisoIds.add(`${brandPrefix}-${article.id}`);
+      });
+      setLoadedMisoIds(newMisoIds);
+
+      // Append to articles array
+      setArticles((prev) => [...prev, ...markedNewArticles]);
+      setTotalMisoItemsLoaded((prev) => prev + newArticles.length);
+
+      // Check if we got fewer items than requested (might be end of content)
+      if (newArticles.length < itemsPerLoad) {
+        console.log(
+          "⚠️ Received fewer items than requested, might be near end"
+        );
+        setHasMoreItems(false);
+      }
+
+      // Extract colors for landscape images
+      const colors: { [key: string]: string[] } = {};
+      for (const article of markedNewArticles) {
+        if (article.isLandscape) {
+          colors[article.id] = await extractImageColors(
+            article.imageUrl,
+            article.id
+          );
+        }
+      }
+      setImageColors((prev) => ({ ...prev, ...colors }));
+
+      // Analytics
+      analyticsService.logEvent("carousel_endless_scroll_loaded", {
+        items_loaded: newArticles.length,
+        total_articles_now: articles.length + newArticles.length,
+        total_miso_items: totalMisoItemsLoaded + newArticles.length,
+        trigger_index: currentIndex,
+        exclude_list_size: excludeIds.length,
+      });
+
+      console.log("✅ Loaded more recommendations:", {
+        newItems: newArticles.length,
+        totalArticles: articles.length + newArticles.length,
+        totalMisoLoaded: totalMisoItemsLoaded + newArticles.length,
+      });
+    } catch (error) {
+      console.error("❌ Error loading more recommendations:", error);
+
+      analyticsService.logEvent("carousel_endless_scroll_error", {
+        error_message: error instanceof Error ? error.message : "Unknown error",
+        trigger_index: currentIndex,
+        total_articles: articles.length,
+      });
+
+      // Don't set hasMoreItems to false on error - allow retry
+    } finally {
+      setIsLoadingMore(false);
+      // Resume playing if carousel is visible and user not interacting
+      if (isCarouselVisible && !isUserInteracting) {
+        setIsPlaying(true);
+      }
+    }
+  };
+
   const goToNextSlide = () => {
     const nextIndex = (currentIndex + 1) % articles.length;
 
@@ -249,6 +419,12 @@ export default function HighlightedScreen() {
   };
 
   const handleProgressComplete = () => {
+    // Don't auto-advance if we're loading more recommendations
+    if (isLoadingMore) {
+      console.log("⏸️ Skipping auto-advance: loading more recommendations");
+      return;
+    }
+
     // Auto-advance for ALL slides (WordPress + Miso)
     const currentArticle = articles[currentIndex];
 
@@ -260,6 +436,7 @@ export default function HighlightedScreen() {
       isNativeAd: currentArticle?.isNativeAd,
       nextIndex: (currentIndex + 1) % articles.length,
       shouldAdvance: !isUserInteracting && isCarouselVisible,
+      isLoadingMore,
     });
 
     if (!isUserInteracting && isCarouselVisible) {
@@ -597,11 +774,38 @@ export default function HighlightedScreen() {
     previousIndexRef.current = currentIndex;
   }, [currentIndex, articles]);
 
+  // Endless scroll trigger - load more when 3 items from end
+  useEffect(() => {
+    if (articles.length === 0 || !hasMoreItems || isLoadingMore) return;
+
+    // Check if endless scroll is enabled
+    if (!brandConfig?.highlightsRecommendations?.endlessScroll?.enabled) return;
+
+    // Calculate distance from end
+    const triggerThreshold =
+      brandConfig?.highlightsRecommendations?.endlessScroll?.triggerThreshold ||
+      3;
+    const distanceFromEnd = articles.length - currentIndex - 1;
+
+    // Trigger load when at threshold distance from end
+    if (distanceFromEnd === triggerThreshold) {
+      console.log("🔄 Endless scroll triggered:", {
+        currentIndex,
+        totalArticles: articles.length,
+        distanceFromEnd,
+        loadedMisoIds: loadedMisoIds.size,
+      });
+
+      loadMoreRecommendations();
+    }
+  }, [currentIndex, articles.length, hasMoreItems, isLoadingMore, brandConfig]);
+
   // Log screen view when carousel is focused and handle visibility
   useFocusEffect(
     useCallback(() => {
       analyticsService.logScreenView("Highlights", "HighlightedScreen");
       setIsCarouselVisible(true);
+
       if (!isUserInteracting) {
         setIsPlaying(true);
       }
@@ -917,15 +1121,33 @@ export default function HighlightedScreen() {
     );
   }
 
+  const renderFooterComponent = () => {
+    if (!isLoadingMore) return null;
+
+    return (
+      <View style={styles.loadingFooter}>
+        <ActivityIndicator
+          size="large"
+          color={brandConfig?.theme.colors.light.primary}
+        />
+        <ThemedText style={styles.loadingText}>
+          Loading more recommendations...
+        </ThemedText>
+      </View>
+    );
+  };
+
   return (
     <ThemedView style={styles.container}>
-      <CarouselProgressIndicator
-        currentIndex={currentIndex}
-        duration={SLIDE_DURATION}
-        isPlaying={isPlaying && isCarouselVisible}
-        onProgressComplete={handleProgressComplete}
-        showMiniPlayer={audioState.showMiniPlayer}
-      />
+      {!isLoadingMore && (
+        <CarouselProgressIndicator
+          currentIndex={currentIndex}
+          duration={SLIDE_DURATION}
+          isPlaying={isPlaying && isCarouselVisible}
+          onProgressComplete={handleProgressComplete}
+          showMiniPlayer={audioState.showMiniPlayer}
+        />
+      )}
       <BrandLogo
         style={[styles.brandLogo, { top: insets.top + 10 }]}
         width={100}
@@ -952,6 +1174,7 @@ export default function HighlightedScreen() {
         horizontal={false}
         pagingEnabled
         showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         snapToInterval={screenHeight}
         snapToAlignment="start"
         disableIntervalMomentum={true}
@@ -966,6 +1189,7 @@ export default function HighlightedScreen() {
           offset: screenHeight * index,
           index,
         })}
+        ListFooterComponent={renderFooterComponent}
       />
 
       {/* Settings Drawer */}
@@ -1096,6 +1320,11 @@ const staticStyles = StyleSheet.create({
   retryButtonText: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  loadingFooter: {
+    height: screenHeight,
+    justifyContent: "center",
+    alignItems: "center",
   },
   userButton: {
     position: "absolute",

@@ -115,6 +115,11 @@ export interface BrandConfig {
   highlightsRecommendations?: {
     enabled: boolean;
     misoItemCount: number;
+    endlessScroll?: {
+      enabled: boolean;
+      itemsPerLoad: number;
+      triggerThreshold: number;
+    };
   };
   trendingBlockListView?: {
     enabled: boolean;
