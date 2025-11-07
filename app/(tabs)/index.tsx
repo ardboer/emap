@@ -648,8 +648,6 @@ export default function HighlightedScreen() {
 
     // Render recommended badge for Miso articles
     const renderRecommendedBadge = () => {
-      if (!item.isRecommended) return null;
-
       return (
         <View style={[styles.recommendedBadge, { top: insets.top + 60 }]}>
           <ThemedText
@@ -658,7 +656,7 @@ export default function HighlightedScreen() {
               { fontFamily: brandConfig?.theme.fonts.primarySemiBold },
             ]}
           >
-            Recommended for you
+            {item.isRecommended ? "Recommended for you" : "Editors Pick"}
           </ThemedText>
         </View>
       );
