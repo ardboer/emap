@@ -30,10 +30,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
-// Configurable slide duration (in milliseconds)
-const SLIDE_DURATION = 5000; // 7 seconds
-
 export default function HighlightedScreen() {
+  const { features } = useBrandConfig();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
@@ -54,6 +52,10 @@ export default function HighlightedScreen() {
   const { brandConfig } = useBrandConfig();
   const backgroundColor = useThemeColor({}, "background");
   const contentBackground = useThemeColor({}, "contentBackground");
+
+  // Get slide duration from brand config (in seconds), default to 5 seconds
+  const slideDurationSeconds = brandConfig?.carousel?.slideDurationSeconds || 5;
+  const SLIDE_DURATION = slideDurationSeconds * 1000; // Convert to milliseconds
 
   // Analytics tracking state
   const [carouselStartTime, setCarouselStartTime] = useState<number | null>(
@@ -204,7 +206,7 @@ export default function HighlightedScreen() {
       const colorGradientSetting = await AsyncStorage.getItem(
         "debug_use_color_gradient"
       );
-      setUseColorGradient(colorGradientSetting === "true");
+      setUseColorGradient(true); // colorGradientSetting === "true"
 
       // Extract colors from landscape images
       const colors: { [key: string]: string[] } = {};
@@ -247,24 +249,20 @@ export default function HighlightedScreen() {
   };
 
   const handleProgressComplete = () => {
-    // Auto-advance if current item is in the WordPress section (WordPress articles or native ads before Miso)
+    // Auto-advance for ALL slides (WordPress + Miso)
     const currentArticle = articles[currentIndex];
-    const isInWordPressSection = currentIndex < wordpressArticleCount;
 
     // DEBUG: Log progress completion details
     console.log("🔄 Progress Complete:", {
       currentIndex,
-      wordpressArticleCount,
-      isInWordPressSection,
-      isLastInSection: currentIndex === wordpressArticleCount - 1,
+      totalArticles: articles.length,
       currentSource: currentArticle?.source,
       isNativeAd: currentArticle?.isNativeAd,
       nextIndex: (currentIndex + 1) % articles.length,
-      shouldAdvance:
-        !isUserInteracting && isCarouselVisible && isInWordPressSection,
+      shouldAdvance: !isUserInteracting && isCarouselVisible,
     });
 
-    if (!isUserInteracting && isCarouselVisible && isInWordPressSection) {
+    if (!isUserInteracting && isCarouselVisible) {
       analyticsService.logEvent("carousel_auto_advance", {
         from_position: currentIndex,
         to_position: (currentIndex + 1) % articles.length,
@@ -278,8 +276,8 @@ export default function HighlightedScreen() {
   };
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollPosition / screenWidth);
+    const scrollPosition = event.nativeEvent.contentOffset.y;
+    const index = Math.round(scrollPosition / screenHeight);
 
     // DEBUG: Log scroll events to detect skipping
     if (index !== currentIndex) {
@@ -332,8 +330,17 @@ export default function HighlightedScreen() {
   const handleMomentumScrollEnd = (
     event: NativeSyntheticEvent<NativeScrollEvent>
   ) => {
-    const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollPosition / screenWidth);
+    const scrollPosition = event.nativeEvent.contentOffset.y;
+    const index = Math.round(scrollPosition / screenHeight);
+
+    // Force scroll to the exact index to prevent skipping
+    if (index !== currentIndex) {
+      flatListRef.current?.scrollToIndex({
+        index: index,
+        animated: false,
+      });
+    }
+
     setCurrentIndex(index);
 
     // Ensure we resume playing after manual scroll, but only if carousel is visible
@@ -341,6 +348,13 @@ export default function HighlightedScreen() {
       setIsPlaying(true);
     }
   };
+
+  // Redirect to news/articles tab if highlights are disabled
+  useEffect(() => {
+    if (!features?.enableHighlights) {
+      router.replace("/(tabs)/news");
+    }
+  }, [features?.enableHighlights]);
 
   // Load articles when auth is ready
   useEffect(() => {
@@ -618,10 +632,6 @@ export default function HighlightedScreen() {
     },
   };
   const renderCarouselItem = ({ item }: { item: Article }) => {
-    // Determine if we should show progress for this item
-    const showingProgress =
-      currentIndex < wordpressArticleCount && wordpressArticleCount > 0;
-
     // Handle native ad items
     if (item.isNativeAd) {
       return (
@@ -631,7 +641,7 @@ export default function HighlightedScreen() {
             console.log("Native ad clicked:", item.id);
           }}
           insets={insets}
-          showingProgress={showingProgress}
+          showingProgress={false}
         />
       );
     }
@@ -871,25 +881,22 @@ export default function HighlightedScreen() {
   };
 
   if (loading) {
-    // During loading, show progress bars (assume WordPress content)
-    // so logo and icon stay at top: 80
     return (
       <ThemedView style={styles.container}>
         <CarouselProgressIndicator
-          totalItems={3}
           currentIndex={0}
           duration={SLIDE_DURATION}
           isPlaying={false}
           onProgressComplete={() => {}}
-          wordpressItemCount={3}
+          showMiniPlayer={audioState.showMiniPlayer}
         />
         <BrandLogo
-          style={[styles.brandLogo, { top: insets.top + 30 }]}
+          style={[styles.brandLogo, { top: insets.top + 10 }]}
           width={100}
           height={35}
         />
         <TouchableOpacity
-          style={[styles.userButton, { top: insets.top + 20 }]} // Keep at top: 80 during loading
+          style={[styles.userButton, { top: insets.top + 10 }]}
           disabled
         >
           <FadeInImage
@@ -916,37 +923,24 @@ export default function HighlightedScreen() {
     );
   }
 
-  // Determine if we should show progress (viewing WordPress article)
-  const showingProgress =
-    currentIndex < wordpressArticleCount && wordpressArticleCount > 0;
-
   return (
     <ThemedView style={styles.container}>
       <CarouselProgressIndicator
-        totalItems={articles.length}
         currentIndex={currentIndex}
         duration={SLIDE_DURATION}
         isPlaying={isPlaying && isCarouselVisible}
         onProgressComplete={handleProgressComplete}
-        wordpressItemCount={wordpressArticleCount}
+        showMiniPlayer={audioState.showMiniPlayer}
       />
       <BrandLogo
-        style={[
-          styles.brandLogo,
-          !showingProgress && styles.brandLogoNoProgress,
-          { top: !showingProgress ? insets.top + 10 : insets.top + 30 },
-        ]}
+        style={[styles.brandLogo, { top: insets.top + 10 }]}
         width={100}
         height={35}
       />
 
       {/* User Settings Button */}
       <TouchableOpacity
-        style={[
-          styles.userButton,
-          !showingProgress && styles.userButtonNoProgress,
-          { top: !showingProgress ? insets.top + 10 : insets.top + 20 },
-        ]}
+        style={[styles.userButton, { top: insets.top + 10 }]}
         onPress={() => setSettingsDrawerVisible(true)}
       >
         <FadeInImage
@@ -961,10 +955,12 @@ export default function HighlightedScreen() {
         data={articles}
         renderItem={renderCarouselItem}
         keyExtractor={(item) => item.id}
-        horizontal
+        horizontal={false}
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        snapToInterval={screenWidth}
+        snapToInterval={screenHeight}
+        snapToAlignment="start"
+        disableIntervalMomentum={true}
         decelerationRate="fast"
         onScroll={handleScroll}
         onScrollBeginDrag={handleScrollBeginDrag}
@@ -972,8 +968,8 @@ export default function HighlightedScreen() {
         onMomentumScrollEnd={handleMomentumScrollEnd}
         scrollEventThrottle={16}
         getItemLayout={(data, index) => ({
-          length: screenWidth,
-          offset: screenWidth * index,
+          length: screenHeight,
+          offset: screenHeight * index,
           index,
         })}
       />
@@ -998,9 +994,6 @@ const staticStyles = StyleSheet.create({
     zIndex: 10,
     borderRadius: 8,
     padding: 8,
-  },
-  brandLogoNoProgress: {
-    top: 60, // Move up when no progress indicator
   },
   carouselItem: {
     width: screenWidth,
@@ -1120,9 +1113,6 @@ const staticStyles = StyleSheet.create({
     height: 40,
     justifyContent: "center",
     alignItems: "center",
-  },
-  userButtonNoProgress: {
-    top: 60, // Move up when no progress indicator
   },
   userIcon: {
     fontSize: 20,

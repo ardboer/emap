@@ -116,7 +116,8 @@
     "enableClinical": false,
     "enableEvents": true,
     "enableAsk": false,
-    "enableMagazine": false
+    "enableMagazine": false,
+    "enableHighlights": true
   },
   "misoConfig": {
     "apiKey": "FcakM2bTHy0Sf0uaM6mYpwI9vnXWKdu4E9jO6Bx2",
@@ -134,6 +135,9 @@
     "alias": "construction-news-key"
   },
   "podcastFeeds": [],
+  "carousel": {
+    "slideDurationSeconds": 5
+  },
   "trendingBlockListView": {
     "enabled": true,
     "position": 1,

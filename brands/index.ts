@@ -87,6 +87,7 @@ export interface BrandConfig {
     enableEvents: boolean;
     enableAsk: boolean;
     enableMagazine: boolean;
+    enableHighlights: boolean;
   };
   onboarding?: {
     editorQuote: string;
@@ -108,6 +109,9 @@ export interface BrandConfig {
   termsOfServiceUrl?: string;
   supportEmail?: string;
   podcastFeeds?: PodcastFeed[];
+  carousel?: {
+    slideDurationSeconds?: number; // Duration each slide is visible (default: 5)
+  };
   highlightsRecommendations?: {
     enabled: boolean;
     misoItemCount: number;

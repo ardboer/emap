@@ -117,11 +117,12 @@
     "secondaryButtonText": "Sign In"
   },
   "features": {
-    "enablePodcasts": true,
+    "enablePodcasts": false,
     "enableClinical": true,
-    "enableEvents": false,
-    "enableAsk": false,
-    "enableMagazine": true
+    "enableEvents": true,
+    "enableAsk": true,
+    "enableMagazine": false,
+    "enableHighlights": true
   },
   "misoConfig": {
     "apiKey": "fAd2K3q1t6pw5SwzQcm0gPkHYvBpqFWkxBWwLvyL",
@@ -142,6 +143,9 @@
     "lastChecked": "2025-10-23T20:42:10.873Z",
     "alias": "nursing-times-key"
   },
+  "carousel": {
+    "slideDurationSeconds": 5
+  },
   "podcastFeeds": [
     {
       "name": "CN First Site",
@@ -154,7 +158,7 @@
     "itemCount": 5
   },
   "relatedArticlesBlock": {
-    "enabled": true,
+    "enabled": false,
     "afterParagraph": 3,
     "itemCount": 5
   },
@@ -178,7 +182,7 @@
     "articleDetail": {
       "enabled": true,
       "maxAdsPerPage": 3,
-      "paragraphInterval": 4,
+      "paragraphInterval": 1,
       "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
       "positions": [
         {

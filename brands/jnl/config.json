@@ -115,7 +115,8 @@
     "enableClinical": false,
     "enableEvents": false,
     "enableAsk": true,
-    "enableMagazine": false
+    "enableMagazine": false,
+    "enableHighlights": true
   },
   "misoConfig": {
     "apiKey": "FcakM2bTHy0Sf0uaM6mYpwI9vnXWKdu4E9jO6Bx2",
@@ -132,6 +133,9 @@
     "lastChecked": "2025-10-19T19:43:46.872Z"
   },
   "podcastFeeds": [],
+  "carousel": {
+    "slideDurationSeconds": 5
+  },
   "trendingBlockListView": {
     "enabled": true,
     "position": 1,

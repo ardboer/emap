@@ -753,7 +753,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             />
           }
         />
-        <SettingsItem
+        {/* <SettingsItem
           title="Use Color Gradient Background"
           subtitle="Use dominant color gradient instead of blurred image for landscape items"
           icon="paintpalette.fill"
@@ -765,7 +765,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
               thumbColor={useColorGradient ? "#00334C" : "#fff"}
             />
           }
-        />
+        /> */}
         {pushToken && (
           <SettingsItem
             title="Push Token"
