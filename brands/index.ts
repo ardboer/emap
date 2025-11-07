@@ -109,12 +109,10 @@ export interface BrandConfig {
   termsOfServiceUrl?: string;
   supportEmail?: string;
   podcastFeeds?: PodcastFeed[];
-  carousel?: {
-    slideDurationSeconds?: number; // Duration each slide is visible (default: 5)
-  };
   highlightsRecommendations?: {
     enabled: boolean;
     misoItemCount: number;
+    slideDurationSeconds?: number; // Duration each slide is visible in carousel (default: 5)
     mixAndMatch?: boolean; // Enable 1:1 alternating pattern (WP, Miso, WP, Miso...)
     endlessScroll?: {
       enabled: boolean;

@@ -134,6 +134,7 @@
     "enabled": true,
     "misoItemCount": 10,
     "mixAndMatch": true,
+    "slideDurationSeconds": 5,
     "endlessScroll": {
       "enabled": true,
       "itemsPerLoad": 5,
@@ -148,9 +149,6 @@
     "details": "Keystore alias found: nursing-times-key",
     "lastChecked": "2025-10-23T20:42:10.873Z",
     "alias": "nursing-times-key"
-  },
-  "carousel": {
-    "slideDurationSeconds": 5
   },
   "podcastFeeds": [
     {

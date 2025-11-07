@@ -128,6 +128,7 @@
     "enabled": true,
     "misoItemCount": 10,
     "mixAndMatch": true,
+    "slideDurationSeconds": 5,
     "endlessScroll": {
       "enabled": true,
       "itemsPerLoad": 5,
@@ -143,9 +144,6 @@
     "lastChecked": "2025-10-19T19:43:46.872Z"
   },
   "podcastFeeds": [],
-  "carousel": {
-    "slideDurationSeconds": 5
-  },
   "trendingBlockListView": {
     "enabled": true,
     "position": 1,

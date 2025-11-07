@@ -129,6 +129,7 @@
     "enabled": true,
     "misoItemCount": 10,
     "mixAndMatch": true,
+    "slideDurationSeconds": 5,
     "endlessScroll": {
       "enabled": true,
       "itemsPerLoad": 5,
@@ -145,9 +146,6 @@
     "alias": "construction-news-key"
   },
   "podcastFeeds": [],
-  "carousel": {
-    "slideDurationSeconds": 5
-  },
   "trendingBlockListView": {
     "enabled": true,
     "position": 1,

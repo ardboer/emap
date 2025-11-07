@@ -74,7 +74,8 @@ export default function HighlightedScreen() {
   const contentBackground = useThemeColor({}, "contentBackground");
 
   // Get slide duration from brand config (in seconds), default to 5 seconds
-  const slideDurationSeconds = brandConfig?.carousel?.slideDurationSeconds || 5;
+  const slideDurationSeconds =
+    brandConfig?.highlightsRecommendations?.slideDurationSeconds || 5;
   const SLIDE_DURATION = slideDurationSeconds * 1000; // Convert to milliseconds
 
   // Analytics tracking state

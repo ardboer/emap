@@ -657,6 +657,22 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                   </div>
                 </div>
 
+                <div className="form-group">
+                  <label className="form-label">Test Article ID</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={config.testArticleId || ""}
+                    onChange={(e) =>
+                      updateConfig({ testArticleId: e.target.value })
+                    }
+                    placeholder="e.g., 345162"
+                  />
+                  <div className="form-help">
+                    Article ID used for testing and development purposes
+                  </div>
+                </div>
+
                 <div className="form-section">
                   <h3 className="form-section-title">API Configuration</h3>
 
@@ -1268,35 +1284,216 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                   </div>
 
                   {config.highlightsRecommendations?.enabled && (
-                    <div className="form-group">
-                      <label className="form-label">Number of Miso Items</label>
-                      <input
-                        type="number"
-                        className="form-input"
-                        min="1"
-                        max="50"
-                        value={
-                          config.highlightsRecommendations?.misoItemCount || 10
-                        }
-                        onChange={(e) =>
-                          setConfig((prev) => ({
-                            ...prev,
-                            highlightsRecommendations: {
-                              ...prev.highlightsRecommendations,
-                              enabled:
-                                prev.highlightsRecommendations?.enabled ||
-                                false,
-                              misoItemCount: parseInt(e.target.value) || 10,
-                            },
-                          }))
-                        }
-                        placeholder="10"
-                      />
-                      <div className="form-help">
-                        Number of Miso recommended articles to show after
-                        WordPress highlights (1-50)
+                    <>
+                      <div className="form-group">
+                        <label className="form-label">
+                          Number of Miso Items
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min="1"
+                          max="50"
+                          value={
+                            config.highlightsRecommendations?.misoItemCount ||
+                            10
+                          }
+                          onChange={(e) =>
+                            setConfig((prev) => ({
+                              ...prev,
+                              highlightsRecommendations: {
+                                ...prev.highlightsRecommendations,
+                                enabled:
+                                  prev.highlightsRecommendations?.enabled ||
+                                  false,
+                                misoItemCount: parseInt(e.target.value) || 10,
+                              },
+                            }))
+                          }
+                          placeholder="10"
+                        />
+                        <div className="form-help">
+                          Number of Miso recommended articles to show after
+                          WordPress highlights (1-50)
+                        </div>
                       </div>
-                    </div>
+
+                      <div className="form-group">
+                        <label className="form-label">
+                          Slide Duration (seconds)
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min="1"
+                          max="30"
+                          value={
+                            config.highlightsRecommendations
+                              ?.slideDurationSeconds || 5
+                          }
+                          onChange={(e) =>
+                            setConfig((prev) => ({
+                              ...prev,
+                              highlightsRecommendations: {
+                                ...prev.highlightsRecommendations,
+                                slideDurationSeconds:
+                                  parseInt(e.target.value) || 5,
+                              },
+                            }))
+                          }
+                          placeholder="5"
+                        />
+                        <div className="form-help">
+                          Duration in seconds for each slide in the highlights
+                          carousel (1-30)
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <div className="checkbox-group">
+                          <input
+                            type="checkbox"
+                            id="highlightsMixAndMatch"
+                            checked={
+                              config.highlightsRecommendations?.mixAndMatch !==
+                              false
+                            }
+                            onChange={(e) =>
+                              setConfig((prev) => ({
+                                ...prev,
+                                highlightsRecommendations: {
+                                  ...prev.highlightsRecommendations,
+                                  mixAndMatch: e.target.checked,
+                                },
+                              }))
+                            }
+                          />
+                          <label htmlFor="highlightsMixAndMatch">
+                            Mix and Match WordPress and Miso items
+                          </label>
+                        </div>
+                        <div className="form-help">
+                          When enabled, WordPress highlights and Miso
+                          recommendations will be mixed together
+                        </div>
+                      </div>
+
+                      <div
+                        className="form-section"
+                        style={{ marginTop: "1.5rem" }}
+                      >
+                        <h4 style={{ marginBottom: "1rem", color: "#2c3e50" }}>
+                          Endless Scroll Configuration
+                        </h4>
+
+                        <div className="form-group">
+                          <div className="checkbox-group">
+                            <input
+                              type="checkbox"
+                              id="highlightsEndlessScroll"
+                              checked={
+                                config.highlightsRecommendations?.endlessScroll
+                                  ?.enabled || false
+                              }
+                              onChange={(e) =>
+                                setConfig((prev) => ({
+                                  ...prev,
+                                  highlightsRecommendations: {
+                                    ...prev.highlightsRecommendations,
+                                    endlessScroll: {
+                                      ...prev.highlightsRecommendations
+                                        ?.endlessScroll,
+                                      enabled: e.target.checked,
+                                    },
+                                  },
+                                }))
+                              }
+                            />
+                            <label htmlFor="highlightsEndlessScroll">
+                              Enable Endless Scroll
+                            </label>
+                          </div>
+                          <div className="form-help">
+                            Automatically load more items as user scrolls
+                            through highlights
+                          </div>
+                        </div>
+
+                        {config.highlightsRecommendations?.endlessScroll
+                          ?.enabled && (
+                          <>
+                            <div className="form-group">
+                              <label className="form-label">
+                                Items Per Load
+                              </label>
+                              <input
+                                type="number"
+                                className="form-input"
+                                min="1"
+                                max="20"
+                                value={
+                                  config.highlightsRecommendations
+                                    ?.endlessScroll?.itemsPerLoad || 5
+                                }
+                                onChange={(e) =>
+                                  setConfig((prev) => ({
+                                    ...prev,
+                                    highlightsRecommendations: {
+                                      ...prev.highlightsRecommendations,
+                                      endlessScroll: {
+                                        ...prev.highlightsRecommendations
+                                          ?.endlessScroll,
+                                        itemsPerLoad:
+                                          parseInt(e.target.value) || 5,
+                                      },
+                                    },
+                                  }))
+                                }
+                                placeholder="5"
+                              />
+                              <div className="form-help">
+                                Number of items to load each time
+                              </div>
+                            </div>
+
+                            <div className="form-group">
+                              <label className="form-label">
+                                Trigger Threshold
+                              </label>
+                              <input
+                                type="number"
+                                className="form-input"
+                                min="1"
+                                max="10"
+                                value={
+                                  config.highlightsRecommendations
+                                    ?.endlessScroll?.triggerThreshold || 3
+                                }
+                                onChange={(e) =>
+                                  setConfig((prev) => ({
+                                    ...prev,
+                                    highlightsRecommendations: {
+                                      ...prev.highlightsRecommendations,
+                                      endlessScroll: {
+                                        ...prev.highlightsRecommendations
+                                          ?.endlessScroll,
+                                        triggerThreshold:
+                                          parseInt(e.target.value) || 3,
+                                      },
+                                    },
+                                  }))
+                                }
+                                placeholder="3"
+                              />
+                              <div className="form-help">
+                                Load more items when this many items remain
+                                before the end
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
 
@@ -1843,16 +2040,38 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                       </div>
 
                       <div className="form-group">
+                        <label className="form-label">First Ad Position</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min="1"
+                          max="20"
+                          value={config.nativeAds?.firstAdPosition || 2}
+                          onChange={(e) =>
+                            updateNativeAds(
+                              "firstAdPosition",
+                              parseInt(e.target.value) || 2
+                            )
+                          }
+                          placeholder="2"
+                        />
+                        <div className="form-help">
+                          Position of the first native ad in the highlights
+                          carousel (e.g., 2 = show first ad after 2 articles)
+                        </div>
+                      </div>
+
+                      <div className="form-group">
                         <label className="form-label">Ad Frequency</label>
                         <input
                           type="number"
                           className="form-input"
                           min="1"
                           max="20"
-                          value={config.nativeAds?.frequency || 5}
+                          value={config.nativeAds?.adFrequency || 5}
                           onChange={(e) =>
                             updateNativeAds(
-                              "frequency",
+                              "adFrequency",
                               parseInt(e.target.value) || 5
                             )
                           }
@@ -1861,30 +2080,6 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                         <div className="form-help">
                           Show a native ad after every N highlight articles
                           (e.g., 5 = show ad after every 5 articles)
-                        </div>
-                      </div>
-
-                      <div className="form-group">
-                        <label className="form-label">
-                          Max Ads Per Session
-                        </label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          min="1"
-                          max="10"
-                          value={config.nativeAds?.maxAdsPerSession || 3}
-                          onChange={(e) =>
-                            updateNativeAds(
-                              "maxAdsPerSession",
-                              parseInt(e.target.value) || 3
-                            )
-                          }
-                          placeholder="3"
-                        />
-                        <div className="form-help">
-                          Maximum number of native ads to show in a single
-                          browsing session
                         </div>
                       </div>
 
