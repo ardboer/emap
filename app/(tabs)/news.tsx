@@ -11,6 +11,7 @@ import { ThemedView } from "@/components/ThemedView";
 import TopicsTabBar from "@/components/TopicsTabBar";
 import TrendingBlockHorizontal from "@/components/TrendingBlockHorizontal";
 import { Colors } from "@/constants/Colors";
+import { getCenteredContentStyle } from "@/constants/Layout";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import {
   brandManager,
@@ -468,6 +469,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 16,
+    ...getCenteredContentStyle(),
   },
   horizontalScrollContent: {
     paddingRight: 16,

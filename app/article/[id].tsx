@@ -7,6 +7,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TrendingArticles from "@/components/TrendingArticles";
 import { Colors } from "@/constants/Colors";
+import { getCenteredContentStyle } from "@/constants/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -654,6 +655,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+    ...getCenteredContentStyle(),
   },
   errorContainer: {
     flex: 1,

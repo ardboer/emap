@@ -3,6 +3,7 @@ import GradientHeader from "@/components/GradientHeader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
+import { getCenteredContentStyle } from "@/constants/Layout";
 import { fetchEvents } from "@/services/api";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -128,6 +129,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 16,
+    ...getCenteredContentStyle(),
   },
   eventContainer: {
     flexDirection: "row",

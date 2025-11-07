@@ -4,6 +4,7 @@ import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
+import { getCenteredContentStyle } from "@/constants/Layout";
 import { useAudio } from "@/contexts/AudioContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -302,6 +303,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+    ...getCenteredContentStyle(),
   },
   screenTitle: {
     marginBottom: 24,

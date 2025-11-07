@@ -2,6 +2,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
+import { getCenteredContentStyle } from "@/constants/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -350,6 +351,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 24,
+    ...getCenteredContentStyle(),
   },
   logoContainer: {
     alignItems: "center",

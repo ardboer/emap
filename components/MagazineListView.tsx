@@ -1,6 +1,7 @@
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
+import { getCenteredContentStyle } from "@/constants/Layout";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { fetchMagazineCover, fetchMagazineEditions } from "@/services/api";
 import { MagazineEdition } from "@/types";
@@ -131,6 +132,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingBottom: 20,
+    ...getCenteredContentStyle(),
   },
   emptyContainer: {
     flex: 1,

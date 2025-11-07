@@ -8,6 +8,7 @@ import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
+import { getCenteredContentStyle } from "@/constants/Layout";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { brandManager, fetchCategoryContent } from "@/services/api";
 import { displayAdManager } from "@/services/displayAdManager";
@@ -282,6 +283,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 16,
+    ...getCenteredContentStyle(),
   },
   horizontalScrollContent: {
     paddingRight: 16,

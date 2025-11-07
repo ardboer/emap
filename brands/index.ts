@@ -147,6 +147,9 @@ export interface BrandConfig {
     };
   };
   displayAds?: DisplayAdsConfig;
+  layout?: {
+    maxContentWidth?: number; // Maximum width for list content on tablets (default: 800)
+  };
 }
 
 export interface PodcastFeed {

@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { getCenteredContentStyle } from "@/constants/Layout";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -251,6 +252,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    ...getCenteredContentStyle(),
   },
   header: {
     flexDirection: "row",
