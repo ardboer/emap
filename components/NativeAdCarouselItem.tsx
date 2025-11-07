@@ -239,7 +239,10 @@ export function NativeAdCarouselItem({
 
         {/* AdChoices Icon - Top Right (Clickable) */}
         <TouchableOpacity
-          style={styles.adChoicesContainer}
+          style={[
+            styles.adChoicesContainer,
+            { top: showingProgress ? insets.top + 80 : insets.top + 60 },
+          ]}
           onPress={handleAdChoicesPress}
           activeOpacity={0.7}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -362,7 +365,7 @@ const styles = StyleSheet.create({
   },
   sponsoredBadge: {
     position: "absolute",
-    top: 80,
+    top: 0,
     left: 16,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     paddingHorizontal: 12,
@@ -429,7 +432,7 @@ const styles = StyleSheet.create({
   },
   adChoicesContainer: {
     position: "absolute",
-    top: 80,
+    top: 120,
     right: 24,
     zIndex: 20,
   },
