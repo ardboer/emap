@@ -3,9 +3,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
-import { fetchRelatedArticles } from "@/services/api";
+import { fetchRecommendedArticles } from "@/services/api";
 import { Article } from "@/types";
-import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,48 +15,43 @@ import {
 
 const { width: screenWidth } = Dimensions.get("window");
 
-interface RelatedArticlesBlockProps {
-  articleId: string;
+interface RecommendedBlockHorizontalProps {
+  onArticlePress?: (article: Article) => void;
 }
 
-export default function RelatedArticlesBlock({
-  articleId,
-}: RelatedArticlesBlockProps) {
+export default function RecommendedBlockHorizontal({
+  onArticlePress,
+}: RecommendedBlockHorizontalProps) {
   const { user, isAuthenticated } = useAuth();
   const { brandConfig } = useBrandConfig();
-  const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
+  const [recommendedArticles, setRecommendedArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Get item count from config, default to 5
-  const itemCount = brandConfig?.relatedArticlesBlock?.itemCount || 5;
+  const itemCount = brandConfig?.recommendedBlockListView?.itemCount || 5;
 
   useEffect(() => {
-    const loadRelatedArticles = async () => {
+    const loadRecommendedArticles = async () => {
       try {
         setLoading(true);
         setError(null);
-        const articles = await fetchRelatedArticles(
-          articleId,
+        const articles = await fetchRecommendedArticles(
           itemCount,
           user?.userId,
           isAuthenticated
         );
-        setRelatedArticles(articles);
+        setRecommendedArticles(articles);
       } catch (err) {
-        setError("Failed to load related articles");
-        console.error("Error loading related articles:", err);
+        setError("Failed to load recommended articles");
+        console.error("Error loading recommended articles:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadRelatedArticles();
-  }, [articleId, itemCount, user?.userId, isAuthenticated]);
-
-  const handleArticlePress = (article: Article) => {
-    router.push(`/article/${article.id}`);
-  };
+    loadRecommendedArticles();
+  }, [itemCount, user?.userId, isAuthenticated]);
 
   if (loading) {
     return (
@@ -65,29 +59,25 @@ export default function RelatedArticlesBlock({
         <ThemedView style={styles.loadingContainer}>
           <ActivityIndicator size="small" />
           <ThemedText style={styles.loadingText}>
-            Loading related articles...
+            Loading recommended articles...
           </ThemedText>
         </ThemedView>
       </ThemedView>
     );
   }
 
-  if (error || relatedArticles.length === 0) {
+  if (error || recommendedArticles.length === 0) {
     return null; // Don't show the block if there's an error or no articles
   }
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.sectionTitle}>Related Articles</ThemedText>
       <FlatList
-        data={relatedArticles}
+        data={recommendedArticles}
         renderItem={({ item }) => (
-          <ArticleTeaserHorizontal
-            article={item}
-            onPress={handleArticlePress}
-          />
+          <ArticleTeaserHorizontal article={item} onPress={onArticlePress} />
         )}
-        keyExtractor={(item, index) => `related-${item.id}-${index}`}
+        keyExtractor={(item, index) => `recommended-${item.id}-${index}`}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.horizontalScrollContent}
@@ -101,19 +91,11 @@ export default function RelatedArticlesBlock({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 24,
-    marginHorizontal: -16, // Negative margin to extend to screen edges
     backgroundColor: "transparent",
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 16,
-    paddingHorizontal: 16, // Add padding back for the title
-  },
   horizontalScrollContent: {
-    paddingLeft: 16,
     paddingRight: 16,
+    paddingBottom: 16,
   },
   loadingContainer: {
     flexDirection: "row",

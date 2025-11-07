@@ -153,9 +153,9 @@
     "position": 1,
     "itemCount": 5
   },
-  "relatedArticlesBlock": {
+  "recommendedBlockListView": {
     "enabled": true,
-    "afterParagraph": 3,
+    "position": 3,
     "itemCount": 5
   },
   "trendingArticlesDetail": {

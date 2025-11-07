@@ -127,9 +127,9 @@ export interface BrandConfig {
     position: number;
     itemCount?: number;
   };
-  relatedArticlesBlock?: {
+  recommendedBlockListView?: {
     enabled: boolean;
-    afterParagraph: number;
+    position: number;
     itemCount?: number;
   };
   trendingArticlesDetail?: {

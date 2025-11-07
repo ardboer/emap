@@ -1,6 +1,5 @@
 import { DisplayAd } from "@/components/DisplayAd";
 import { FadeInImage } from "@/components/FadeInImage";
-import RelatedArticlesBlock from "@/components/RelatedArticlesBlock";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useImageViewer } from "@/hooks/useImageViewer";
@@ -945,9 +944,8 @@ const RichContentRendererInternal: React.FC<
   isBlockquote = false,
   isLink = false,
 }) => {
-  // Get brand configuration for related articles block and display ads
+  // Get brand configuration for display ads
   const brandConfig = brandManager.getCurrentBrand();
-  const relatedArticlesConfig = brandConfig.relatedArticlesBlock;
 
   // Initialize display ad manager with brand config
   useEffect(() => {
@@ -965,13 +963,8 @@ const RichContentRendererInternal: React.FC<
   const adPlacements =
     displayAdManager.calculateArticleAdPlacements(totalParagraphs);
 
-  // Count paragraphs to determine where to inject related articles and ads
+  // Count paragraphs to determine where to inject ads
   let paragraphCount = 0;
-  const shouldInjectRelatedArticles =
-    relatedArticlesConfig?.enabled &&
-    relatedArticlesConfig?.afterParagraph !== null &&
-    relatedArticlesConfig?.afterParagraph !== undefined &&
-    articleId;
 
   return (
     <View style={style}>
@@ -985,12 +978,7 @@ const RichContentRendererInternal: React.FC<
             (placement) => placement.position === paragraphCount
           );
 
-          // Check if we should inject related articles after this paragraph
-          const shouldInjectRelatedHere =
-            shouldInjectRelatedArticles &&
-            paragraphCount === relatedArticlesConfig.afterParagraph;
-
-          if (adPlacement || shouldInjectRelatedHere) {
+          if (adPlacement) {
             return (
               <React.Fragment key={index}>
                 <RichContentNode
@@ -1001,20 +989,15 @@ const RichContentRendererInternal: React.FC<
                   isBlockquote={isBlockquote}
                   isLink={isLink}
                 />
-                {adPlacement && (
-                  <DisplayAd
-                    context="article_detail"
-                    size={adPlacement.size}
-                    onAdLoaded={() =>
-                      console.log(
-                        `Article ad loaded at paragraph ${paragraphCount}`
-                      )
-                    }
-                  />
-                )}
-                {shouldInjectRelatedHere && (
-                  <RelatedArticlesBlock articleId={articleId} />
-                )}
+                <DisplayAd
+                  context="article_detail"
+                  size={adPlacement.size}
+                  onAdLoaded={() =>
+                    console.log(
+                      `Article ad loaded at paragraph ${paragraphCount}`
+                    )
+                  }
+                />
               </React.Fragment>
             );
           }

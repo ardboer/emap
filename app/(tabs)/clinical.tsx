@@ -1,100 +1,83 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
+import ArticleTeaserHero from "@/components/ArticleTeaserHero";
+import ArticleTeaserHorizontal from "@/components/ArticleTeaserHorizontal";
+import { BlockHeader } from "@/components/BlockHeader";
+import { DisplayAd } from "@/components/DisplayAd";
 import GradientHeader from "@/components/GradientHeader";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme.web";
-import { fetchClinicalArticles } from "@/services/api";
-import { Article } from "@/types";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { brandManager, fetchCategoryContent } from "@/services/api";
+import { displayAdManager } from "@/services/displayAdManager";
+import { Article, CategoryContentResponse } from "@/types";
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
+  Dimensions,
   FlatList,
   RefreshControl,
+  SectionList,
   StyleSheet,
   TouchableOpacity,
-  View,
+  useColorScheme,
 } from "react-native";
 
-export default function ClinicalScreen() {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const colorScheme = useColorScheme() ?? "light";
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const { width: screenWidth } = Dimensions.get("window");
 
-  // Load initial data
-  const loadInitialData = async () => {
+// Configuration: Block index that should render horizontally
+const HORIZONTAL_BLOCK_INDEX = 3;
+
+// Clinical category ID
+const CLINICAL_CATEGORY_ID = "161366";
+
+export default function ClinicalScreen() {
+  const colorScheme = useColorScheme() ?? "light";
+  const [categoryContent, setCategoryContent] =
+    useState<CategoryContentResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const contentBackground = useThemeColor({}, "contentBackground");
+
+  // Initialize display ad manager with brand config
+  useEffect(() => {
+    const brandConfig = brandManager.getCurrentBrand();
+    if (brandConfig.displayAds) {
+      displayAdManager.initialize(brandConfig.displayAds);
+    }
+  }, []);
+
+  const loadClinicalContent = async () => {
     try {
-      setLoading(true);
       setError(null);
-      const { articles: fetchedArticles, hasMore: more } =
-        await fetchClinicalArticles(1);
-      setArticles(fetchedArticles);
-      setHasMore(more);
-      setCurrentPage(1);
+      const content = await fetchCategoryContent(CLINICAL_CATEGORY_ID);
+      setCategoryContent(content);
     } catch (err) {
-      setError("Failed to load articles");
-      console.error("Error loading clinical articles:", err);
+      setError("Failed to load clinical articles");
+      console.error("Error loading clinical content:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Load more articles for pagination
-  const loadMoreArticles = async () => {
-    if (loadingMore || !hasMore) return;
-
-    try {
-      setLoadingMore(true);
-      const nextPage = currentPage + 1;
-      const { articles: fetchedArticles, hasMore: more } =
-        await fetchClinicalArticles(nextPage);
-
-      // Append new articles to existing ones
-      setArticles((prev) => [...prev, ...fetchedArticles]);
-      setHasMore(more);
-      setCurrentPage(nextPage);
-    } catch (err) {
-      console.error("Error loading more clinical articles:", err);
-      // Don't show error for pagination failures, just stop loading
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
-  // Pull to refresh handler
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       setError(null);
-      const { articles: fetchedArticles, hasMore: more } =
-        await fetchClinicalArticles(1);
-      setArticles(fetchedArticles);
-      setHasMore(more);
-      setCurrentPage(1);
+      const content = await fetchCategoryContent(CLINICAL_CATEGORY_ID);
+      setCategoryContent(content);
     } catch (err) {
-      setError("Failed to refresh articles");
-      console.error("Error refreshing clinical articles:", err);
+      setError("Failed to refresh clinical articles");
+      console.error("Error refreshing clinical content:", err);
     } finally {
       setRefreshing(false);
     }
   }, []);
 
-  // Handle end reached for infinite scroll
-  const handleEndReached = () => {
-    if (!loadingMore && hasMore) {
-      loadMoreArticles();
-    }
-  };
-
   useEffect(() => {
-    loadInitialData();
+    loadClinicalContent();
   }, []);
 
   const handleArticlePress = (article: Article) => {
@@ -105,71 +88,188 @@ export default function ClinicalScreen() {
     router.push("/search");
   };
 
-  const renderArticle = ({ item }: { item: Article }) => (
-    <ArticleTeaser article={item} onPress={() => handleArticlePress(item)} />
-  );
+  const renderArticle = ({
+    item,
+    index,
+    section,
+  }: {
+    item: Article;
+    index: number;
+    section: any;
+  }) => {
+    // Check if this is the horizontal block - render horizontal scroll
+    if (section.index === HORIZONTAL_BLOCK_INDEX) {
+      return null; // Horizontal items are rendered in renderSectionFooter
+    }
 
-  const renderFooter = () => {
-    if (!loadingMore) return null;
+    // Use hero variant for the first article in each block (index 0)
+    if (index === 0) {
+      return <ArticleTeaserHero article={item} onPress={handleArticlePress} />;
+    }
+    return <ArticleTeaser article={item} onPress={handleArticlePress} />;
+  };
+
+  const renderSectionFooter = ({
+    section,
+  }: {
+    section: {
+      title: string;
+      layout: string;
+      description: string;
+      data: Article[];
+      index: number;
+    };
+  }) => {
+    // Only render horizontal scroll for the configured block index
+    if (section.index !== HORIZONTAL_BLOCK_INDEX || section.data.length === 0) {
+      return null;
+    }
+
     return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" />
-        <ThemedText style={styles.footerText}>Loading more...</ThemedText>
-      </View>
+      <FlatList
+        data={section.data}
+        renderItem={({ item }) => (
+          <ArticleTeaserHorizontal
+            article={item}
+            onPress={handleArticlePress}
+          />
+        )}
+        keyExtractor={(item, index) => `horizontal-${item.id}-${index}`}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.horizontalScrollContent}
+        snapToInterval={screenWidth * 0.7 + 12} // Card width + spacing
+        decelerationRate="fast"
+        snapToAlignment="start"
+      />
     );
   };
 
-  const renderEmpty = () => {
-    if (loading) return null;
+  const renderSectionHeader = ({
+    section,
+  }: {
+    section: {
+      title: string;
+      layout: string;
+      description: string;
+      index: number;
+    };
+  }) => {
+    // Hide the first block's title
+    if (section.index === 0) {
+      return null;
+    }
+
+    // Check if we should show an ad before this block
+    const shouldShowAd = displayAdManager.shouldShowListAd(
+      section.index,
+      sections.length
+    );
+
     return (
-      <ThemedView style={styles.centerContent}>
-        <ThemedText style={styles.emptyText}>
-          No clinical articles available
-        </ThemedText>
-      </ThemedView>
+      <>
+        {shouldShowAd && (
+          <DisplayAd
+            context="list_view"
+            size={shouldShowAd.size}
+            onAdLoaded={() =>
+              console.log(`List ad loaded at block ${section.index}`)
+            }
+          />
+        )}
+        <BlockHeader
+          title={section.title}
+          description={section.description}
+          layout={section.layout}
+        />
+      </>
     );
   };
 
   if (loading) {
     return (
-      <ThemedView style={styles.container}>
+      <ThemedView
+        style={[styles.container, { backgroundColor: contentBackground }]}
+      >
         <GradientHeader onSearchPress={handleSearchPress} />
         <SkeletonLoader variant="list" count={8} />
       </ThemedView>
     );
   }
 
-  if (error && articles.length === 0) {
+  if (error && !categoryContent) {
     return (
       <ThemedView style={[styles.container, styles.centerContent]}>
+        <GradientHeader onSearchPress={handleSearchPress} />
         <ThemedText style={styles.errorText}>{error}</ThemedText>
-        <TouchableOpacity style={styles.retryButton} onPress={loadInitialData}>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={loadClinicalContent}
+        >
           <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
         </TouchableOpacity>
       </ThemedView>
     );
   }
 
+  // Prepare sections for SectionList
+  let sections: {
+    title: string;
+    layout: string;
+    description: string;
+    data: Article[];
+    index: number;
+  }[] = [];
+
+  if (categoryContent) {
+    sections = categoryContent.blocks.map((block, index) => ({
+      title: block.blockTitle,
+      layout: block.blockLayout,
+      description: block.blockDescription,
+      data: block.articles,
+      index,
+    }));
+  }
+
+  const hasContent =
+    sections.length > 0 && sections.some((s) => s.data.length > 0);
+
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: contentBackground }]}
+    >
       <GradientHeader onSearchPress={handleSearchPress} />
-      <FlatList
-        data={articles}
-        renderItem={renderArticle}
-        keyExtractor={(item, index) => `${item.id}-${index}`}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={[
-          styles.listContainer,
-          { backgroundColor: Colors[colorScheme].articleListBackground },
-        ]}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
-        ListEmptyComponent={renderEmpty}
-      />
+      {!hasContent && !loading ? (
+        <ThemedView style={styles.centerContent}>
+          <ThemedText style={styles.emptyText}>
+            No clinical articles available
+          </ThemedText>
+        </ThemedView>
+      ) : (
+        <SectionList
+          sections={sections}
+          renderItem={renderArticle}
+          renderSectionHeader={renderSectionHeader}
+          renderSectionFooter={renderSectionFooter}
+          keyExtractor={(item, index) => item.id + index.toString()}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          contentContainerStyle={[
+            styles.listContainer,
+            { backgroundColor: Colors[colorScheme].articleListBackground },
+          ]}
+          ListEmptyComponent={
+            <ThemedView style={styles.centerContent}>
+              <ThemedText style={styles.emptyText}>
+                No clinical articles available
+              </ThemedText>
+            </ThemedView>
+          }
+          stickySectionHeadersEnabled={false}
+        />
+      )}
     </ThemedView>
   );
 }
@@ -177,19 +277,22 @@ export default function ClinicalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingBottom: 45,
+    backgroundColor: "transparent",
   },
   listContainer: {
     padding: 16,
+  },
+  horizontalScrollContent: {
+    paddingRight: 16,
+    paddingBottom: 16,
   },
   centerContent: {
     justifyContent: "center",
     alignItems: "center",
     flex: 1,
     padding: 20,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
+    backgroundColor: "transparent",
   },
   errorText: {
     fontSize: 16,
@@ -210,14 +313,5 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: 16,
     fontWeight: "600",
-  },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: "center",
-  },
-  footerText: {
-    marginTop: 8,
-    fontSize: 14,
-    opacity: 0.6,
   },
 });

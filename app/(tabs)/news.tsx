@@ -4,6 +4,7 @@ import ArticleTeaserHorizontal from "@/components/ArticleTeaserHorizontal";
 import { BlockHeader } from "@/components/BlockHeader";
 import { DisplayAd } from "@/components/DisplayAd";
 import GradientHeader from "@/components/GradientHeader";
+import RecommendedBlockHorizontal from "@/components/RecommendedBlockHorizontal";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -191,11 +192,17 @@ export default function NewsScreen() {
       data: Article[];
       index: number;
       isTrendingBlock?: boolean;
+      isRecommendedBlock?: boolean;
     };
   }) => {
     // Check if this is the trending block
     if (section.isTrendingBlock) {
       return <TrendingBlockHorizontal onArticlePress={handleArticlePress} />;
+    }
+
+    // Check if this is the recommended block
+    if (section.isRecommendedBlock) {
+      return <RecommendedBlockHorizontal onArticlePress={handleArticlePress} />;
     }
 
     // Only render horizontal scroll for the configured block index
@@ -364,6 +371,40 @@ export default function NewsScreen() {
         sections.splice(position, 0, trendingSection);
 
         // Update indices for blocks after the trending block
+        sections = sections.map((section, idx) => ({
+          ...section,
+          index: idx,
+        }));
+      }
+    }
+
+    // Check if recommended block should be injected
+    const recommendedConfig = brandConfig.recommendedBlockListView;
+
+    if (
+      recommendedConfig &&
+      recommendedConfig.enabled &&
+      recommendedConfig.position !== null &&
+      recommendedConfig.position !== undefined
+    ) {
+      const position = recommendedConfig.position;
+
+      // Only inject if position is valid (within bounds or at the end)
+      if (position >= 0 && position <= sections.length) {
+        // Create recommended block section
+        const recommendedSection = {
+          title: "Recommended",
+          layout: "horizontal",
+          description: "",
+          data: [], // Empty data array since we render custom content
+          index: position,
+          isRecommendedBlock: true,
+        };
+
+        // Insert at the specified position and update indices of following blocks
+        sections.splice(position, 0, recommendedSection);
+
+        // Update indices for blocks after the recommended block
         sections = sections.map((section, idx) => ({
           ...section,
           index: idx,
