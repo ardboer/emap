@@ -1467,13 +1467,13 @@ export async function fetchRecommendedArticlesWithExclude(
       // Remove the 150x150 size constraint from URL to get larger image
       if (imageUrl.includes("-150x150")) {
         imageUrl = imageUrl.replace("-150x150", "");
-        console.log(
-          `Miso product ${product.product_id}: Removed 150x150 constraint, using: ${imageUrl}`
-        );
+        // console.log(
+        //   `Miso product ${product.product_id}: Removed 150x150 constraint, using: ${imageUrl}`
+        // );
       } else {
-        console.log(
-          `Miso product ${product.product_id}: Using cover_image: ${imageUrl}`
-        );
+        // console.log(
+        //   `Miso product ${product.product_id}: Using cover_image: ${imageUrl}`
+        // );
       }
 
       return {

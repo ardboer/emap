@@ -212,17 +212,17 @@ export default function HighlightedScreen() {
       );
 
       // DEBUG: Log article details
-      console.log(
-        "📋 Article order:",
-        fetchedArticles.map((a, i) => ({
-          index: i,
-          id: a.id,
-          title: a.title.substring(0, 30),
-          source: a.source,
-          isNativeAd: a.isNativeAd,
-          inProgressSection: i < wpCount,
-        }))
-      );
+      // console.log(
+      //   "📋 Article order:",
+      //   fetchedArticles.map((a, i) => ({
+      //     index: i,
+      //     id: a.id,
+      //     title: a.title.substring(0, 30),
+      //     source: a.source,
+      //     isNativeAd: a.isNativeAd,
+      //     inProgressSection: i < wpCount,
+      //   }))
+      // );
 
       // Track initial Miso IDs for exclusion in endless scroll
       const brandPrefix = brandConfig?.shortcode.toUpperCase() || "NT";

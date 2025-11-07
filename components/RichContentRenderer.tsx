@@ -424,6 +424,26 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         );
 
       case "p":
+        // Handle custom embeds (Spotify, etc.) within paragraphs
+        if (
+          node.children?.some((child) => child.typename === "HTMLCustomEmbed")
+        ) {
+          const embedNode = node.children.find(
+            (child) => child.typename === "HTMLCustomEmbed"
+          );
+          if (embedNode) {
+            // Render the embed directly, not wrapped in text
+            return (
+              <RichContentNode
+                key={index}
+                node={embedNode}
+                index={index}
+                onImagePress={onImagePress}
+              />
+            );
+          }
+        }
+
         // Handle images within paragraphs
         if (
           node.children?.some(
@@ -843,7 +863,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
     );
   }
 
-  // Handle custom embeds (YouTube, etc.)
+  // Handle custom embeds (YouTube, Spotify, etc.)
   if (node.typename === "HTMLCustomEmbed" && node.code) {
     // Extract YouTube video ID from iframe
     const youtubeMatch = node.code.match(
@@ -856,9 +876,28 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
       return <YouTubePlayerComponent key={index} videoId={videoId} />;
     }
 
-    // For other embeds, use WebView
+    // Check for Spotify embed
+    const spotifyMatch = node.code.match(
+      /open\.spotify\.com\/embed\/(episode|track|playlist|album)\/([a-zA-Z0-9]+)/
+    );
+
+    // Extract height from iframe if specified
+    const heightMatch = node.code.match(/height=["']?(\d+)["']?/);
+    const embedHeight = heightMatch ? parseInt(heightMatch[1], 10) : 300;
+
+    // For Spotify and other embeds, use WebView with appropriate height
+    const backgroundColor =
+      themeColors?.background ||
+      (colorScheme === "dark" ? "#000000" : "#FFFFFF");
+
     return (
-      <View key={index} style={styles.embedContainer}>
+      <View
+        key={index}
+        style={[
+          styles.embedContainer,
+          { height: embedHeight, backgroundColor },
+        ]}
+      >
         <WebView
           source={{
             html: `
@@ -866,7 +905,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                 <head>
                   <meta name="viewport" content="width=device-width, initial-scale=1.0">
                   <style>
-                    body { margin: 0; padding: 0; }
+                    body {
+                      margin: 0;
+                      padding: 0;
+                      overflow: hidden;
+                      background-color: ${backgroundColor};
+                    }
+                    iframe {
+                      border: none;
+                      width: 100%;
+                      height: 100%;
+                    }
                   </style>
                 </head>
                 <body>
@@ -878,6 +927,9 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           style={styles.webView}
           javaScriptEnabled={true}
           domStorageEnabled={true}
+          scrollEnabled={false}
+          allowsInlineMediaPlayback={true}
+          mediaPlaybackRequiresUserAction={false}
         />
       </View>
     );

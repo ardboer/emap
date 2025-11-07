@@ -24,12 +24,12 @@ class DisplayAdManager {
    */
   initialize(config: DisplayAdsConfig): void {
     this.config = config;
-    console.log("DisplayAdManager initialized:", {
-      enabled: config.enabled,
-      testMode: config.testMode,
-      articleDetailEnabled: config.articleDetail.enabled,
-      listViewEnabled: config.listView.enabled,
-    });
+    // console.log("DisplayAdManager initialized:", {
+    //   enabled: config.enabled,
+    //   testMode: config.testMode,
+    //   articleDetailEnabled: config.articleDetail.enabled,
+    //   listViewEnabled: config.listView.enabled,
+    // });
   }
 
   /**
@@ -106,12 +106,12 @@ class DisplayAdManager {
     // Limit to maxAdsPerPage
     const limitedPlacements = placements.slice(0, config.maxAdsPerPage);
 
-    console.log("Article ad placements calculated:", {
-      paragraphCount,
-      totalPlacements: limitedPlacements.length,
-      maxAllowed: config.maxAdsPerPage,
-      placements: limitedPlacements,
-    });
+    // console.log("Article ad placements calculated:", {
+    //   paragraphCount,
+    //   totalPlacements: limitedPlacements.length,
+    //   maxAllowed: config.maxAdsPerPage,
+    //   placements: limitedPlacements,
+    // });
 
     return limitedPlacements;
   }

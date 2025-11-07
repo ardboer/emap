@@ -109,7 +109,7 @@ export function DisplayAd({
         showLoadingIndicator={true}
         showErrorMessage={false}
         onAdLoaded={() => {
-          console.log(`Display ad loaded: ${context} - ${size}`);
+          // console.log(`Display ad loaded: ${context} - ${size}`);
           onAdLoaded?.();
         }}
         onAdFailedToLoad={(error) => {

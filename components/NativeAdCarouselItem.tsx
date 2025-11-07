@@ -92,20 +92,20 @@ export function NativeAdCarouselItem({
 
       // Log detailed ad data
       console.log("Native ad loaded successfully in", loadTime, "ms");
-      console.log("Ad Data:", {
-        headline: ad.headline || "N/A",
-        body: ad.body || "N/A",
-        advertiser: ad.advertiser || "N/A",
-        callToAction: ad.callToAction || "N/A",
-        store: ad.store || "N/A",
-        price: ad.price || "N/A",
-        starRating: ad.starRating || "N/A",
-        imageCount: ad.images?.length || 0,
-        hasIcon: !!ad.icon,
-        hasMediaContent: !!ad.mediaContent,
-        hasVideo: ad.mediaContent?.hasVideoContent || false,
-        mediaAspectRatio: ad.mediaContent?.aspectRatio || "N/A",
-      });
+      // console.log("Ad Data:", {
+      //   headline: ad.headline || "N/A",
+      //   body: ad.body || "N/A",
+      //   advertiser: ad.advertiser || "N/A",
+      //   callToAction: ad.callToAction || "N/A",
+      //   store: ad.store || "N/A",
+      //   price: ad.price || "N/A",
+      //   starRating: ad.starRating || "N/A",
+      //   imageCount: ad.images?.length || 0,
+      //   hasIcon: !!ad.icon,
+      //   hasMediaContent: !!ad.mediaContent,
+      //   hasVideo: ad.mediaContent?.hasVideoContent || false,
+      //   mediaAspectRatio: ad.mediaContent?.aspectRatio || "N/A",
+      // });
 
       // Track impression
       analyticsService.logEvent("native_ad_impression", {
