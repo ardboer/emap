@@ -1567,7 +1567,145 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                 </div>
 
                 <div className="form-section">
-                  <h3 className="form-section-title">Related Articles Block</h3>
+                  <h3 className="form-section-title">
+                    Recommended Block (List View)
+                  </h3>
+
+                  <div className="form-group">
+                    <div className="checkbox-group">
+                      <input
+                        type="checkbox"
+                        id="recommendedBlockEnabled"
+                        checked={
+                          config.recommendedBlockListView?.enabled || false
+                        }
+                        onChange={(e) =>
+                          setConfig((prev) => ({
+                            ...prev,
+                            recommendedBlockListView: {
+                              ...prev.recommendedBlockListView,
+                              enabled: e.target.checked,
+                            },
+                          }))
+                        }
+                      />
+                      <label
+                        htmlFor="recommendedBlockEnabled"
+                        style={{ cursor: "pointer", userSelect: "none" }}
+                      >
+                        Enable Recommended Block in List View
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Position</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={config.recommendedBlockListView?.position || 3}
+                      onChange={(e) =>
+                        setConfig((prev) => ({
+                          ...prev,
+                          recommendedBlockListView: {
+                            ...prev.recommendedBlockListView,
+                            position: parseInt(e.target.value) || 3,
+                          },
+                        }))
+                      }
+                      min="1"
+                      placeholder="3"
+                    />
+                    <div className="form-help">
+                      Position in the article list (1 = first)
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Item Count</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={config.recommendedBlockListView?.itemCount || 5}
+                      onChange={(e) =>
+                        setConfig((prev) => ({
+                          ...prev,
+                          recommendedBlockListView: {
+                            ...prev.recommendedBlockListView,
+                            itemCount: parseInt(e.target.value) || 5,
+                          },
+                        }))
+                      }
+                      min="1"
+                      max="20"
+                      placeholder="5"
+                    />
+                    <div className="form-help">
+                      Number of recommended articles to display
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-section">
+                  <h3 className="form-section-title">Layout Configuration</h3>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Horizontal Blocks (List View)
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={config.layout?.horizontalBlocks || ""}
+                      onChange={(e) =>
+                        setConfig((prev) => ({
+                          ...prev,
+                          layout: {
+                            ...prev.layout,
+                            horizontalBlocks: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="e.g., 1,4,5"
+                    />
+                    <div className="form-help">
+                      Comma-separated list of block indices to render
+                      horizontally in the news list view (e.g.,
+                      &quot;1,4,5&quot;). Leave empty for no horizontal blocks.
+                      Note: Trending and Recommended blocks are always
+                      horizontal.
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Max Content Width</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={config.layout?.maxContentWidth || 800}
+                      onChange={(e) =>
+                        setConfig((prev) => ({
+                          ...prev,
+                          layout: {
+                            ...prev.layout,
+                            maxContentWidth: parseInt(e.target.value) || 800,
+                          },
+                        }))
+                      }
+                      min="600"
+                      max="1200"
+                      placeholder="800"
+                    />
+                    <div className="form-help">
+                      Maximum width for list content on tablets (default: 800px)
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-section">
+                  <h3 className="form-section-title">
+                    Related Articles Block (Detail View)
+                  </h3>
 
                   <div className="form-group">
                     <div className="checkbox-group">

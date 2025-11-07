@@ -34,9 +34,6 @@ import {
 
 const { width: screenWidth } = Dimensions.get("window");
 
-// Configuration: Block index that should render horizontally
-const HORIZONTAL_BLOCK_INDEX = 3;
-
 export default function NewsScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -171,8 +168,20 @@ export default function NewsScreen() {
       return null;
     }
 
-    // Check if this is the horizontal block - render horizontal scroll
-    if (section.index === HORIZONTAL_BLOCK_INDEX) {
+    // Check if this block should be horizontal based on config
+    const brandConfig = brandManager.getCurrentBrand();
+    const horizontalBlocksStr = brandConfig.layout?.horizontalBlocks || "";
+    const horizontalBlockIndices = horizontalBlocksStr
+      .split(",")
+      .map((s: string) => parseInt(s.trim()))
+      .filter((n: number) => !isNaN(n));
+
+    // Use originalIndex to check against config (before trending/recommended injection)
+    const checkIndex =
+      section.originalIndex !== undefined
+        ? section.originalIndex
+        : section.index;
+    if (horizontalBlockIndices.includes(checkIndex)) {
       return null; // Horizontal items are rendered in renderSectionFooter
     }
 
@@ -192,6 +201,7 @@ export default function NewsScreen() {
       description: string;
       data: Article[];
       index: number;
+      originalIndex?: number;
       isTrendingBlock?: boolean;
       isRecommendedBlock?: boolean;
     };
@@ -206,8 +216,25 @@ export default function NewsScreen() {
       return <RecommendedBlockHorizontal onArticlePress={handleArticlePress} />;
     }
 
-    // Only render horizontal scroll for the configured block index
-    if (section.index !== HORIZONTAL_BLOCK_INDEX || section.data.length === 0) {
+    // Check if this block should be horizontal based on config
+    const brandConfig = brandManager.getCurrentBrand();
+    const horizontalBlocksStr = brandConfig.layout?.horizontalBlocks || "";
+    const horizontalBlockIndices = horizontalBlocksStr
+      .split(",")
+      .map((s: string) => parseInt(s.trim()))
+      .filter((n: number) => !isNaN(n));
+
+    // Use originalIndex to check against config (before trending/recommended injection)
+    const checkIndex =
+      section.originalIndex !== undefined
+        ? section.originalIndex
+        : section.index;
+
+    // Only render horizontal scroll for configured block indices
+    if (
+      !horizontalBlockIndices.includes(checkIndex) ||
+      section.data.length === 0
+    ) {
       return null;
     }
 
@@ -330,6 +357,7 @@ export default function NewsScreen() {
     description: string;
     data: Article[];
     index: number;
+    originalIndex?: number;
     isTrendingBlock?: boolean;
   }[] = [];
 
@@ -342,6 +370,7 @@ export default function NewsScreen() {
       description: block.blockDescription,
       data: block.articles,
       index,
+      originalIndex: index, // Store original index before trending/recommended injection
     }));
 
     // Check if trending block should be injected
@@ -371,7 +400,7 @@ export default function NewsScreen() {
         // Insert at the specified position and update indices of following blocks
         sections.splice(position, 0, trendingSection);
 
-        // Update indices for blocks after the trending block
+        // Update indices for blocks after the trending block (but keep originalIndex)
         sections = sections.map((section, idx) => ({
           ...section,
           index: idx,
@@ -405,7 +434,7 @@ export default function NewsScreen() {
         // Insert at the specified position and update indices of following blocks
         sections.splice(position, 0, recommendedSection);
 
-        // Update indices for blocks after the recommended block
+        // Update indices for blocks after the recommended block (but keep originalIndex)
         sections = sections.map((section, idx) => ({
           ...section,
           index: idx,

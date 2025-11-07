@@ -187,7 +187,10 @@
       "enabled": true,
       "maxAdsPerPage": 3,
       "paragraphInterval": 1,
-      "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
+      "allowedSizes": [
+        "MEDIUM_RECTANGLE",
+        "BANNER"
+      ],
       "positions": [
         {
           "type": "after_lead",
@@ -206,7 +209,9 @@
       "enabled": true,
       "maxAdsPerPage": 4,
       "blockInterval": 3,
-      "allowedSizes": ["BANNER"],
+      "allowedSizes": [
+        "BANNER"
+      ],
       "positions": [
         {
           "type": "between_blocks",
@@ -222,6 +227,7 @@
     }
   },
   "layout": {
-    "maxContentWidth": 800
+    "maxContentWidth": 800,
+    "horizontalBlocks": ""
   }
 }

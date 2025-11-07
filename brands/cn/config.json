@@ -212,6 +212,7 @@
     }
   },
   "layout": {
-    "maxContentWidth": 800
+    "maxContentWidth": 800,
+    "horizontalBlocks": "3"
   }
 }
