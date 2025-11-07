@@ -124,6 +124,16 @@
     "brandFilter": "Journal of Nursing Leadership",
     "baseUrl": "https://api.askmiso.com/v1"
   },
+  "highlightsRecommendations": {
+    "enabled": true,
+    "misoItemCount": 10,
+    "mixAndMatch": true,
+    "endlessScroll": {
+      "enabled": true,
+      "itemsPerLoad": 5,
+      "triggerThreshold": 3
+    }
+  },
   "testArticleId": "528406",
   "termsOfServiceUrl": "https://jnl.nursingtimes.net/consents/terms-and-conditions/",
   "supportEmail": "support@jnl.nursingtimes.net",

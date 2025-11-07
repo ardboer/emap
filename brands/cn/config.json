@@ -125,6 +125,16 @@
     "brandFilter": "Construction News",
     "baseUrl": "https://api.askmiso.com/v1"
   },
+  "highlightsRecommendations": {
+    "enabled": true,
+    "misoItemCount": 10,
+    "mixAndMatch": true,
+    "endlessScroll": {
+      "enabled": true,
+      "itemsPerLoad": 5,
+      "triggerThreshold": 3
+    }
+  },
   "testArticleId": "528406",
   "termsOfServiceUrl": "https://www.constructionnews.co.uk/consents/terms-and-conditions/",
   "supportEmail": "support@constructionnews.co.uk",

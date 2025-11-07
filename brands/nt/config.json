@@ -133,6 +133,7 @@
   "highlightsRecommendations": {
     "enabled": true,
     "misoItemCount": 10,
+    "mixAndMatch": true,
     "endlessScroll": {
       "enabled": true,
       "itemsPerLoad": 5,

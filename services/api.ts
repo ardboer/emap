@@ -1512,6 +1512,45 @@ export async function fetchRecommendedArticlesWithExclude(
   }
 }
 
+/**
+ * Mix WordPress and Miso articles in alternating 1:1 pattern
+ * Pattern: WP, Miso, WP, Miso, ... until WP runs out, then continue with Miso only
+ *
+ * @param wordpressArticles - Array of WordPress articles
+ * @param misoArticles - Array of Miso recommendation articles
+ * @returns Mixed array following the alternating pattern
+ */
+function mixArticles(
+  wordpressArticles: Article[],
+  misoArticles: Article[]
+): Article[] {
+  const result: Article[] = [];
+  const maxLength = Math.max(wordpressArticles.length, misoArticles.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    // Add WordPress article if available
+    if (i < wordpressArticles.length) {
+      result.push(wordpressArticles[i]);
+    }
+
+    // Add Miso article if available
+    if (i < misoArticles.length) {
+      result.push(misoArticles[i]);
+    }
+  }
+
+  console.log(
+    `📊 Mixed articles: ${result.length} total (${wordpressArticles.length} WP + ${misoArticles.length} Miso)`
+  );
+  console.log(
+    `📋 Pattern: ${result
+      .map((a) => (a.source === "wordpress" ? "WP" : "M"))
+      .join(", ")}`
+  );
+
+  return result;
+}
+
 // Fetch highlights with Miso recommendations appended
 export async function fetchHighlightsWithRecommendations(
   userId?: string,
@@ -1576,11 +1615,20 @@ export async function fetchHighlightsWithRecommendations(
         `Combined highlights: ${markedWordpressArticles.length} WordPress + ${markedMisoArticles.length} Miso`
       );
 
-      // 6. Combine: WordPress first, then Miso
-      const combinedArticles = [
-        ...markedWordpressArticles,
-        ...markedMisoArticles,
-      ];
+      // 6. Combine articles based on mixAndMatch setting
+      let combinedArticles: Article[];
+      if (brandConfig.highlightsRecommendations?.mixAndMatch) {
+        console.log(
+          "🔀 Mix-and-match enabled: alternating WP and Miso articles"
+        );
+        combinedArticles = mixArticles(
+          markedWordpressArticles,
+          markedMisoArticles
+        );
+      } else {
+        console.log("📚 Sequential mode: WordPress first, then Miso");
+        combinedArticles = [...markedWordpressArticles, ...markedMisoArticles];
+      }
 
       // 7. Inject native ads at configured positions
       return injectNativeAds(combinedArticles, brandConfig);

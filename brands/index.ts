@@ -115,6 +115,7 @@ export interface BrandConfig {
   highlightsRecommendations?: {
     enabled: boolean;
     misoItemCount: number;
+    mixAndMatch?: boolean; // Enable 1:1 alternating pattern (WP, Miso, WP, Miso...)
     endlessScroll?: {
       enabled: boolean;
       itemsPerLoad: number;
