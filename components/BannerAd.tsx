@@ -1,7 +1,7 @@
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { adMobService, AdSizes } from "@/services/admob";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import {
   BannerAdSize,
   BannerAd as GoogleBannerAd,
@@ -121,8 +121,8 @@ export function BannerAdComponent({
 
   return (
     <ThemedView style={[styles.container, style]}>
-      {/* Loading indicator */}
-      {isLoading && showLoadingIndicator && (
+      {/* Loading indicator - hidden to prevent layout shift */}
+      {/* {isLoading && showLoadingIndicator && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator
             size="small"
@@ -130,7 +130,7 @@ export function BannerAdComponent({
           />
           <ThemedText style={styles.loadingText}>Loading ad...</ThemedText>
         </View>
-      )}
+      )} */}
 
       {/* Error message */}
       {hasError && showErrorMessage && (

@@ -45,8 +45,7 @@
         "highlightBoxBorder": "#10D1F0",
         "articleListBackground": "#FFFFFF",
         "articleTeaserTitleText": "#00334C",
-        "linkColor": "#007AFF",
-        "recommendedBadgeBg": "rgba(16, 209, 240, 0.9)"
+        "linkColor": "#007AFF"
       },
       "dark": {
         "primary": "#fff",
@@ -80,8 +79,7 @@
         "highlightBoxBorder": "#10D1F0",
         "articleListBackground": "#011620",
         "articleTeaserTitleText": "#FFFFFF",
-        "linkColor": "#10D1F0",
-        "recommendedBadgeBg": "rgba(16, 209, 240, 0.9)"
+        "linkColor": "#10D1F0"
       }
     },
     "fonts": {
@@ -119,7 +117,7 @@
     "secondaryButtonText": "Sign In"
   },
   "features": {
-    "enablePodcasts": false,
+    "enablePodcasts": true,
     "enableClinical": true,
     "enableEvents": true,
     "enableAsk": true,
@@ -191,14 +189,26 @@
       "views": {
         "news": {
           "enabled": true,
-          "positions": [2, 5, 15, 22],
+          "positions": [
+            2,
+            5,
+            15,
+            22
+          ],
           "maxAdsPerList": 4,
-          "blockPositions": [0, 2],
+          "blockPositions": [
+            0,
+            2
+          ],
           "maxAdsPerBlock": 2
         },
         "clinical": {
           "enabled": true,
-          "positions": [5, 12, 20],
+          "positions": [
+            5,
+            12,
+            20
+          ],
           "maxAdsPerList": 3
         },
         "events": {
@@ -208,7 +218,9 @@
         },
         "trending": {
           "enabled": true,
-          "positions": [2],
+          "positions": [
+            2
+          ],
           "maxAdsPerList": 1
         }
       },
@@ -240,7 +252,10 @@
       "enabled": true,
       "maxAdsPerPage": 3,
       "paragraphInterval": 3,
-      "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
+      "allowedSizes": [
+        "MEDIUM_RECTANGLE",
+        "BANNER"
+      ],
       "positions": [
         {
           "type": "after_lead",
@@ -259,7 +274,9 @@
       "enabled": true,
       "maxAdsPerPage": 4,
       "blockInterval": 3,
-      "allowedSizes": ["BANNER"],
+      "allowedSizes": [
+        "BANNER"
+      ],
       "positions": [
         {
           "type": "between_blocks",
