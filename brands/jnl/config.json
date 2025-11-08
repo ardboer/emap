@@ -172,6 +172,12 @@
   "displayAds": {
     "enabled": true,
     "testMode": true,
+    "lazyLoading": {
+      "enabled": true,
+      "threshold": 250,
+      "showPlaceholder": true,
+      "analytics": true
+    },
     "articleDetail": {
       "enabled": true,
       "maxAdsPerPage": 2,
