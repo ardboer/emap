@@ -1,10 +1,12 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
 import GradientHeader from "@/components/GradientHeader";
+import { NativeAdListItem } from "@/components/NativeAdListItem";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { getCenteredContentStyle } from "@/constants/Layout";
 import { fetchEvents } from "@/services/api";
+import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useState } from "react";
@@ -23,6 +25,13 @@ export default function EventsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialize native ad variant manager
+  useEffect(() => {
+    if (!nativeAdVariantManager.isInitialized()) {
+      nativeAdVariantManager.initialize();
+    }
+  }, []);
 
   const loadData = async () => {
     try {
@@ -79,9 +88,27 @@ export default function EventsScreen() {
     router.push("/search");
   };
 
-  const renderEvent = ({ item }: { item: any }) => (
-    <ArticleTeaser article={item} onPress={() => handleEventPress(item)} />
-  );
+  const renderEvent = ({ item, index }: { item: any; index: number }) => {
+    // Check if this position should show a native ad
+    if (nativeAdVariantManager.shouldShowAdAtPosition("events", index)) {
+      return (
+        <NativeAdListItem
+          position={index}
+          viewType="events"
+          onAdLoaded={(pos) =>
+            console.log(`Native ad loaded at position ${pos} in events`)
+          }
+          onAdFailed={(pos) =>
+            console.log(`Native ad failed at position ${pos} in events`)
+          }
+        />
+      );
+    }
+
+    return (
+      <ArticleTeaser article={item} onPress={() => handleEventPress(item)} />
+    );
+  };
 
   if (loading) {
     return (

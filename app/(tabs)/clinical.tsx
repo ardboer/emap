@@ -4,6 +4,7 @@ import ArticleTeaserHorizontal from "@/components/ArticleTeaserHorizontal";
 import { BlockHeader } from "@/components/BlockHeader";
 import { DisplayAd } from "@/components/DisplayAd";
 import GradientHeader from "@/components/GradientHeader";
+import { NativeAdListItem } from "@/components/NativeAdListItem";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -12,6 +13,7 @@ import { getCenteredContentStyle } from "@/constants/Layout";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { brandManager, fetchCategoryContent } from "@/services/api";
 import { displayAdManager } from "@/services/displayAdManager";
+import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { Article, CategoryContentResponse } from "@/types";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -42,11 +44,15 @@ export default function ClinicalScreen() {
   const [error, setError] = useState<string | null>(null);
   const contentBackground = useThemeColor({}, "contentBackground");
 
-  // Initialize display ad manager with brand config
+  // Initialize display ad manager and native ad variant manager with brand config
   useEffect(() => {
     const brandConfig = brandManager.getCurrentBrand();
     if (brandConfig.displayAds) {
       displayAdManager.initialize(brandConfig.displayAds);
+    }
+    // Initialize native ad variant manager
+    if (!nativeAdVariantManager.isInitialized()) {
+      nativeAdVariantManager.initialize();
     }
   }, []);
 
@@ -101,6 +107,29 @@ export default function ClinicalScreen() {
     // Check if this is the horizontal block - render horizontal scroll
     if (section.index === HORIZONTAL_BLOCK_INDEX) {
       return null; // Horizontal items are rendered in renderSectionFooter
+    }
+
+    // Check if this position should show a native ad
+    if (
+      nativeAdVariantManager.shouldShowAdAtPosition(
+        "clinical",
+        index,
+        section.index
+      )
+    ) {
+      return (
+        <NativeAdListItem
+          position={index}
+          viewType="clinical"
+          blockIndex={section.index}
+          onAdLoaded={(pos) =>
+            console.log(`Native ad loaded at position ${pos} in clinical`)
+          }
+          onAdFailed={(pos) =>
+            console.log(`Native ad failed at position ${pos} in clinical`)
+          }
+        />
+      );
     }
 
     // Use hero variant for the first article in each block (index 0)

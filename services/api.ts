@@ -1653,8 +1653,25 @@ function injectNativeAds(articles: Article[], brandConfig: any): Article[] {
     return articles;
   }
 
-  // Support both adInterval (new) and adFrequency (old) for backward compatibility
-  const { firstAdPosition, adInterval, adFrequency } = brandConfig.nativeAds;
+  // Get carousel configuration (new structure) or fall back to legacy structure
+  const carouselConfig =
+    brandConfig.nativeAds.carousel || brandConfig.nativeAds;
+
+  // Check if carousel ads are enabled
+  if (carouselConfig.enabled === false) {
+    console.log("Carousel native ads disabled, returning articles without ads");
+    return articles;
+  }
+
+  // Support both new structure (carousel.firstAdPosition) and legacy structure
+  const firstAdPosition =
+    carouselConfig.firstAdPosition ||
+    brandConfig.nativeAds.firstAdPosition ||
+    2;
+  const adInterval =
+    carouselConfig.adInterval || brandConfig.nativeAds.adInterval;
+  const adFrequency =
+    carouselConfig.adFrequency || brandConfig.nativeAds.adFrequency;
   const interval = adInterval || adFrequency || 5;
 
   if (adFrequency && !adInterval) {

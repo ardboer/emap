@@ -1,8 +1,7 @@
 /**
- * Display Ads Configuration Types
+ * Display Ads and Native Ads Configuration Types
  *
- * This file defines types for configuring display ads (banner ads) across the app.
- * Note: Native ads (carousel ads) have separate configuration and are not affected by these types.
+ * This file defines types for configuring both display ads (banner ads) and native ads across the app.
  */
 
 /**
@@ -14,6 +13,16 @@ export type AdSizeType =
   | "MEDIUM_RECTANGLE" // 300x250
   | "FULL_BANNER" // 468x60
   | "LEADERBOARD"; // 728x90
+
+/**
+ * Native ad variant types
+ */
+export type NativeAdVariant = "carousel" | "listItem";
+
+/**
+ * List view types that support native ads
+ */
+export type ListViewType = "news" | "clinical" | "events" | "trending";
 
 /**
  * Ad position types
@@ -86,6 +95,88 @@ export interface DisplayAdsConfig {
     ios: string;
     android: string;
   };
+}
+
+/**
+
+/**
+ * Configuration for a single list view's native ads
+ */
+export interface ListViewNativeAdConfig {
+  /** Whether native ads are enabled for this list view */
+  enabled: boolean;
+  /** Specific positions where ads should appear (0-based indices) */
+  positions: number[];
+  /** Maximum number of ads to show in this list */
+  maxAdsPerList: number;
+  /** For section-based lists: which block indices can have ads */
+  blockPositions?: number[];
+  /** Maximum ads per block (for section lists) */
+  maxAdsPerBlock?: number;
+}
+
+/**
+ * Carousel native ad configuration
+ */
+export interface CarouselNativeAdConfig {
+  enabled: boolean;
+  firstAdPosition: number;
+  adInterval: number;
+  preloadDistance: number;
+  unloadDistance: number;
+  maxCachedAds: number;
+  maxAdsPerSession: number | null;
+  showLoadingIndicator: boolean;
+  skipIfNotReady: boolean;
+}
+
+/**
+ * List view native ads configuration
+ */
+export interface ListViewNativeAdsConfig {
+  /** Whether list view native ads are enabled globally */
+  enabled: boolean;
+  /** Configuration per list view type */
+  views: {
+    news?: ListViewNativeAdConfig;
+    clinical?: ListViewNativeAdConfig;
+    events?: ListViewNativeAdConfig;
+  };
+  /** Whether to preload ads */
+  preloadAds: boolean;
+  /** Show loading placeholder */
+  showLoadingIndicator: boolean;
+  /** Skip position if ad not ready */
+  skipIfNotReady: boolean;
+}
+
+/**
+ * Complete native ads configuration with variant support
+ */
+export interface NativeAdsConfig {
+  /** Master switch for all native ads */
+  enabled: boolean;
+  /** Whether to use test ads (Google test ad units) */
+  testMode: boolean;
+  /** Carousel variant configuration */
+  carousel?: CarouselNativeAdConfig;
+  /** List view variant configuration */
+  listView?: ListViewNativeAdsConfig;
+  /** Ad unit IDs per variant and platform */
+  adUnitIds: {
+    carousel: {
+      ios: string;
+      android: string;
+    };
+    listView: {
+      ios: string;
+      android: string;
+    };
+  };
+  // Legacy support for old config format
+  firstAdPosition?: number;
+  adInterval?: number;
+  adFrequency?: number;
 }
 
 /**

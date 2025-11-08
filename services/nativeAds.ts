@@ -1,4 +1,5 @@
 import { brandManager } from "@/config/BrandManager";
+import { CarouselNativeAdConfig, NativeAdsConfig } from "@/types/ads";
 import { Platform } from "react-native";
 import mobileAds, { TestIds } from "react-native-google-mobile-ads";
 
@@ -8,7 +9,8 @@ const TEST_NATIVE_AD_UNITS = {
   android: TestIds.NATIVE,
 };
 
-export interface NativeAdConfig {
+// Legacy type for backward compatibility
+export interface LegacyNativeAdConfig {
   enabled: boolean;
   testMode: boolean;
   firstAdPosition: number;
@@ -23,13 +25,13 @@ export interface NativeAdConfig {
     ios: string;
     android: string;
   };
-  // Backward compatibility
   adFrequency?: number;
 }
 
 class NativeAdService {
   private initialized = false;
-  private config: NativeAdConfig | null = null;
+  private config: CarouselNativeAdConfig | null = null;
+  private fullConfig: NativeAdsConfig | null = null;
 
   /**
    * Initialize Native Ad service with brand configuration
@@ -42,13 +44,59 @@ class NativeAdService {
     try {
       // Get brand configuration
       const brandConfig = brandManager.getCurrentBrand();
-      this.config = brandConfig.nativeAds as NativeAdConfig;
+      this.fullConfig = brandConfig.nativeAds as NativeAdsConfig;
 
-      if (!this.config) {
+      if (!this.fullConfig) {
         console.warn("Native ads configuration not found in brand config");
-        this.config = {
+        this.fullConfig = {
           enabled: false,
           testMode: true,
+          adUnitIds: {
+            carousel: {
+              ios: TEST_NATIVE_AD_UNITS.ios,
+              android: TEST_NATIVE_AD_UNITS.android,
+            },
+            listView: {
+              ios: TEST_NATIVE_AD_UNITS.ios,
+              android: TEST_NATIVE_AD_UNITS.android,
+            },
+          },
+        };
+      }
+
+      // Handle new structure with carousel config
+      if (this.fullConfig.carousel) {
+        this.config = this.fullConfig.carousel;
+      }
+      // Handle legacy structure (backward compatibility)
+      else if (this.fullConfig.firstAdPosition !== undefined) {
+        console.warn(
+          "⚠️ Using legacy native ads config format. Consider updating to new format."
+        );
+        const legacyConfig = this.fullConfig as any as LegacyNativeAdConfig;
+
+        this.config = {
+          enabled: legacyConfig.enabled,
+          firstAdPosition: legacyConfig.firstAdPosition,
+          adInterval: legacyConfig.adInterval || legacyConfig.adFrequency || 5,
+          preloadDistance: legacyConfig.preloadDistance || 2,
+          unloadDistance: legacyConfig.unloadDistance || 3,
+          maxCachedAds: legacyConfig.maxCachedAds || 3,
+          maxAdsPerSession: legacyConfig.maxAdsPerSession || null,
+          showLoadingIndicator:
+            legacyConfig.showLoadingIndicator !== undefined
+              ? legacyConfig.showLoadingIndicator
+              : true,
+          skipIfNotReady:
+            legacyConfig.skipIfNotReady !== undefined
+              ? legacyConfig.skipIfNotReady
+              : true,
+        };
+      }
+      // No carousel config at all
+      else {
+        this.config = {
+          enabled: false,
           firstAdPosition: 4,
           adInterval: 5,
           preloadDistance: 2,
@@ -57,48 +105,16 @@ class NativeAdService {
           maxAdsPerSession: null,
           showLoadingIndicator: true,
           skipIfNotReady: true,
-          adUnitIds: {
-            ios: TEST_NATIVE_AD_UNITS.ios,
-            android: TEST_NATIVE_AD_UNITS.android,
-          },
         };
-      }
-
-      // Handle backward compatibility: convert adFrequency to adInterval
-      if (this.config.adFrequency && !this.config.adInterval) {
-        console.warn(
-          "⚠️ 'adFrequency' is deprecated. Please use 'adInterval' instead."
-        );
-        this.config.adInterval = this.config.adFrequency;
-      }
-
-      // Set defaults for new properties if not provided
-      if (this.config.preloadDistance === undefined) {
-        this.config.preloadDistance = 2;
-      }
-      if (this.config.unloadDistance === undefined) {
-        this.config.unloadDistance = 3;
-      }
-      if (this.config.maxCachedAds === undefined) {
-        this.config.maxCachedAds = 3;
-      }
-      if (this.config.maxAdsPerSession === undefined) {
-        this.config.maxAdsPerSession = null;
-      }
-      if (this.config.showLoadingIndicator === undefined) {
-        this.config.showLoadingIndicator = true;
-      }
-      if (this.config.skipIfNotReady === undefined) {
-        this.config.skipIfNotReady = true;
       }
 
       // Initialize Mobile Ads SDK
       await mobileAds().initialize();
 
       this.initialized = true;
-      console.log("Native Ad Service initialized:", {
+      console.log("Native Ad Service (Carousel) initialized:", {
         enabled: this.config.enabled,
-        testMode: this.config.testMode,
+        testMode: this.fullConfig.testMode,
         firstAdPosition: this.config.firstAdPosition,
         adInterval: this.config.adInterval,
         preloadDistance: this.config.preloadDistance,
@@ -130,28 +146,42 @@ class NativeAdService {
    * Get the appropriate ad unit ID for current platform
    */
   getAdUnitId(): string {
-    if (!this.config) {
+    if (!this.fullConfig) {
       throw new Error("Native Ad Service not initialized");
     }
 
     // Use test ad units if in test mode
-    if (this.config.testMode) {
+    if (this.fullConfig.testMode) {
       return Platform.OS === "ios"
         ? TEST_NATIVE_AD_UNITS.ios
         : TEST_NATIVE_AD_UNITS.android;
     }
 
-    // Use production ad units
-    return Platform.OS === "ios"
-      ? this.config.adUnitIds.ios
-      : this.config.adUnitIds.android;
+    // Use production ad units from carousel config
+    const adUnitIds = this.fullConfig.adUnitIds?.carousel;
+    if (!adUnitIds) {
+      // Fallback to legacy format
+      const legacyConfig = this.fullConfig as any;
+      return Platform.OS === "ios"
+        ? legacyConfig.adUnitIds?.ios || TEST_NATIVE_AD_UNITS.ios
+        : legacyConfig.adUnitIds?.android || TEST_NATIVE_AD_UNITS.android;
+    }
+
+    return Platform.OS === "ios" ? adUnitIds.ios : adUnitIds.android;
   }
 
   /**
-   * Get current configuration
+   * Get current configuration (carousel config)
    */
-  getConfig(): NativeAdConfig | null {
+  getConfig(): CarouselNativeAdConfig | null {
     return this.config;
+  }
+
+  /**
+   * Get full configuration (including listView)
+   */
+  getFullConfig(): NativeAdsConfig | null {
+    return this.fullConfig;
   }
 
   /**
@@ -221,7 +251,7 @@ class NativeAdService {
   /**
    * Update configuration (useful for testing)
    */
-  updateConfig(config: Partial<NativeAdConfig>): void {
+  updateConfig(config: Partial<CarouselNativeAdConfig>): void {
     if (this.config) {
       this.config = { ...this.config, ...config };
       console.log("Native Ad Service configuration updated:", this.config);
@@ -234,6 +264,7 @@ class NativeAdService {
   reset(): void {
     this.initialized = false;
     this.config = null;
+    this.fullConfig = null;
     console.log("Native Ad Service reset");
   }
 }

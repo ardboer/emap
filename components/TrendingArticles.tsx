@@ -4,10 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { fetchTrendingArticles } from "@/services/api";
+import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { Article } from "@/types";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import ArticleTeaser from "./ArticleTeaser";
+import NativeAdListItem from "./NativeAdListItem";
 
 export default function TrendingArticles() {
   const { user, isAuthenticated } = useAuth();
@@ -32,6 +34,10 @@ export default function TrendingArticles() {
       try {
         setLoading(true);
         setError(null);
+
+        // Initialize native ad variant manager
+        await nativeAdVariantManager.initialize();
+
         const articles = await fetchTrendingArticles(
           itemCount,
           user?.userId,
@@ -90,9 +96,21 @@ export default function TrendingArticles() {
           { backgroundColor: contentBackground },
         ]}
       >
-        {trendingArticles.map((article) => (
-          <ArticleTeaser key={article.id} article={article} />
-        ))}
+        {trendingArticles.map((article, index) => {
+          // Check if we should show a native ad at this position
+          if (
+            nativeAdVariantManager.shouldShowAdAtPosition("trending", index)
+          ) {
+            return (
+              <React.Fragment key={`ad-${index}`}>
+                <NativeAdListItem position={index} viewType="trending" />
+                <ArticleTeaser key={article.id} article={article} />
+              </React.Fragment>
+            );
+          }
+
+          return <ArticleTeaser key={article.id} article={article} />;
+        })}
       </ThemedView>
     </ThemedView>
   );

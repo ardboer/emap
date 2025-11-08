@@ -61,7 +61,6 @@ export default function HighlightedScreen() {
   );
   const [isCarouselVisible, setIsCarouselVisible] = useState(true);
   const [wordpressArticleCount, setWordpressArticleCount] = useState(0);
-  const [hasRefreshedAtZero, setHasRefreshedAtZero] = useState(false);
 
   // Endless scroll state
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -858,19 +857,24 @@ export default function HighlightedScreen() {
     }, [isUserInteracting])
   );
 
-  // Handle tab press to scroll to top when already in view
+  // Handle tab press to scroll to top and refresh when already in view
   // Listen for route params to detect when tab is pressed while already focused
   useEffect(() => {
     // Check if scrollToTop param is present (set by tab press listener)
-    if (params.scrollToTop && isCarouselVisible && currentIndex !== 0) {
+    if (params.scrollToTop && isCarouselVisible) {
       // Scroll to index 0 instantly (no animation)
-      flatListRef.current?.scrollToIndex({
-        index: 0,
-        animated: false,
-      });
+      if (currentIndex !== 0) {
+        flatListRef.current?.scrollToIndex({
+          index: 0,
+          animated: false,
+        });
+        setCurrentIndex(0);
+      }
 
-      // Update state
-      setCurrentIndex(0);
+      // Refresh content when tab is pressed while already in view
+      console.log("🔄 Tab pressed while in view - refreshing content");
+      nativeAdInstanceManager.clearAll();
+      loadArticles();
 
       // Analytics
       analyticsService.logEvent("carousel_tab_press_scroll_to_top", {
@@ -893,27 +897,13 @@ export default function HighlightedScreen() {
     articles.length,
   ]);
 
-  // Refresh content when returning to index 0
-  useEffect(() => {
-    if (currentIndex === 0 && !hasRefreshedAtZero && articles.length > 0) {
-      // Only refresh if we've moved away from 0 before
-      if (maxIndexReached > 0) {
-        console.log("🔄 Returned to index 0 - refreshing content");
-        nativeAdInstanceManager.clearAll();
-        loadArticles();
-        setHasRefreshedAtZero(true);
-      }
-    } else if (currentIndex > 0) {
-      // Reset the flag when moving away from 0
-      setHasRefreshedAtZero(false);
-    }
-  }, [currentIndex, maxIndexReached, articles.length, hasRefreshedAtZero]);
-
   // Handle app coming back from background
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (nextAppState === "active" && isFocused) {
-        console.log("📱 App returned from background - resetting to index 0");
+        console.log(
+          "📱 App returned from background - resetting to index 0 and refreshing"
+        );
         // Scroll to index 0
         if (currentIndex !== 0) {
           flatListRef.current?.scrollToIndex({
@@ -925,7 +915,6 @@ export default function HighlightedScreen() {
         // Clear ads and refresh content
         nativeAdInstanceManager.clearAll();
         loadArticles();
-        setHasRefreshedAtZero(true);
       }
     });
 

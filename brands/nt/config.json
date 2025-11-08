@@ -173,17 +173,56 @@
   "nativeAds": {
     "enabled": true,
     "testMode": true,
-    "firstAdPosition": 2,
-    "adInterval": 5,
-    "preloadDistance": 1,
-    "unloadDistance": 3,
-    "maxCachedAds": 3,
-    "maxAdsPerSession": null,
-    "showLoadingIndicator": true,
-    "skipIfNotReady": false,
+    "carousel": {
+      "enabled": true,
+      "firstAdPosition": 2,
+      "adInterval": 5,
+      "preloadDistance": 1,
+      "unloadDistance": 3,
+      "maxCachedAds": 3,
+      "maxAdsPerSession": null,
+      "showLoadingIndicator": true,
+      "skipIfNotReady": false
+    },
+    "listView": {
+      "enabled": true,
+      "views": {
+        "news": {
+          "enabled": true,
+          "positions": [3, 8, 15, 22],
+          "maxAdsPerList": 4,
+          "blockPositions": [1, 3],
+          "maxAdsPerBlock": 2
+        },
+        "clinical": {
+          "enabled": true,
+          "positions": [5, 12, 20],
+          "maxAdsPerList": 3
+        },
+        "events": {
+          "enabled": false,
+          "positions": [],
+          "maxAdsPerList": 0
+        },
+        "trending": {
+          "enabled": true,
+          "positions": [2],
+          "maxAdsPerList": 1
+        }
+      },
+      "preloadAds": true,
+      "showLoadingIndicator": false,
+      "skipIfNotReady": true
+    },
     "adUnitIds": {
-      "ios": "ca-app-pub-3940256099942544/3986624511",
-      "android": "ca-app-pub-3940256099942544/2247696110"
+      "carousel": {
+        "ios": "ca-app-pub-3940256099942544/3986624511",
+        "android": "ca-app-pub-3940256099942544/2247696110"
+      },
+      "listView": {
+        "ios": "ca-app-pub-3940256099942544/3986624511",
+        "android": "ca-app-pub-3940256099942544/2247696110"
+      }
     }
   },
   "displayAds": {

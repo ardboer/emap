@@ -1,5 +1,5 @@
 // Brand registry and management
-import { DisplayAdsConfig } from "@/types/ads";
+import { DisplayAdsConfig, NativeAdsConfig } from "@/types/ads";
 import { discoverBrandsSync, type BrandsRegistry } from "./brandDiscovery";
 
 export interface MisoConfig {
@@ -134,16 +134,7 @@ export interface BrandConfig {
     enabled: boolean;
     itemCount?: number;
   };
-  nativeAds?: {
-    enabled: boolean;
-    testMode: boolean;
-    firstAdPosition: number;
-    adFrequency: number;
-    adUnitIds: {
-      ios: string;
-      android: string;
-    };
-  };
+  nativeAds?: NativeAdsConfig;
   displayAds?: DisplayAdsConfig;
   layout?: {
     maxContentWidth?: number; // Maximum width for list content on tablets (default: 800)

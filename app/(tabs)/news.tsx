@@ -4,6 +4,7 @@ import ArticleTeaserHorizontal from "@/components/ArticleTeaserHorizontal";
 import { BlockHeader } from "@/components/BlockHeader";
 import { DisplayAd } from "@/components/DisplayAd";
 import GradientHeader from "@/components/GradientHeader";
+import { NativeAdListItem } from "@/components/NativeAdListItem";
 import RecommendedBlockHorizontal from "@/components/RecommendedBlockHorizontal";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
@@ -19,6 +20,7 @@ import {
   fetchMenuItems,
 } from "@/services/api";
 import { displayAdManager } from "@/services/displayAdManager";
+import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { Article, CategoryContentResponse } from "@/types";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -42,11 +44,15 @@ export default function NewsScreen() {
   const [error, setError] = useState<string | null>(null);
   const contentBackground = useThemeColor({}, "contentBackground");
 
-  // Initialize display ad manager with brand config
+  // Initialize display ad manager and native ad variant manager with brand config
   useEffect(() => {
     const brandConfig = brandManager.getCurrentBrand();
     if (brandConfig.displayAds) {
       displayAdManager.initialize(brandConfig.displayAds);
+    }
+    // Initialize native ad variant manager
+    if (!nativeAdVariantManager.isInitialized()) {
+      nativeAdVariantManager.initialize();
     }
   }, []);
   // Store content per tab - all tabs now use grouped blocks structure
@@ -183,6 +189,33 @@ export default function NewsScreen() {
         : section.index;
     if (horizontalBlockIndices.includes(checkIndex)) {
       return null; // Horizontal items are rendered in renderSectionFooter
+    }
+
+    // Check if this position should show a native ad
+    const blockIndex =
+      section.originalIndex !== undefined
+        ? section.originalIndex
+        : section.index;
+    if (
+      nativeAdVariantManager.shouldShowAdAtPosition("news", index, blockIndex)
+    ) {
+      return (
+        <NativeAdListItem
+          position={index}
+          viewType="news"
+          blockIndex={blockIndex}
+          onAdLoaded={(pos) =>
+            console.log(
+              `Native ad loaded at position ${pos} in block ${blockIndex}`
+            )
+          }
+          onAdFailed={(pos) =>
+            console.log(
+              `Native ad failed at position ${pos} in block ${blockIndex}`
+            )
+          }
+        />
+      );
     }
 
     // Use hero variant for the first article in each block (index 0)
