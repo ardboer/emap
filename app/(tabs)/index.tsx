@@ -5,6 +5,7 @@ import { NativeAdCarouselItem } from "@/components/NativeAdCarouselItem";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { UserIcon } from "@/components/UserIcon";
 import { useAudio } from "@/contexts/AudioContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
@@ -74,6 +75,7 @@ export default function HighlightedScreen() {
   const { brandConfig } = useBrandConfig();
   const backgroundColor = useThemeColor({}, "background");
   const contentBackground = useThemeColor({}, "contentBackground");
+  const recommendedBadgeBg = useThemeColor({}, "recommendedBadgeBg");
 
   // Get slide duration from brand config (in seconds), default to 5 seconds
   const slideDurationSeconds =
@@ -972,7 +974,12 @@ export default function HighlightedScreen() {
     // Render recommended badge for Miso articles
     const renderRecommendedBadge = () => {
       return (
-        <View style={[styles.recommendedBadge, { top: insets.top + 60 }]}>
+        <View
+          style={[
+            styles.recommendedBadge,
+            { top: insets.top + 60, backgroundColor: recommendedBadgeBg },
+          ]}
+        >
           <ThemedText
             style={[
               styles.recommendedBadgeText,
@@ -1220,11 +1227,7 @@ export default function HighlightedScreen() {
           style={[styles.userButton, { top: insets.top + 10 }]}
           disabled
         >
-          <FadeInImage
-            source={require("@/assets/images/user-icon.png")}
-            style={{ width: 24, height: 24, opacity: 0.5 }}
-            contentFit="contain"
-          />
+          <UserIcon width={24} height={24} opacity={0.5} />
         </TouchableOpacity>
         <SkeletonLoader variant="carousel" />
       </ThemedView>
@@ -1282,11 +1285,7 @@ export default function HighlightedScreen() {
         style={[styles.userButton, { top: insets.top + 10 }]}
         onPress={() => setSettingsDrawerVisible(true)}
       >
-        <FadeInImage
-          source={require("@/assets/images/user-icon.png")}
-          style={{ width: 24, height: 24 }}
-          contentFit="contain"
-        />
+        <UserIcon width={24} height={24} />
       </TouchableOpacity>
 
       <FlatList
@@ -1468,7 +1467,6 @@ const staticStyles = StyleSheet.create({
     position: "absolute",
     top: 80,
     left: 16,
-    backgroundColor: "rgba(16, 209, 240, 0.9)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,

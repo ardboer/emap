@@ -45,7 +45,8 @@
         "highlightBoxBorder": "#10D1F0",
         "articleListBackground": "#FFFFFF",
         "articleTeaserTitleText": "#00334C",
-        "linkColor": "#007AFF"
+        "linkColor": "#007AFF",
+        "recommendedBadgeBg": "rgba(16, 209, 240, 0.9)"
       },
       "dark": {
         "primary": "#fff",
@@ -79,7 +80,8 @@
         "highlightBoxBorder": "#10D1F0",
         "articleListBackground": "#011620",
         "articleTeaserTitleText": "#FFFFFF",
-        "linkColor": "#10D1F0"
+        "linkColor": "#10D1F0",
+        "recommendedBadgeBg": "rgba(16, 209, 240, 0.9)"
       }
     },
     "fonts": {
@@ -189,9 +191,9 @@
       "views": {
         "news": {
           "enabled": true,
-          "positions": [3, 8, 15, 22],
+          "positions": [2, 5, 15, 22],
           "maxAdsPerList": 4,
-          "blockPositions": [1, 3],
+          "blockPositions": [0, 2],
           "maxAdsPerBlock": 2
         },
         "clinical": {
@@ -237,7 +239,7 @@
     "articleDetail": {
       "enabled": true,
       "maxAdsPerPage": 3,
-      "paragraphInterval": 1,
+      "paragraphInterval": 3,
       "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
       "positions": [
         {

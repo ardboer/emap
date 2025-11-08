@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { brandApi } from "../services/api";
 import ConfigEditor from "./ConfigEditor";
+import NativeAdsConfig from "./NativeAdsConfig";
 
 const BrandForm = ({ brand, onClose, onSuccess }) => {
   const [activeTab, setActiveTab] = useState("basic");
@@ -315,6 +316,51 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
     }));
   };
 
+  const updateNativeAdsCarousel = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      nativeAds: {
+        ...prev.nativeAds,
+        carousel: {
+          ...prev.nativeAds?.carousel,
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const updateNativeAdsListView = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      nativeAds: {
+        ...prev.nativeAds,
+        listView: {
+          ...prev.nativeAds?.listView,
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const updateNativeAdsListViewView = (viewName, field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      nativeAds: {
+        ...prev.nativeAds,
+        listView: {
+          ...prev.nativeAds?.listView,
+          views: {
+            ...prev.nativeAds?.listView?.views,
+            [viewName]: {
+              ...prev.nativeAds?.listView?.views?.[viewName],
+              [field]: value,
+            },
+          },
+        },
+      },
+    }));
+  };
+
   const updateNativeAdsAdUnitIds = (platform, value) => {
     setConfig((prev) => ({
       ...prev,
@@ -323,6 +369,36 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
         adUnitIds: {
           ...prev.nativeAds?.adUnitIds,
           [platform]: value,
+        },
+      },
+    }));
+  };
+
+  const updateNativeAdsAdUnitIdsNested = (type, platform, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      nativeAds: {
+        ...prev.nativeAds,
+        adUnitIds: {
+          ...prev.nativeAds?.adUnitIds,
+          [type]: {
+            ...prev.nativeAds?.adUnitIds?.[type],
+            [platform]: value,
+          },
+        },
+      },
+    }));
+  };
+
+  // Update display ads lazy loading
+  const updateDisplayAdsLazyLoading = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      displayAds: {
+        ...prev.displayAds,
+        lazyLoading: {
+          ...prev.displayAds?.lazyLoading,
+          [field]: value,
         },
       },
     }));
@@ -2124,161 +2200,16 @@ const BrandForm = ({ brand, onClose, onSuccess }) => {
                 </div>
 
                 {/* Native Ads Section */}
-                <div className="form-section" style={{ marginTop: "2rem" }}>
-                  <h3 className="form-section-title">
-                    Native Ads (Highlight Carousel)
-                  </h3>
-
-                  <div className="form-group">
-                    <div className="checkbox-group">
-                      <input
-                        type="checkbox"
-                        id="nativeAdsEnabled"
-                        checked={config.nativeAds?.enabled || false}
-                        onChange={(e) =>
-                          updateNativeAds("enabled", e.target.checked)
-                        }
-                      />
-                      <label
-                        htmlFor="nativeAdsEnabled"
-                        style={{ cursor: "pointer", userSelect: "none" }}
-                      >
-                        Enable Native Ads in Highlights
-                      </label>
-                    </div>
-                    <div className="form-help">
-                      Show native ads in the highlights carousel (full-screen
-                      ads between articles)
-                    </div>
-                  </div>
-
-                  {config.nativeAds?.enabled && (
-                    <>
-                      <div className="form-group">
-                        <div className="checkbox-group">
-                          <input
-                            type="checkbox"
-                            id="nativeAdsTestMode"
-                            checked={config.nativeAds?.testMode || false}
-                            onChange={(e) =>
-                              updateNativeAds("testMode", e.target.checked)
-                            }
-                          />
-                          <label
-                            htmlFor="nativeAdsTestMode"
-                            style={{ cursor: "pointer", userSelect: "none" }}
-                          >
-                            Test Mode
-                          </label>
-                        </div>
-                        <div className="form-help">
-                          Use Google test ad units for testing (recommended
-                          during development)
-                        </div>
-                      </div>
-
-                      <div className="form-group">
-                        <label className="form-label">First Ad Position</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          min="1"
-                          max="20"
-                          value={config.nativeAds?.firstAdPosition || 2}
-                          onChange={(e) =>
-                            updateNativeAds(
-                              "firstAdPosition",
-                              parseInt(e.target.value) || 2
-                            )
-                          }
-                          placeholder="2"
-                        />
-                        <div className="form-help">
-                          Position of the first native ad in the highlights
-                          carousel (e.g., 2 = show first ad after 2 articles)
-                        </div>
-                      </div>
-
-                      <div className="form-group">
-                        <label className="form-label">Ad Frequency</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          min="1"
-                          max="20"
-                          value={config.nativeAds?.adFrequency || 5}
-                          onChange={(e) =>
-                            updateNativeAds(
-                              "adFrequency",
-                              parseInt(e.target.value) || 5
-                            )
-                          }
-                          placeholder="5"
-                        />
-                        <div className="form-help">
-                          Show a native ad after every N highlight articles
-                          (e.g., 5 = show ad after every 5 articles)
-                        </div>
-                      </div>
-
-                      {/* Native Ad Unit IDs */}
-                      <div style={{ marginTop: "1.5rem" }}>
-                        <h4 style={{ marginBottom: "1rem", color: "#2c3e50" }}>
-                          Native Ad Unit IDs
-                        </h4>
-                        <div
-                          className="form-help"
-                          style={{ marginBottom: "1rem" }}
-                        >
-                          {config.nativeAds?.testMode
-                            ? "Test mode is enabled - these IDs will be ignored and Google test units will be used"
-                            : "Production native ad unit IDs from Google AdMob"}
-                        </div>
-
-                        <div className="form-group">
-                          <label className="form-label">
-                            iOS Native Ad Unit ID
-                          </label>
-                          <input
-                            type="text"
-                            className="form-input"
-                            value={config.nativeAds?.adUnitIds?.ios || ""}
-                            onChange={(e) =>
-                              updateNativeAdsAdUnitIds("ios", e.target.value)
-                            }
-                            placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY"
-                            disabled={config.nativeAds?.testMode}
-                          />
-                          <div className="form-help">
-                            Google AdMob native ad unit ID for iOS
-                          </div>
-                        </div>
-
-                        <div className="form-group">
-                          <label className="form-label">
-                            Android Native Ad Unit ID
-                          </label>
-                          <input
-                            type="text"
-                            className="form-input"
-                            value={config.nativeAds?.adUnitIds?.android || ""}
-                            onChange={(e) =>
-                              updateNativeAdsAdUnitIds(
-                                "android",
-                                e.target.value
-                              )
-                            }
-                            placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ"
-                            disabled={config.nativeAds?.testMode}
-                          />
-                          <div className="form-help">
-                            Google AdMob native ad unit ID for Android
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <NativeAdsConfig
+                  config={config}
+                  updateNativeAds={updateNativeAds}
+                  updateNativeAdsCarousel={updateNativeAdsCarousel}
+                  updateNativeAdsListView={updateNativeAdsListView}
+                  updateNativeAdsListViewView={updateNativeAdsListViewView}
+                  updateNativeAdsAdUnitIdsNested={
+                    updateNativeAdsAdUnitIdsNested
+                  }
+                />
 
                 <div
                   style={{
