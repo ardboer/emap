@@ -193,8 +193,8 @@ export function NativeAdCarouselItem({
     }
   }
 
-  // Show loading state if ad is loading or should load but not ready
-  if (isLoading || (shouldLoad && !nativeAd && !hasError)) {
+  // Show loading state if ad is loading or should load but not ready (only in development)
+  if ((isLoading || (shouldLoad && !nativeAd && !hasError)) && __DEV__) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator

@@ -48,7 +48,7 @@ export function BannerAdComponent({
   size = AdSizes.BANNER,
   style,
   showLoadingIndicator = true,
-  showErrorMessage = true,
+  showErrorMessage = __DEV__, // Only show errors in development
   errorMessage = "Unable to load advertisement",
   onAdLoaded,
   onAdFailedToLoad,

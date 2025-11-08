@@ -200,8 +200,8 @@ export function NativeAdListItem({
     return null;
   }
 
-  // Show loading state if configured
-  if (isLoading && config?.showLoadingIndicator) {
+  // Show loading state if configured (only in development)
+  if (isLoading && config?.showLoadingIndicator && __DEV__) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator
