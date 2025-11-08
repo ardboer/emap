@@ -14,6 +14,7 @@ import {
   fetchHighlightsWithRecommendations,
   fetchRecommendedArticlesWithExclude,
 } from "@/services/api";
+import { nativeAdInstanceManager } from "@/services/nativeAdInstanceManager";
 import { Article } from "@/types";
 import { hexToRgba } from "@/utils/colors";
 import {
@@ -26,6 +27,7 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
   Dimensions,
   FlatList,
   NativeScrollEvent,
@@ -59,6 +61,7 @@ export default function HighlightedScreen() {
   );
   const [isCarouselVisible, setIsCarouselVisible] = useState(true);
   const [wordpressArticleCount, setWordpressArticleCount] = useState(0);
+  const [hasRefreshedAtZero, setHasRefreshedAtZero] = useState(false);
 
   // Endless scroll state
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -247,6 +250,22 @@ export default function HighlightedScreen() {
       });
 
       setArticles(fetchedArticles);
+
+      // Trigger initial preload for native ads near starting position
+      const config = brandConfig?.nativeAds as any;
+      if (config?.enabled && fetchedArticles.length > 0) {
+        const preloadDistance = config?.preloadDistance || 2;
+        const unloadDistance = config?.unloadDistance || 3;
+
+        // Trigger preload for ads near position 0
+        setTimeout(() => {
+          nativeAdInstanceManager.handlePositionChange(
+            0,
+            preloadDistance,
+            unloadDistance
+          );
+        }, 100);
+      }
 
       // Load color gradient setting
       const AsyncStorage = (
@@ -475,6 +494,19 @@ export default function HighlightedScreen() {
         isNativeAd: articles[index]?.isNativeAd,
       });
       setCurrentIndex(index);
+
+      // Trigger lazy loading/unloading for native ads
+      const config = brandConfig?.nativeAds as any;
+      if (config?.enabled) {
+        const preloadDistance = config?.preloadDistance || 2;
+        const unloadDistance = config?.unloadDistance || 3;
+
+        nativeAdInstanceManager.handlePositionChange(
+          index,
+          preloadDistance,
+          unloadDistance
+        );
+      }
     }
   };
 
@@ -861,10 +893,53 @@ export default function HighlightedScreen() {
     articles.length,
   ]);
 
+  // Refresh content when returning to index 0
+  useEffect(() => {
+    if (currentIndex === 0 && !hasRefreshedAtZero && articles.length > 0) {
+      // Only refresh if we've moved away from 0 before
+      if (maxIndexReached > 0) {
+        console.log("🔄 Returned to index 0 - refreshing content");
+        nativeAdInstanceManager.clearAll();
+        loadArticles();
+        setHasRefreshedAtZero(true);
+      }
+    } else if (currentIndex > 0) {
+      // Reset the flag when moving away from 0
+      setHasRefreshedAtZero(false);
+    }
+  }, [currentIndex, maxIndexReached, articles.length, hasRefreshedAtZero]);
+
+  // Handle app coming back from background
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active" && isFocused) {
+        console.log("📱 App returned from background - resetting to index 0");
+        // Scroll to index 0
+        if (currentIndex !== 0) {
+          flatListRef.current?.scrollToIndex({
+            index: 0,
+            animated: false,
+          });
+          setCurrentIndex(0);
+        }
+        // Clear ads and refresh content
+        nativeAdInstanceManager.clearAll();
+        loadArticles();
+        setHasRefreshedAtZero(true);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isFocused, currentIndex]);
+
   // Handle focus/blur events to pause/resume when screen is not active
   useEffect(() => {
     return () => {
       setIsPlaying(false);
+      // Cleanup all native ads on unmount
+      nativeAdInstanceManager.clearAll();
     };
   }, []);
   const styles = {
@@ -874,14 +949,30 @@ export default function HighlightedScreen() {
       backgroundColor: contentBackground,
     },
   };
-  const renderCarouselItem = ({ item }: { item: Article }) => {
+  const renderCarouselItem = ({
+    item,
+    index,
+  }: {
+    item: Article;
+    index: number;
+  }) => {
     // Handle native ad items
     if (item.isNativeAd) {
       return (
         <NativeAdCarouselItem
           item={item}
+          position={index}
+          shouldLoad={true}
           onAdClicked={() => {
-            console.log("Native ad clicked:", item.id);
+            analyticsService.logEvent("native_ad_click", {
+              position: index,
+              ad_id: item.id,
+            });
+          }}
+          onLoadComplete={(success) => {
+            if (!success) {
+              console.warn(`Native ad at position ${index} failed to load`);
+            }
           }}
           insets={insets}
           showingProgress={false}

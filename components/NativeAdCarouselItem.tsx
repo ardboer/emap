@@ -3,7 +3,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { analyticsService } from "@/services/analytics";
-import { nativeAdLoader } from "@/services/nativeAdLoader";
+import { nativeAdInstanceManager } from "@/services/nativeAdInstanceManager";
 import { Article } from "@/types";
 import { hexToRgba } from "@/utils/colors";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,104 +29,122 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface NativeAdCarouselItemProps {
   item: Article;
+  position: number;
+  shouldLoad: boolean;
   onAdClicked?: () => void;
+  onLoadComplete?: (success: boolean) => void;
   insets: { top: number; bottom: number; left: number; right: number };
   showingProgress?: boolean;
 }
 
 export function NativeAdCarouselItem({
   item,
+  position,
+  shouldLoad,
   onAdClicked,
+  onLoadComplete,
   insets,
   showingProgress = false,
 }: NativeAdCarouselItemProps) {
   const { brandConfig } = useBrandConfig();
   const adViewStartTime = useRef<number>(Date.now());
   const [nativeAd, setNativeAd] = useState<NativeAd | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const hasLoggedImpression = useRef(false);
 
+  // Effect to handle lazy loading based on shouldLoad prop
   useEffect(() => {
-    adViewStartTime.current = Date.now();
-    loadAd();
+    if (shouldLoad && !nativeAd && !isLoading && !hasError) {
+      loadAd();
+    }
+  }, [shouldLoad, nativeAd, isLoading, hasError]);
 
+  // Effect to handle unloading when shouldLoad becomes false
+  useEffect(() => {
+    if (!shouldLoad && nativeAd) {
+      console.log(`🗑️ Unloading ad at position ${position} (shouldLoad=false)`);
+      unloadAd();
+    }
+  }, [shouldLoad]);
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      // Cleanup: destroy ad when component unmounts
       if (nativeAd) {
+        console.log(
+          `🧹 Cleanup: destroying ad at position ${position} on unmount`
+        );
         try {
           nativeAd.destroy?.();
         } catch (error) {
-          console.warn("Error destroying native ad:", error);
+          console.warn(`Error destroying ad at position ${position}:`, error);
         }
       }
     };
-  }, []);
+  }, [nativeAd, position]);
 
   const loadAd = async () => {
-    try {
-      // Initialize ad loader if needed
-      if (!nativeAdLoader.isInitialized()) {
-        await nativeAdLoader.initialize();
-      }
-
-      const adUnitId = nativeAdLoader.getAdUnitId();
-      const startTime = Date.now();
-
-      // Log ad request
-      nativeAdLoader.logAdRequest(item.id);
-
-      console.log("Loading native ad with unit ID:", adUnitId);
-
-      // Create and load native ad
-      const ad = await NativeAd.createForAdRequest(adUnitId, {
-        requestNonPersonalizedAdsOnly: false,
-      });
-
-      const loadTime = Date.now() - startTime;
-
-      // Log successful load
-      nativeAdLoader.logAdLoaded(item.id, loadTime);
-
-      setNativeAd(ad);
+    // Check if ad is already loaded in instance manager
+    const existingInstance = nativeAdInstanceManager.getAdInstance(position);
+    if (existingInstance?.nativeAd && existingInstance.status === "loaded") {
+      console.log(`✅ Using pre-loaded ad at position ${position}`);
+      setNativeAd(existingInstance.nativeAd);
       setIsLoading(false);
+      onLoadComplete?.(true);
+      return;
+    }
 
-      // Log detailed ad data
-      console.log("Native ad loaded successfully in", loadTime, "ms");
-      // console.log("Ad Data:", {
-      //   headline: ad.headline || "N/A",
-      //   body: ad.body || "N/A",
-      //   advertiser: ad.advertiser || "N/A",
-      //   callToAction: ad.callToAction || "N/A",
-      //   store: ad.store || "N/A",
-      //   price: ad.price || "N/A",
-      //   starRating: ad.starRating || "N/A",
-      //   imageCount: ad.images?.length || 0,
-      //   hasIcon: !!ad.icon,
-      //   hasMediaContent: !!ad.mediaContent,
-      //   hasVideo: ad.mediaContent?.hasVideoContent || false,
-      //   mediaAspectRatio: ad.mediaContent?.aspectRatio || "N/A",
-      // });
+    setIsLoading(true);
+    adViewStartTime.current = Date.now();
 
-      // Track impression
-      analyticsService.logEvent("native_ad_impression", {
-        ad_id: item.id,
-        position: item.id,
-        time_to_view_ms: 0,
-        is_real_ad: true,
-      });
+    try {
+      console.log(`🔄 Loading ad at position ${position}...`);
+
+      // Use instance manager to load ad
+      const ad = await nativeAdInstanceManager.loadAdForPosition(position);
+
+      if (ad) {
+        setNativeAd(ad);
+        setIsLoading(false);
+        setHasError(false);
+        onLoadComplete?.(true);
+        console.log(`✅ Ad loaded successfully at position ${position}`);
+      } else {
+        // Ad failed to load or is still loading
+        setIsLoading(false);
+        setHasError(true);
+        onLoadComplete?.(false);
+        console.log(`❌ Ad failed to load at position ${position}`);
+      }
     } catch (error: any) {
-      console.error("Failed to load native ad:", error);
-
-      // Log failure
-      nativeAdLoader.logAdFailed(item.id, error);
-
-      // Set error state
+      console.error(`❌ Error loading ad at position ${position}:`, error);
       setHasError(true);
       setIsLoading(false);
-
-      console.log("Native ad failed to load - skipping position");
+      onLoadComplete?.(false);
     }
   };
+
+  const unloadAd = () => {
+    if (nativeAd) {
+      try {
+        nativeAd.destroy?.();
+      } catch (error) {
+        console.warn(`Error destroying ad at position ${position}:`, error);
+      }
+      setNativeAd(null);
+      setIsLoading(false);
+      hasLoggedImpression.current = false;
+    }
+  };
+
+  // Log impression when ad becomes visible
+  useEffect(() => {
+    if (nativeAd && !hasLoggedImpression.current) {
+      hasLoggedImpression.current = true;
+      nativeAdInstanceManager.markAdAsViewed(position);
+    }
+  }, [nativeAd, position]);
 
   const handleAdPress = async () => {
     const dwellTime = Date.now() - adViewStartTime.current;
@@ -166,13 +184,17 @@ export function NativeAdCarouselItem({
     }
   };
 
-  // If ad failed to load, skip this position
+  // If ad failed to load and skipIfNotReady is true, skip this position
   if (hasError) {
-    return null;
+    const config = brandConfig?.nativeAds as any;
+    if (config?.skipIfNotReady !== false) {
+      // Default to true (skip if not ready)
+      return null;
+    }
   }
 
-  // Show loading state
-  if (isLoading) {
+  // Show loading state if ad is loading or should load but not ready
+  if (isLoading || (shouldLoad && !nativeAd && !hasError)) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator
@@ -184,8 +206,19 @@ export function NativeAdCarouselItem({
     );
   }
 
-  // Render real Google native ad
+  // If shouldLoad is false, don't render anything
+  if (!shouldLoad) {
+    return null;
+  }
+
+  // If ad not loaded yet and skipIfNotReady, skip
   if (!nativeAd) {
+    const config = brandConfig?.nativeAds as any;
+    if (config?.skipIfNotReady !== false) {
+      // Default to true (skip if not ready)
+      return null;
+    }
+    // Otherwise show loading (handled above)
     return null;
   }
 

@@ -174,7 +174,13 @@
     "enabled": true,
     "testMode": true,
     "firstAdPosition": 2,
-    "adFrequency": 5,
+    "adInterval": 5,
+    "preloadDistance": 1,
+    "unloadDistance": 3,
+    "maxCachedAds": 3,
+    "maxAdsPerSession": null,
+    "showLoadingIndicator": true,
+    "skipIfNotReady": false,
     "adUnitIds": {
       "ios": "ca-app-pub-3940256099942544/3986624511",
       "android": "ca-app-pub-3940256099942544/2247696110"
@@ -187,10 +193,7 @@
       "enabled": true,
       "maxAdsPerPage": 3,
       "paragraphInterval": 1,
-      "allowedSizes": [
-        "MEDIUM_RECTANGLE",
-        "BANNER"
-      ],
+      "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
       "positions": [
         {
           "type": "after_lead",
@@ -209,9 +212,7 @@
       "enabled": true,
       "maxAdsPerPage": 4,
       "blockInterval": 3,
-      "allowedSizes": [
-        "BANNER"
-      ],
+      "allowedSizes": ["BANNER"],
       "positions": [
         {
           "type": "between_blocks",

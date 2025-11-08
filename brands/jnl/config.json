@@ -153,6 +153,22 @@
     "enabled": true,
     "itemCount": 5
   },
+  "nativeAds": {
+    "enabled": true,
+    "testMode": true,
+    "firstAdPosition": 2,
+    "adInterval": 5,
+    "preloadDistance": 2,
+    "unloadDistance": 3,
+    "maxCachedAds": 3,
+    "maxAdsPerSession": null,
+    "showLoadingIndicator": true,
+    "skipIfNotReady": true,
+    "adUnitIds": {
+      "ios": "ca-app-pub-3940256099942544/3986624511",
+      "android": "ca-app-pub-3940256099942544/2247696110"
+    }
+  },
   "displayAds": {
     "enabled": true,
     "testMode": true,

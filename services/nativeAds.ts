@@ -12,11 +12,19 @@ export interface NativeAdConfig {
   enabled: boolean;
   testMode: boolean;
   firstAdPosition: number;
-  adFrequency: number;
+  adInterval: number;
+  preloadDistance: number;
+  unloadDistance: number;
+  maxCachedAds: number;
+  maxAdsPerSession: number | null;
+  showLoadingIndicator: boolean;
+  skipIfNotReady: boolean;
   adUnitIds: {
     ios: string;
     android: string;
   };
+  // Backward compatibility
+  adFrequency?: number;
 }
 
 class NativeAdService {
@@ -42,12 +50,46 @@ class NativeAdService {
           enabled: false,
           testMode: true,
           firstAdPosition: 4,
-          adFrequency: 5,
+          adInterval: 5,
+          preloadDistance: 2,
+          unloadDistance: 3,
+          maxCachedAds: 3,
+          maxAdsPerSession: null,
+          showLoadingIndicator: true,
+          skipIfNotReady: true,
           adUnitIds: {
             ios: TEST_NATIVE_AD_UNITS.ios,
             android: TEST_NATIVE_AD_UNITS.android,
           },
         };
+      }
+
+      // Handle backward compatibility: convert adFrequency to adInterval
+      if (this.config.adFrequency && !this.config.adInterval) {
+        console.warn(
+          "⚠️ 'adFrequency' is deprecated. Please use 'adInterval' instead."
+        );
+        this.config.adInterval = this.config.adFrequency;
+      }
+
+      // Set defaults for new properties if not provided
+      if (this.config.preloadDistance === undefined) {
+        this.config.preloadDistance = 2;
+      }
+      if (this.config.unloadDistance === undefined) {
+        this.config.unloadDistance = 3;
+      }
+      if (this.config.maxCachedAds === undefined) {
+        this.config.maxCachedAds = 3;
+      }
+      if (this.config.maxAdsPerSession === undefined) {
+        this.config.maxAdsPerSession = null;
+      }
+      if (this.config.showLoadingIndicator === undefined) {
+        this.config.showLoadingIndicator = true;
+      }
+      if (this.config.skipIfNotReady === undefined) {
+        this.config.skipIfNotReady = true;
       }
 
       // Initialize Mobile Ads SDK
@@ -58,7 +100,11 @@ class NativeAdService {
         enabled: this.config.enabled,
         testMode: this.config.testMode,
         firstAdPosition: this.config.firstAdPosition,
-        adFrequency: this.config.adFrequency,
+        adInterval: this.config.adInterval,
+        preloadDistance: this.config.preloadDistance,
+        unloadDistance: this.config.unloadDistance,
+        maxCachedAds: this.config.maxCachedAds,
+        maxAdsPerSession: this.config.maxAdsPerSession,
       });
     } catch (error) {
       console.error("Failed to initialize Native Ad Service:", error);
@@ -116,7 +162,7 @@ class NativeAdService {
       return false;
     }
 
-    const { firstAdPosition, adFrequency } = this.config;
+    const { firstAdPosition, adInterval } = this.config;
 
     // Check if this is the first ad position
     if (index === firstAdPosition) {
@@ -126,7 +172,7 @@ class NativeAdService {
     // Check if this is a subsequent ad position
     if (index > firstAdPosition) {
       const positionAfterFirst = index - firstAdPosition;
-      return positionAfterFirst % adFrequency === 0;
+      return positionAfterFirst % adInterval === 0;
     }
 
     return false;
@@ -141,9 +187,9 @@ class NativeAdService {
     }
 
     const positions: number[] = [];
-    const { firstAdPosition, adFrequency } = this.config;
+    const { firstAdPosition, adInterval } = this.config;
 
-    for (let i = firstAdPosition; i < totalItems; i += adFrequency) {
+    for (let i = firstAdPosition; i < totalItems; i += adInterval) {
       positions.push(i);
     }
 
@@ -158,16 +204,16 @@ class NativeAdService {
       return null;
     }
 
-    const { firstAdPosition, adFrequency } = this.config;
+    const { firstAdPosition, adInterval } = this.config;
 
     if (currentIndex < firstAdPosition) {
       return firstAdPosition;
     }
 
-    // Calculate next position based on frequency
+    // Calculate next position based on interval
     const positionAfterFirst = currentIndex - firstAdPosition;
-    const remainder = positionAfterFirst % adFrequency;
-    const nextPosition = currentIndex + (adFrequency - remainder);
+    const remainder = positionAfterFirst % adInterval;
+    const nextPosition = currentIndex + (adInterval - remainder);
 
     return nextPosition;
   }

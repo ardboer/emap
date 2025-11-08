@@ -1653,15 +1653,28 @@ function injectNativeAds(articles: Article[], brandConfig: any): Article[] {
     return articles;
   }
 
-  const { firstAdPosition, adFrequency } = brandConfig.nativeAds;
+  // Support both adInterval (new) and adFrequency (old) for backward compatibility
+  const { firstAdPosition, adInterval, adFrequency } = brandConfig.nativeAds;
+  const interval = adInterval || adFrequency || 5;
+
+  if (adFrequency && !adInterval) {
+    console.warn(
+      "⚠️ Using deprecated 'adFrequency'. Please update to 'adInterval'"
+    );
+  }
+
   const result: Article[] = [];
   let adCounter = 0;
+
+  console.log(
+    `📢 Injecting native ads: firstAdPosition=${firstAdPosition}, interval=${interval}`
+  );
 
   for (let i = 0; i < articles.length; i++) {
     // Check if we should insert an ad at this position
     const shouldInsertAd =
       i === firstAdPosition ||
-      (i > firstAdPosition && (i - firstAdPosition) % adFrequency === 0);
+      (i > firstAdPosition && (i - firstAdPosition) % interval === 0);
 
     if (shouldInsertAd) {
       // Create a mock native ad article
@@ -1687,7 +1700,11 @@ function injectNativeAds(articles: Article[], brandConfig: any): Article[] {
       result.push(nativeAd);
       adCounter++;
 
-      console.log(`Injected native ad at position ${result.length - 1}`);
+      console.log(
+        `✅ Injected native ad placeholder at position ${
+          result.length - 1
+        } (id: ${nativeAd.id})`
+      );
     }
 
     // Add the regular article
