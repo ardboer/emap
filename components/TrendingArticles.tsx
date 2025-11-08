@@ -118,7 +118,7 @@ export default function TrendingArticles() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 32,
+    marginTop: 0,
   },
   divider: {
     height: 1,

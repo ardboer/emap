@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
-    padding: 20,
+    padding: 16,
     marginTop: -20,
     minHeight: screenHeight - HEADER_HEIGHT + 40,
     shadowColor: "#000",
@@ -680,8 +680,8 @@ const styles = StyleSheet.create({
     textTransform: "uppercase" as "uppercase",
   },
   title: {
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 24,
+    lineHeight: 28,
     fontWeight: "700" as "700",
     marginBottom: 18,
   },
