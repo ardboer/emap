@@ -21,7 +21,7 @@ import { useCarouselNavigation } from "./highlights/hooks/useCarouselNavigation"
 import { useCarouselState } from "./highlights/hooks/useCarouselState";
 
 export default function HighlightedScreen() {
-  const { features } = useBrandConfig();
+  const { features, brandConfig } = useBrandConfig();
   const insets = useSafeAreaInsets();
   const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
   const [useColorGradient] = useState(true);
@@ -29,7 +29,6 @@ export default function HighlightedScreen() {
   // Auth & Audio context
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { state: audioState } = useAudio();
-  const { brandConfig } = useBrandConfig();
 
   // Theme colors
   const contentBackground = useThemeColor({}, "contentBackground");
