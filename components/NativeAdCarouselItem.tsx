@@ -293,7 +293,7 @@ export function NativeAdCarouselItem({
   // Extract ad data from the loaded native ad
   const adHeadline = nativeAd.headline || "Sponsored Content";
   const adBody = nativeAd.body || "";
-  const adAdvertiser = nativeAd.advertiser || "Advertiser";
+  const adAdvertiser = nativeAd.advertiser || "";
   const adCallToAction = nativeAd.callToAction || "Learn More";
   const adImage = nativeAd.images?.[0]?.url || item.imageUrl;
   const hasMediaContent = !!nativeAd.mediaContent;
@@ -396,18 +396,20 @@ export function NativeAdCarouselItem({
             )}
 
             {/* Advertiser from Google */}
-            <View style={styles.metaContainer}>
-              <NativeAsset assetType={NativeAssetType.ADVERTISER}>
-                <ThemedText
-                  style={[
-                    styles.advertiser,
-                    { fontFamily: brandConfig?.theme.fonts.primaryMedium },
-                  ]}
-                >
-                  {adAdvertiser}
-                </ThemedText>
-              </NativeAsset>
-            </View>
+            {adAdvertiser && (
+              <View style={styles.metaContainer}>
+                <NativeAsset assetType={NativeAssetType.ADVERTISER}>
+                  <ThemedText
+                    style={[
+                      styles.advertiser,
+                      { fontFamily: brandConfig?.theme.fonts.primaryMedium },
+                    ]}
+                  >
+                    {adAdvertiser}
+                  </ThemedText>
+                </NativeAsset>
+              </View>
+            )}
 
             {/* Call to Action from Google */}
             <View style={styles.ctaButton}>
@@ -520,6 +522,7 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     alignSelf: "flex-start",
+    paddingBottom: 8,
   },
   ctaButtonInner: {
     backgroundColor: "rgba(255, 255, 255, 0.2)",

@@ -1146,11 +1146,12 @@ export default function HighlightedScreen() {
                   style={[
                     styles.title,
                     { fontFamily: brandConfig?.theme.fonts.primaryBold },
+                    { paddingBottom: 16 },
                   ]}
                 >
                   {item.title}
                 </ThemedText>
-                <ThemedView transparant style={styles.metaContainer}>
+                {/* <ThemedView transparant style={styles.metaContainer}>
                   <ThemedText
                     style={[
                       styles.category,
@@ -1159,7 +1160,7 @@ export default function HighlightedScreen() {
                   >
                     {item.category}
                   </ThemedText>
-                </ThemedView>
+                </ThemedView> */}
               </ThemedView>
             </LinearGradient>
           </TouchableOpacity>
