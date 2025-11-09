@@ -139,10 +139,6 @@ function RootLayoutContent() {
     const currentRoute = pathname;
 
     if (previousRoute.current && previousRoute.current !== currentRoute) {
-      // Log navigation event
-      analyticsService.logNavigation(previousRoute.current, currentRoute, {
-        segments: segments.join("/"),
-      });
       console.log(`📍 Navigation: ${previousRoute.current} → ${currentRoute}`);
     }
 

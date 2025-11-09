@@ -11,6 +11,7 @@ import { getCenteredContentStyle } from "@/constants/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { analyticsService } from "@/services/analytics";
 import { getAnonymousId } from "@/services/anonymousId";
 import { displayAdManager } from "@/services/displayAdManager";
 import { trackArticleView } from "@/services/miso";
@@ -128,6 +129,14 @@ export default function ArticleScreen() {
         const fullArticle = await fetchSingleArticle(id);
 
         setArticle(fullArticle);
+
+        // Track screen view with article metadata
+        await analyticsService.logScreenView(
+          "ArticleDetail",
+          "ArticleScreen",
+          fullArticle.id,
+          fullArticle.title
+        );
 
         // Track article view with Miso
         const anonymousId = await getAnonymousId();

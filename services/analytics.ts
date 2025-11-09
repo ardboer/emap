@@ -18,8 +18,6 @@ const ANALYTICS_ENABLED_KEY = "analytics_enabled";
  */
 class AnalyticsService {
   private sessionStartTime: number | null = null;
-  private screenStartTime: number | null = null;
-  private currentScreen: string | null = null;
   private isInitialized: boolean = false;
   private analytics: ReturnType<typeof getAnalytics> | null = null;
 
@@ -132,31 +130,33 @@ class AnalyticsService {
   }
 
   /**
-   * Log screen view with automatic time tracking
+   * Log screen view
    */
-  async logScreenView(screenName: string, screenClass?: string): Promise<void> {
+  async logScreenView(
+    screenName: string,
+    screenClass?: string,
+    articleId?: string,
+    articleTitle?: string
+  ): Promise<void> {
     if (!this.isInitialized) return;
 
     try {
-      // Calculate time on previous screen
-      if (this.currentScreen && this.screenStartTime) {
-        const timeOnScreen = Date.now() - this.screenStartTime;
-        await this.logEvent("screen_time", {
-          screen_name: this.currentScreen,
-          duration_ms: timeOnScreen,
-          duration_seconds: Math.round(timeOnScreen / 1000),
-        });
-      }
-
       // Log new screen view
       if (!this.analytics) return;
-      await logScreenView(this.analytics, {
+      const screenViewParams: Record<string, string> = {
         screen_name: screenName,
         screen_class: screenClass || screenName,
-      });
+      };
 
-      this.currentScreen = screenName;
-      this.screenStartTime = Date.now();
+      // Add article metadata if provided
+      if (articleId) {
+        screenViewParams.article_id = articleId;
+      }
+      if (articleTitle) {
+        screenViewParams.article_title = articleTitle;
+      }
+
+      await logScreenView(this.analytics, screenViewParams);
     } catch (error) {
       console.error("Error logging screen view:", error);
     }
@@ -297,39 +297,6 @@ class AnalyticsService {
       max_transition_duration_ms: maxDuration,
       total_transitions: velocityData.length,
     };
-  }
-
-  /**
-   * Log app foreground event
-   */
-  async logAppForeground(previousState: string): Promise<void> {
-    await this.logEvent("app_foreground", {
-      previous_state: previousState,
-    });
-  }
-
-  /**
-   * Log app background event
-   */
-  async logAppBackground(nextState: string): Promise<void> {
-    await this.logEvent("app_went_background", {
-      next_state: nextState,
-    });
-  }
-
-  /**
-   * Log navigation event
-   */
-  async logNavigation(
-    fromScreen: string,
-    toScreen: string,
-    params?: Record<string, any>
-  ): Promise<void> {
-    await this.logEvent("screen_navigation", {
-      from_screen: fromScreen,
-      to_screen: toScreen,
-      params: params ? JSON.stringify(params) : undefined,
-    });
   }
 
   /**
