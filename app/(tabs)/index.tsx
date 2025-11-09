@@ -41,14 +41,21 @@ import {
 import { getColors } from "react-native-image-colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-
 export default function HighlightedScreen() {
   const { features } = useBrandConfig();
   const navigation = useNavigation();
   const route = useRoute();
   const isFocused = useIsFocused();
   const params = useLocalSearchParams();
+
+  // Make screen dimensions reactive to orientation changes
+  const [screenDimensions, setScreenDimensions] = useState(() => {
+    const { width, height } = Dimensions.get("window");
+    return { width, height };
+  });
+  const screenWidth = screenDimensions.width;
+  const screenHeight = screenDimensions.height;
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
@@ -931,6 +938,42 @@ export default function HighlightedScreen() {
     };
   }, [isFocused, currentIndex]);
 
+  // Handle device orientation changes
+  useEffect(() => {
+    let previousOrientation =
+      screenWidth > screenHeight ? "landscape" : "portrait";
+
+    const subscription = Dimensions.addEventListener("change", ({ window }) => {
+      const { width, height } = window;
+      const newOrientation = width > height ? "landscape" : "portrait";
+
+      // Update screen dimensions state
+      setScreenDimensions({ width, height });
+
+      // Only reload if orientation actually changed
+      if (newOrientation !== previousOrientation) {
+        previousOrientation = newOrientation;
+
+        // Clear the cache for both orientations to force fresh data
+        (async () => {
+          const { cacheService } = await import("@/services/cache");
+          await cacheService.remove("highlights_landscape");
+          await cacheService.remove("highlights_portrait");
+          await cacheService.remove("featured_articles_landscape");
+          await cacheService.remove("featured_articles_portrait");
+
+          // Clear ads and refresh content to get appropriate images
+          nativeAdInstanceManager.clearAll();
+          loadArticles();
+        })();
+      }
+    });
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
+
   // Handle focus/blur events to pause/resume when screen is not active
   useEffect(() => {
     return () => {
@@ -944,6 +987,16 @@ export default function HighlightedScreen() {
     container: {
       flex: 1,
       backgroundColor: contentBackground,
+    },
+    carouselItem: {
+      width: screenWidth,
+      height: screenHeight,
+      position: "relative" as const,
+    },
+    loadingFooter: {
+      height: screenHeight,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
     },
   };
   const renderCarouselItem = ({
@@ -1033,7 +1086,7 @@ export default function HighlightedScreen() {
             <FadeInImage
               source={{ uri: item.imageUrl }}
               style={styles.centeredImage}
-              contentFit="contain"
+              contentFit="cover"
               contentPosition="center"
             />
             {renderRecommendedBadge()}
@@ -1102,7 +1155,7 @@ export default function HighlightedScreen() {
             <FadeInImage
               source={{ uri: item.imageUrl }}
               style={styles.centeredImage}
-              contentFit="contain"
+              contentFit="cover"
               contentPosition="center"
             />
             {renderRecommendedBadge()}
@@ -1310,6 +1363,7 @@ export default function HighlightedScreen() {
       </ThemedView>
 
       <FlatList
+        key={`${screenWidth}x${screenHeight}`}
         ref={flatListRef}
         data={articles}
         renderItem={renderCarouselItem}
@@ -1355,11 +1409,6 @@ const staticStyles = StyleSheet.create({
     zIndex: 10,
     borderRadius: 8,
     padding: 8,
-  },
-  carouselItem: {
-    width: screenWidth,
-    height: screenHeight, // Account for tab bar
-    position: "relative",
   },
   backgroundImage: {
     position: "absolute",
@@ -1463,11 +1512,6 @@ const staticStyles = StyleSheet.create({
   retryButtonText: {
     fontSize: 16,
     fontWeight: "600",
-  },
-  loadingFooter: {
-    height: screenHeight,
-    justifyContent: "center",
-    alignItems: "center",
   },
   topRightIcons: {
     position: "absolute",

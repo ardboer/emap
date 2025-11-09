@@ -10,6 +10,7 @@ import {
   MagazineEditionsResponse,
   StructuredContentNode,
 } from "@/types";
+import { Dimensions } from "react-native";
 import { getAnonymousId } from "./anonymousId";
 
 // Re-export brandManager for use in other services
@@ -212,6 +213,11 @@ function extractCategoryFromUrl(url: string): string {
 async function transformHighlightsItemToArticle(
   item: HighlightsApiItem
 ): Promise<Article> {
+  // Detect device orientation
+  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+  const isDeviceLandscape = screenWidth > screenHeight;
+  const isTablet = Math.min(screenWidth, screenHeight) >= 600; // Tablets typically have min dimension >= 600
+
   // Check if debug setting is enabled to force landscape images
   const AsyncStorage = (
     await import("@react-native-async-storage/async-storage")
@@ -221,12 +227,37 @@ async function transformHighlightsItemToArticle(
   );
   const useLandscape = forceLandscape === "true";
 
-  // Select image and dimensions based on debug setting
+  // Select image and dimensions based on device orientation and debug setting
   let imageUrl: string;
   let imageWidth: number;
   let imageHeight: number;
 
-  if (useLandscape) {
+  // On tablets in landscape mode, prioritize landscape images (post_image)
+  // Otherwise, use portrait images (post_highlights_image) for better vertical fill
+  const shouldUseLandscapeImage =
+    useLandscape || (isTablet && isDeviceLandscape);
+
+  console.log("🖼️ Image selection for article:", {
+    articleId: item.post_id,
+    title: item.post_title.substring(0, 40),
+    screenWidth,
+    screenHeight,
+    isDeviceLandscape,
+    isTablet,
+    shouldUseLandscapeImage,
+    post_image_url: item.post_image?.substring(
+      item.post_image.lastIndexOf("/") + 1,
+      item.post_image.lastIndexOf("/") + 30
+    ),
+    post_image_dims: `${item.post_image_width}x${item.post_image_height}`,
+    post_highlights_image_url: item.post_highlights_image?.substring(
+      item.post_highlights_image.lastIndexOf("/") + 1,
+      item.post_highlights_image.lastIndexOf("/") + 30
+    ),
+    post_highlights_image_dims: `${item.post_highlights_image_width}x${item.post_highlights_image_height}`,
+  });
+
+  if (shouldUseLandscapeImage) {
     imageUrl =
       item.post_image ||
       item.post_highlights_image ||
@@ -235,6 +266,10 @@ async function transformHighlightsItemToArticle(
       item.post_image_width || item.post_highlights_image_width || 800;
     imageHeight =
       item.post_image_height || item.post_highlights_image_height || 600;
+    console.log(
+      "✅ Using landscape image (post_image):",
+      imageUrl.substring(0, 50)
+    );
   } else {
     imageUrl =
       item.post_highlights_image ||
@@ -244,10 +279,19 @@ async function transformHighlightsItemToArticle(
       item.post_highlights_image_width || item.post_image_width || 800;
     imageHeight =
       item.post_highlights_image_height || item.post_image_height || 600;
+    console.log(
+      "✅ Using portrait image (post_highlights_image):",
+      imageUrl.substring(0, 50)
+    );
   }
 
   // Determine if image is landscape (width > height)
   const isLandscape = imageWidth > imageHeight;
+  console.log("📐 Final image dimensions:", {
+    imageWidth,
+    imageHeight,
+    isLandscape,
+  });
 
   const category = extractCategoryFromUrl(item.post_url);
 
@@ -287,13 +331,20 @@ async function transformPostToArticle(post: WordPressPost): Promise<Article> {
 // Fetch articles from highlights API
 export async function fetchArticles(): Promise<Article[]> {
   const { cacheService } = await import("./cache");
-  const cacheKey = "highlights";
+  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+  const isDeviceLandscape = screenWidth > screenHeight;
+  const orientation = isDeviceLandscape ? "landscape" : "portrait";
+  const cacheKey = `highlights_${orientation}`;
   const { hash } = getApiConfig();
+
+  console.log(
+    `📦 Cache key: ${cacheKey} (device: ${screenWidth}x${screenHeight})`
+  );
 
   // Try to get from cache first
   const cached = await cacheService.get<Article[]>(cacheKey, { hash });
   if (cached) {
-    console.log("Returning cached articles");
+    console.log(`✅ Returning cached articles for ${orientation} mode`);
     return cached;
   }
   try {
@@ -435,13 +486,15 @@ export async function fetchArticleContent(articleId: string): Promise<string> {
 // Get featured articles (limited by maxNbOfItems with valid highlight images)
 export async function fetchFeaturedArticles(): Promise<Article[]> {
   const { cacheService } = await import("./cache");
-  const cacheKey = "featured_articles";
+  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+  const isDeviceLandscape = screenWidth > screenHeight;
+  const orientation = isDeviceLandscape ? "landscape" : "portrait";
+  const cacheKey = `featured_articles_${orientation}`;
   const { hash, maxNbOfItems = 10 } = getApiConfig();
 
   // Try to get from cache first
   const cached = await cacheService.get<Article[]>(cacheKey, { hash });
   if (cached) {
-    console.log("Returning cached featured articles");
     // return cached;
   }
 
