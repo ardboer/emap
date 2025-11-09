@@ -133,11 +133,19 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            manifestPlaceholders = [enableFirebaseDebug: "true"]
+        }
+        debugRelease {
+            initWith release
+            signingConfig signingConfigs.release
+            manifestPlaceholders = [enableFirebaseDebug: "true"]
+            matchingFallbacks = ['release']
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.release
+            manifestPlaceholders = [enableFirebaseDebug: "false"]
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
@@ -269,6 +277,34 @@ android {
                                     }
                                 }
                                 println "Copied APK to Desktop: ${desktopFile.absolutePath}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Copy debugRelease APK to Desktop after assembleDebugRelease
+        tasks.matching { it.name == 'assembleDebugRelease' }.all { assembleTask ->
+            assembleTask.doLast {
+                def apkDir = file("$buildDir/outputs/apk/debugRelease")
+                if (apkDir.exists()) {
+                    apkDir.listFiles().each { file ->
+                        if (file.name.endsWith('.apk')) {
+                            // Rename to include 'debug' in filename
+                            def originalName = file.name
+                            def newName = originalName.replace("_${brandKey}.apk", "_${brandKey}_debug.apk")
+                            
+                            // Copy to Desktop with new name
+                            def desktopDir = new File(System.getProperty("user.home"), "Desktop")
+                            if (desktopDir.exists()) {
+                                def desktopFile = new File(desktopDir, newName)
+                                file.withInputStream { input ->
+                                    desktopFile.withOutputStream { output ->
+                                        output << input
+                                    }
+                                }
+                                println "Copied debug APK to Desktop: ${desktopFile.absolutePath}"
                             }
                         }
                     }

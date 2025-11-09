@@ -64,7 +64,7 @@ export default function HighlightedScreen() {
   const insets = useSafeAreaInsets();
   const [error, setError] = useState<string | null>(null);
   const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
-  const [useColorGradient, setUseColorGradient] = useState(false);
+  const [useColorGradient, setUseColorGradient] = useState(true);
   const [imageColors, setImageColors] = useState<{ [key: string]: string[] }>(
     {}
   );
@@ -265,6 +265,28 @@ export default function HighlightedScreen() {
           brandConfig?.highlightsRecommendations?.endlessScroll?.enabled,
       });
 
+      // Load color gradient setting
+      const AsyncStorage = (
+        await import("@react-native-async-storage/async-storage")
+      ).default;
+      const colorGradientSetting = await AsyncStorage.getItem(
+        "debug_use_color_gradient"
+      );
+      setUseColorGradient(true); // colorGradientSetting === "true"
+
+      // Extract colors from landscape images BEFORE setting articles
+      const colors: { [key: string]: string[] } = {};
+      for (const article of fetchedArticles) {
+        if (article.isLandscape) {
+          colors[article.id] = await extractImageColors(
+            article.imageUrl,
+            article.id
+          );
+        }
+      }
+      setImageColors(colors);
+
+      // Set articles AFTER colors are extracted
       setArticles(fetchedArticles);
 
       // Trigger initial preload for native ads near starting position
@@ -286,27 +308,6 @@ export default function HighlightedScreen() {
         // Store timeout ID for cleanup
         return () => clearTimeout(timeoutId);
       }
-
-      // Load color gradient setting
-      const AsyncStorage = (
-        await import("@react-native-async-storage/async-storage")
-      ).default;
-      const colorGradientSetting = await AsyncStorage.getItem(
-        "debug_use_color_gradient"
-      );
-      setUseColorGradient(true); // colorGradientSetting === "true"
-
-      // Extract colors from landscape images
-      const colors: { [key: string]: string[] } = {};
-      for (const article of fetchedArticles) {
-        if (article.isLandscape) {
-          colors[article.id] = await extractImageColors(
-            article.imageUrl,
-            article.id
-          );
-        }
-      }
-      setImageColors(colors);
     } catch (err) {
       setError("Failed to load articles");
       console.error("Error loading articles:", err);
@@ -1073,8 +1074,9 @@ export default function HighlightedScreen() {
       );
     };
 
-    // For landscape images, choose between blurred background or color gradient
-    if (item.isLandscape) {
+    // For landscape images OR when no portrait image is available, use landscape layout
+    // This provides a fallback when portrait images are missing
+    if (item.isLandscape || !item.imageUrl) {
       if (useColorGradient) {
         // Get extracted colors for this image, or use default gradient
         const extractedColors = imageColors[item.id] || [
@@ -1104,12 +1106,18 @@ export default function HighlightedScreen() {
               colors={colors}
               style={styles.backgroundImageBlurred}
             />
-            {/* Main centered image */}
+            {/* Main centered image - use contain to maintain aspect ratio */}
             <FadeInImage
               source={{ uri: item.imageUrl }}
               style={styles.centeredImage}
-              contentFit="cover"
+              contentFit="contain"
               contentPosition="center"
+            />
+            {/* Top gradient for header visibility */}
+            <LinearGradient
+              colors={["rgba(0, 0, 0, 0.6)", "transparent"] as const}
+              style={styles.topGradient}
+              pointerEvents="none"
             />
             {renderRecommendedBadge()}
             <LinearGradient
@@ -1119,7 +1127,7 @@ export default function HighlightedScreen() {
                   hexToRgba(
                     brandConfig?.theme.colors.light.overlayGradientEnd ||
                       "#011620",
-                    0.7
+                    0.85
                   ),
                 ] as const
               }
@@ -1173,12 +1181,18 @@ export default function HighlightedScreen() {
             />
             {/* Dark overlay for blurred background */}
             <View style={styles.darkOverlay} />
-            {/* Main centered image */}
+            {/* Main centered image - use contain to maintain aspect ratio */}
             <FadeInImage
               source={{ uri: item.imageUrl }}
               style={styles.centeredImage}
-              contentFit="cover"
+              contentFit="contain"
               contentPosition="center"
+            />
+            {/* Top gradient for header visibility */}
+            <LinearGradient
+              colors={["rgba(0, 0, 0, 0.6)", "transparent"] as const}
+              style={styles.topGradient}
+              pointerEvents="none"
             />
             {renderRecommendedBadge()}
             <LinearGradient
@@ -1188,7 +1202,7 @@ export default function HighlightedScreen() {
                   hexToRgba(
                     brandConfig?.theme.colors.light.overlayGradientEnd ||
                       "#011620",
-                    0.7
+                    0.85
                   ),
                 ] as const
               }
@@ -1242,6 +1256,12 @@ export default function HighlightedScreen() {
           contentFit="cover"
           contentPosition="center"
         />
+        {/* Top gradient for header visibility */}
+        <LinearGradient
+          colors={["rgba(0, 0, 0, 0.6)", "transparent"] as const}
+          style={styles.topGradient}
+          pointerEvents="none"
+        />
         {renderRecommendedBadge()}
         <LinearGradient
           colors={
@@ -1249,7 +1269,7 @@ export default function HighlightedScreen() {
               "transparent",
               hexToRgba(
                 brandConfig?.theme.colors.light.overlayGradientEnd || "#011620",
-                0.7
+                0.85
               ),
             ] as const
           }
@@ -1460,6 +1480,14 @@ const staticStyles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+  topGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+    zIndex: 5,
   },
   overlay: {
     position: "absolute",

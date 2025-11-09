@@ -35,6 +35,10 @@ class AnalyticsService {
       const app = getApp();
       this.analytics = getAnalytics(app);
 
+      // Enable analytics collection explicitly
+      await setAnalyticsCollectionEnabled(this.analytics, true);
+      console.log("📊 Analytics collection explicitly enabled");
+
       // Check if analytics is enabled
       const enabled = await this.isAnalyticsEnabled();
       if (!enabled) {
