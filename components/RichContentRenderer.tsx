@@ -179,13 +179,15 @@ const renderInlineContent = (
     if (node.typename === "HTMLLink") {
       const linkText = node.children ? extractTextContent(node.children) : "";
       return (
-        <RNText
-          key={index}
-          style={{ color: linkColor, textDecorationLine: "underline" }}
-          onPress={() => node.href && handleLinkPress(node.href)}
-        >
-          {linkText}
-        </RNText>
+        <React.Fragment key={index}>
+          {" "}
+          <RNText
+            style={{ color: linkColor, textDecorationLine: "underline" }}
+            onPress={() => node.href && handleLinkPress(node.href)}
+          >
+            {linkText}
+          </RNText>{" "}
+        </React.Fragment>
       );
     }
     if (node.typename === "HTMLElement") {

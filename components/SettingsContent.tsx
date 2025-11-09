@@ -9,6 +9,7 @@ import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import {
   checkNotificationPermission,
+  getStoredFCMToken,
   subscribeToTopic,
   unsubscribeFromTopic,
 } from "@/services/firebaseNotifications";
@@ -54,6 +55,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   const [forceLandscapeImages, setForceLandscapeImages] = React.useState(false);
   const [useColorGradient, setUseColorGradient] = React.useState(false);
   const [pushToken, setPushToken] = React.useState<string | null>(null);
+  const [debugModeEnabled, setDebugModeEnabled] = React.useState(false);
   const [topicSubscriptions, setTopicSubscriptions] = React.useState<
     TopicSubscription[]
   >([]);
@@ -139,6 +141,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     });
   }, []);
 
+  // Load debug mode flag
+  React.useEffect(() => {
+    AsyncStorage.getItem("debug_mode_enabled").then((value) => {
+      if (value !== null) {
+        setDebugModeEnabled(value === "true");
+      }
+    });
+  }, []);
+
   const loadCacheStats = async () => {
     try {
       const { cacheService } = await import("@/services/cache");
@@ -155,7 +166,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
 
   const loadPushToken = async () => {
     try {
-      const token = await AsyncStorage.getItem("expoPushToken");
+      const token = await getStoredFCMToken();
       setPushToken(token);
     } catch (error) {
       console.error("Error loading push token:", error);
@@ -442,6 +453,29 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     );
   };
 
+  // Helper function to determine if debug section should be shown
+  const shouldShowDebugSection = () => {
+    return __DEV__ || debugModeEnabled;
+  };
+
+  // Handler to disable debug mode (production only)
+  const handleDisableDebugMode = async () => {
+    try {
+      await AsyncStorage.removeItem("debug_mode_enabled");
+      setDebugModeEnabled(false);
+      Alert.alert(
+        "Debug Mode Disabled",
+        "Debug options are now hidden. Restart the app to see the changes.",
+        [{ text: "OK" }]
+      );
+    } catch (error) {
+      console.error("Error disabling debug mode:", error);
+      Alert.alert("Error", "Failed to disable debug mode. Please try again.", [
+        { text: "OK" },
+      ]);
+    }
+  };
+
   const SettingsItem = ({
     title,
     subtitle,
@@ -693,88 +727,50 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         />
       </ThemedView>
 
-      <ThemedView transparant style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>
-          Debug
-        </ThemedText>
-        <ThemedView>
-          {/* Test Article Button */}
-          {brandConfig?.testArticleId && (
+      {/* Debug Section - Only visible in DEV mode or when debug mode is enabled */}
+      {shouldShowDebugSection() && (
+        <ThemedView transparant style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Debug
+          </ThemedText>
+          <ThemedView>
+            {/* Disable Debug Mode Button - Only in production when debug mode is enabled */}
+            {!__DEV__ && debugModeEnabled && (
+              <SettingsItem
+                title="Disable Debug Mode"
+                subtitle="Hide debug options (production only)"
+                icon="eye.slash.fill"
+                onPress={handleDisableDebugMode}
+              />
+            )}
+            {/* Test Article Button */}
+            {brandConfig?.testArticleId && (
+              <SettingsItem
+                title="Test Article"
+                subtitle={`Open test article for ${brandConfig.displayName} (ID: ${brandConfig.testArticleId})`}
+                icon="doc.text"
+                onPress={handleTestArticle}
+              />
+            )}
+            {/* Reset Onboarding Button */}
             <SettingsItem
-              title="Test Article"
-              subtitle={`Open test article for ${brandConfig.displayName} (ID: ${brandConfig.testArticleId})`}
-              icon="doc.text"
-              onPress={handleTestArticle}
+              title="Reset Onboarding"
+              subtitle="Clear onboarding flag to see the welcome flow again"
+              icon="arrow.counterclockwise"
+              onPress={handleResetOnboarding}
             />
-          )}
-          {/* Reset Onboarding Button */}
-          <SettingsItem
-            title="Reset Onboarding"
-            subtitle="Clear onboarding flag to see the welcome flow again"
-            icon="arrow.counterclockwise"
-            onPress={handleResetOnboarding}
-          />
-          {/* Crashlytics Debug Button - Only in DEV mode */}
-          {__DEV__ && (
-            <SettingsItem
-              title="Crashlytics Debug"
-              subtitle="Test crash reporting and error logging"
-              icon="flame.fill"
-              onPress={() => {
-                router.push("/debug-crashlytics");
-                onClose?.();
-              }}
-            />
-          )}
+            {/* Push Token */}
+            {pushToken && (
+              <SettingsItem
+                title="Push Token"
+                subtitle={`${pushToken.substring(0, 30)}...`}
+                icon="key.fill"
+                onPress={handleCopyPushToken}
+              />
+            )}
+          </ThemedView>
         </ThemedView>
-        <SettingsItem
-          title="Show Paywall"
-          subtitle="Enable paywall for testing"
-          icon="ladybug.fill"
-          rightElement={
-            <Switch
-              value={showPaywall}
-              onValueChange={handlePaywallToggle}
-              trackColor={{ false: "#767577", true: primaryColor }}
-              thumbColor={showPaywall ? "#00334C" : "#fff"}
-            />
-          }
-        />
-        <SettingsItem
-          title="Force Landscape Images"
-          subtitle="Use landscape images (post_image) in highlights carousel for testing fallback"
-          icon="photo.fill"
-          rightElement={
-            <Switch
-              value={forceLandscapeImages}
-              onValueChange={handleForceLandscapeToggle}
-              trackColor={{ false: "#767577", true: primaryColor }}
-              thumbColor={forceLandscapeImages ? "#00334C" : "#fff"}
-            />
-          }
-        />
-        {/* <SettingsItem
-          title="Use Color Gradient Background"
-          subtitle="Use dominant color gradient instead of blurred image for landscape items"
-          icon="paintpalette.fill"
-          rightElement={
-            <Switch
-              value={useColorGradient}
-              onValueChange={handleColorGradientToggle}
-              trackColor={{ false: "#767577", true: primaryColor }}
-              thumbColor={useColorGradient ? "#00334C" : "#fff"}
-            />
-          }
-        /> */}
-        {pushToken && (
-          <SettingsItem
-            title="Push Token"
-            subtitle={`${pushToken.substring(0, 30)}...`}
-            icon="key.fill"
-            onPress={handleCopyPushToken}
-          />
-        )}
-      </ThemedView>
+      )}
     </ScrollView>
   );
 }

@@ -5,10 +5,12 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { fetchSearchResults } from "@/services/api";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   FlatList,
   StyleSheet,
@@ -50,6 +52,29 @@ export default function SearchScreen() {
 
   const handleSearch = async () => {
     if (!query.trim()) return;
+
+    // Check for debug mode activation (case-insensitive)
+    if (query.trim().toLowerCase() === "debugmode on") {
+      try {
+        await AsyncStorage.setItem("debug_mode_enabled", "true");
+        Alert.alert(
+          "Debug Mode Activated",
+          "Debug options are now available in Settings.",
+          [{ text: "OK" }]
+        );
+        // Clear the search query
+        setQuery("");
+        setHasSearched(false);
+      } catch (error) {
+        console.error("Error activating debug mode:", error);
+        Alert.alert(
+          "Error",
+          "Failed to activate debug mode. Please try again.",
+          [{ text: "OK" }]
+        );
+      }
+      return; // Don't perform actual search
+    }
 
     setLoading(true);
     setError(null);
