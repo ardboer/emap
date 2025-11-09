@@ -1,14 +1,16 @@
 import GradientHeader from "@/components/GradientHeader";
 import MagazineListView from "@/components/MagazineListView";
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { MagazineEdition } from "@/types";
 import { router } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 
 export default function MagazineScreen() {
   const { features } = useBrandConfig();
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
 
   useEffect(() => {
     if (!features?.enableMagazine) {
@@ -31,8 +33,16 @@ export default function MagazineScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <GradientHeader onSearchPress={handleSearchPress} />
+      <GradientHeader
+        onSearchPress={handleSearchPress}
+        showUserIcon={true}
+        onUserPress={() => setSettingsDrawerVisible(true)}
+      />
       <MagazineListView onMagazineSelect={handleMagazineSelect} />
+      <SettingsDrawer
+        visible={settingsDrawerVisible}
+        onClose={() => setSettingsDrawerVisible(false)}
+      />
     </ThemedView>
   );
 }

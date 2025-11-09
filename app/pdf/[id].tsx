@@ -1,5 +1,6 @@
 import GradientHeader from "@/components/GradientHeader";
 import PDFViewer from "@/components/PDFViewer";
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
@@ -13,6 +14,7 @@ export default function PDFScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [magazine, setMagazine] = useState<MagazineEdition | null>(null);
   const [loading, setLoading] = useState(true);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -77,8 +79,14 @@ export default function PDFScreen() {
           onSearchPress={handleSearchPress}
           showBackButton={true}
           onBackPress={handleBack}
+          showUserIcon={true}
+          onUserPress={() => setSettingsDrawerVisible(true)}
         />
         <PDFViewer magazine={magazine} onBack={handleBack} />
+        <SettingsDrawer
+          visible={settingsDrawerVisible}
+          onClose={() => setSettingsDrawerVisible(false)}
+        />
       </ThemedView>
     </>
   );

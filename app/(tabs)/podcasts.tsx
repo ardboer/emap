@@ -1,5 +1,6 @@
 import { FadeInImage } from "@/components/FadeInImage";
 import GradientHeader from "@/components/GradientHeader";
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -26,6 +27,7 @@ export default function PodcastsScreen() {
   const [categories, setCategories] = useState<PodcastCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
 
   useEffect(() => {
     if (!features?.enablePodcasts) {
@@ -282,7 +284,11 @@ export default function PodcastsScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <GradientHeader onSearchPress={handleSearchPress} />
+      <GradientHeader
+        onSearchPress={handleSearchPress}
+        showUserIcon={true}
+        onUserPress={() => setSettingsDrawerVisible(true)}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
@@ -293,6 +299,10 @@ export default function PodcastsScreen() {
       >
         {categories.map(renderCategory)}
       </ScrollView>
+      <SettingsDrawer
+        visible={settingsDrawerVisible}
+        onClose={() => setSettingsDrawerVisible(false)}
+      />
     </ThemedView>
   );
 }

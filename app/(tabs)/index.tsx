@@ -18,6 +18,7 @@ import {
 import { nativeAdInstanceManager } from "@/services/nativeAdInstanceManager";
 import { Article } from "@/types";
 import { hexToRgba } from "@/utils/colors";
+import { Ionicons } from "@expo/vector-icons";
 import {
   useIsFocused,
   useNavigation,
@@ -76,6 +77,7 @@ export default function HighlightedScreen() {
   const backgroundColor = useThemeColor({}, "background");
   const contentBackground = useThemeColor({}, "contentBackground");
   const recommendedBadgeBg = useThemeColor({}, "recommendedBadgeBg");
+  const searchIconColor = useThemeColor({}, "searchIcon");
 
   // Get slide duration from brand config (in seconds), default to 5 seconds
   const slideDurationSeconds =
@@ -106,6 +108,10 @@ export default function HighlightedScreen() {
   const previousIndexRef = useRef(0);
   const indexChangeTimeRef = useRef<number>(Date.now());
   const wasUnfocusedRef = useRef(false);
+
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
 
   const handleArticlePress = (article: Article) => {
     const dwellTime = articleViewStartTime
@@ -1223,12 +1229,19 @@ export default function HighlightedScreen() {
           width={100}
           height={35}
         />
-        <TouchableOpacity
-          style={[styles.userButton, { top: insets.top + 10 }]}
-          disabled
-        >
-          <UserIcon width={24} height={24} opacity={0.5} />
-        </TouchableOpacity>
+        <ThemedView style={[styles.topRightIcons, { top: insets.top + 10 }]}>
+          <TouchableOpacity style={styles.iconButton} disabled>
+            <Ionicons
+              name="search"
+              size={24}
+              color={searchIconColor}
+              opacity={0.5}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} disabled>
+            <UserIcon width={24} height={24} opacity={0.5} />
+          </TouchableOpacity>
+        </ThemedView>
         <SkeletonLoader variant="carousel" />
       </ThemedView>
     );
@@ -1280,13 +1293,21 @@ export default function HighlightedScreen() {
         height={35}
       />
 
-      {/* User Settings Button */}
-      <TouchableOpacity
-        style={[styles.userButton, { top: insets.top + 10 }]}
-        onPress={() => setSettingsDrawerVisible(true)}
-      >
-        <UserIcon width={24} height={24} />
-      </TouchableOpacity>
+      {/* Top Right Icons Container */}
+      <ThemedView style={[styles.topRightIcons, { top: insets.top + 10 }]}>
+        {/* Search Button */}
+        <TouchableOpacity style={styles.iconButton} onPress={handleSearchPress}>
+          <Ionicons name="search" size={24} color={searchIconColor} />
+        </TouchableOpacity>
+
+        {/* User Settings Button */}
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => setSettingsDrawerVisible(true)}
+        >
+          <UserIcon width={24} height={24} />
+        </TouchableOpacity>
+      </ThemedView>
 
       <FlatList
         ref={flatListRef}
@@ -1448,11 +1469,16 @@ const staticStyles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  userButton: {
+  topRightIcons: {
     position: "absolute",
     top: 80,
     right: 16,
     zIndex: 10,
+    flexDirection: "row",
+    gap: 8,
+    backgroundColor: "transparent",
+  },
+  iconButton: {
     borderRadius: 20,
     width: 40,
     height: 40,

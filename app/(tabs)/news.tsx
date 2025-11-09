@@ -6,6 +6,7 @@ import { DisplayAd } from "@/components/DisplayAd";
 import GradientHeader from "@/components/GradientHeader";
 import { NativeAdListItem } from "@/components/NativeAdListItem";
 import RecommendedBlockHorizontal from "@/components/RecommendedBlockHorizontal";
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -42,6 +43,7 @@ export default function NewsScreen() {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
   const contentBackground = useThemeColor({}, "contentBackground");
 
   // Initialize display ad manager and native ad variant manager with brand config
@@ -483,7 +485,11 @@ export default function NewsScreen() {
     <ThemedView
       style={[styles.container, { backgroundColor: contentBackground }]}
     >
-      <GradientHeader onSearchPress={handleSearchPress} />
+      <GradientHeader
+        onSearchPress={handleSearchPress}
+        showUserIcon={true}
+        onUserPress={() => setSettingsDrawerVisible(true)}
+      />
       <TopicsTabBar
         tabs={tabs}
         activeTabIndex={activeTabIndex}
@@ -519,6 +525,10 @@ export default function NewsScreen() {
           stickySectionHeadersEnabled={false}
         />
       )}
+      <SettingsDrawer
+        visible={settingsDrawerVisible}
+        onClose={() => setSettingsDrawerVisible(false)}
+      />
     </ThemedView>
   );
 }

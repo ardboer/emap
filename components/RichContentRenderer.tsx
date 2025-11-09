@@ -166,6 +166,56 @@ const extractTextContent = (nodes: StructuredContentNode[]): string => {
     .join("");
 };
 
+// Helper function to render inline content (text + links) within a single Text component
+const renderInlineContent = (
+  nodes: StructuredContentNode[],
+  linkColor: string,
+  handleLinkPress: (url: string) => void
+): React.ReactNode[] => {
+  return nodes.map((node, index) => {
+    if (node.typename === "HTMLTextNode") {
+      return node.text || "";
+    }
+    if (node.typename === "HTMLLink") {
+      const linkText = node.children ? extractTextContent(node.children) : "";
+      return (
+        <RNText
+          key={index}
+          style={{ color: linkColor, textDecorationLine: "underline" }}
+          onPress={() => node.href && handleLinkPress(node.href)}
+        >
+          {linkText}
+        </RNText>
+      );
+    }
+    if (node.typename === "HTMLElement") {
+      // Handle inline formatting like strong, em, span
+      if (node.type === "strong") {
+        return (
+          <RNText key={index} style={{ fontWeight: "bold" }}>
+            {node.children
+              ? renderInlineContent(node.children, linkColor, handleLinkPress)
+              : ""}
+          </RNText>
+        );
+      }
+      if (node.type === "em") {
+        return (
+          <RNText key={index} style={{ fontStyle: "italic" }}>
+            {node.children
+              ? renderInlineContent(node.children, linkColor, handleLinkPress)
+              : ""}
+          </RNText>
+        );
+      }
+      if (node.type === "span" && node.children) {
+        return renderInlineContent(node.children, linkColor, handleLinkPress);
+      }
+    }
+    return null;
+  });
+};
+
 // Helper function to extract text content from a single node (for table cells)
 const extractSingleNodeTextContent = (node: StructuredContentNode): string => {
   if (node.typename === "HTMLTextNode") {
@@ -525,6 +575,26 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           );
         }
 
+        // For paragraphs with mixed content (text + links), render inline
+        // Check if paragraph contains links
+        const hasLinks = node.children?.some(
+          (child) => child.typename === "HTMLLink"
+        );
+
+        if (hasLinks && node.children) {
+          // Render inline content to keep links in the same line as text
+          return (
+            <ThemedText key={index} style={styles.paragraph}>
+              {renderInlineContent(
+                node.children,
+                themeColors?.linkColor || "#007AFF",
+                handleLinkPress
+              )}
+            </ThemedText>
+          );
+        }
+
+        // For paragraphs without links, use normal rendering
         return (
           <ThemedText key={index} style={styles.paragraph}>
             {children}
@@ -849,21 +919,17 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
 
   // Handle links
   if (node.typename === "HTMLLink") {
-    const children = node.children ? (
-      <RichContentRendererInternal
-        content={node.children}
-        onImagePress={onImagePress}
-        isLink={true}
-      />
-    ) : null;
+    // Extract text content from link children
+    const linkText = node.children ? extractTextContent(node.children) : "";
 
+    // Render link inline using Text component with onPress
     return (
       <RNText
         key={index}
         style={[styles.link, { color: themeColors?.linkColor || "#007AFF" }]}
         onPress={() => node.href && handleLinkPress(node.href)}
       >
-        {children}
+        {linkText}
       </RNText>
     );
   }

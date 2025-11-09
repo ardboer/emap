@@ -1,6 +1,7 @@
 import ArticleTeaser from "@/components/ArticleTeaser";
 import GradientHeader from "@/components/GradientHeader";
 import { NativeAdListItem } from "@/components/NativeAdListItem";
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
@@ -25,6 +26,7 @@ export default function EventsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
 
   // Initialize native ad variant manager
   useEffect(() => {
@@ -132,7 +134,11 @@ export default function EventsScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <GradientHeader onSearchPress={handleSearchPress} />
+      <GradientHeader
+        onSearchPress={handleSearchPress}
+        showUserIcon={true}
+        onUserPress={() => setSettingsDrawerVisible(true)}
+      />
       <FlatList
         data={events}
         renderItem={renderEvent}
@@ -145,6 +151,10 @@ export default function EventsScreen() {
           styles.listContainer,
           { backgroundColor: Colors[colorScheme].articleListBackground },
         ]}
+      />
+      <SettingsDrawer
+        visible={settingsDrawerVisible}
+        onClose={() => setSettingsDrawerVisible(false)}
       />
     </ThemedView>
   );

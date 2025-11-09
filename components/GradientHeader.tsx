@@ -1,4 +1,5 @@
 import { BrandLogo } from "@/components/BrandLogo";
+import { UserIcon } from "@/components/UserIcon";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,6 +13,8 @@ interface GradientHeaderProps {
   onSearchPress?: () => void;
   showBackButton?: boolean;
   onBackPress?: () => void;
+  showUserIcon?: boolean;
+  onUserPress?: () => void;
 }
 
 export default function GradientHeader({
@@ -20,6 +23,8 @@ export default function GradientHeader({
   onSearchPress,
   showBackButton = false,
   onBackPress,
+  showUserIcon = false,
+  onUserPress,
 }: GradientHeaderProps) {
   const insets = useSafeAreaInsets();
 
@@ -54,15 +59,26 @@ export default function GradientHeader({
         ) : (
           <View />
         )}
-        {showSearch && (
-          <TouchableOpacity
-            style={styles.searchButton}
-            onPress={onSearchPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="search" size={24} color={searchIconColor} />
-          </TouchableOpacity>
-        )}
+        <View style={styles.iconsContainer}>
+          {showSearch && (
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={onSearchPress}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="search" size={24} color={searchIconColor} />
+            </TouchableOpacity>
+          )}
+          {showUserIcon && (
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={onUserPress}
+              activeOpacity={0.7}
+            >
+              <UserIcon width={24} height={24} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </LinearGradient>
   );
@@ -84,7 +100,12 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
-  searchButton: {
+  iconsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  iconButton: {
     padding: 8,
   },
 });

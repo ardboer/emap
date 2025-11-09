@@ -1,4 +1,5 @@
 import GradientHeader from "@/components/GradientHeader";
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
@@ -21,6 +22,7 @@ export default function AskScreen() {
   const [webViewLoading, setWebViewLoading] = useState(true);
   const [webViewError, setWebViewError] = useState<string | null>(null);
   const [webViewHeight, setWebViewHeight] = useState(600);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
   const hasInitiallyLoaded = useRef(false);
 
   // Construct the dynamic URL based on brand configuration
@@ -95,7 +97,11 @@ export default function AskScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <GradientHeader onSearchPress={handleSearchPress} />
+      <GradientHeader
+        onSearchPress={handleSearchPress}
+        showUserIcon={true}
+        onUserPress={() => setSettingsDrawerVisible(true)}
+      />
       {webViewLoading && (
         <ThemedView style={styles.loadingOverlay}>
           <ActivityIndicator size="large" />
@@ -223,6 +229,10 @@ export default function AskScreen() {
           accessibilityHint="Interactive web content for asking questions"
         />
       </ScrollView>
+      <SettingsDrawer
+        visible={settingsDrawerVisible}
+        onClose={() => setSettingsDrawerVisible(false)}
+      />
     </ThemedView>
   );
 }

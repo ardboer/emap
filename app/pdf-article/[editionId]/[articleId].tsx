@@ -1,4 +1,5 @@
 import GradientHeader from "@/components/GradientHeader";
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
@@ -33,6 +34,7 @@ export default function PDFArticleScreen() {
   const [article, setArticle] = useState<PDFArticleDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
 
   // Scroll position tracking
   const scrollY = useSharedValue(0);
@@ -86,6 +88,8 @@ export default function PDFArticleScreen() {
           onSearchPress={handleSearchPress}
           showBackButton={true}
           onBackPress={handleBack}
+          showUserIcon={true}
+          onUserPress={() => setSettingsDrawerVisible(true)}
         />
         <ThemedView style={styles.centerContent}>
           <ActivityIndicator size="large" />
@@ -102,6 +106,8 @@ export default function PDFArticleScreen() {
           onSearchPress={handleSearchPress}
           showBackButton={true}
           onBackPress={handleBack}
+          showUserIcon={true}
+          onUserPress={() => setSettingsDrawerVisible(true)}
         />
         <ThemedView style={styles.errorContainer}>
           <Ionicons name="alert-circle-outline" size={64} color="#999" />
@@ -128,6 +134,8 @@ export default function PDFArticleScreen() {
           onSearchPress={handleSearchPress}
           showBackButton={true}
           onBackPress={handleBack}
+          showUserIcon={true}
+          onUserPress={() => setSettingsDrawerVisible(true)}
         />
         {/* Scrollable Content */}
         <Animated.ScrollView
@@ -172,6 +180,10 @@ export default function PDFArticleScreen() {
             </ThemedText>
           </ThemedView>
         </Animated.ScrollView>
+        <SettingsDrawer
+          visible={settingsDrawerVisible}
+          onClose={() => setSettingsDrawerVisible(false)}
+        />
       </ThemedView>
     </>
   );

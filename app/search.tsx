@@ -1,6 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { getCenteredContentStyle } from "@/constants/Layout";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -10,6 +9,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   StyleSheet,
   TextInput,
@@ -17,6 +17,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const isTablet = screenWidth >= 768;
 
 interface SearchResult {
   id: number;
@@ -117,6 +120,7 @@ export default function SearchScreen() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: contentBackground }]}
+      edges={["top"]}
     >
       <ThemedView
         style={[styles.content, { backgroundColor: contentBackground }]}
@@ -252,7 +256,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    ...getCenteredContentStyle(),
+    maxWidth: isTablet ? 700 : undefined,
+    width: "100%",
+    alignSelf: "center",
   },
   header: {
     flexDirection: "row",
@@ -313,7 +319,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   loadingContainer: {
-    flex: 1,
+    paddingVertical: 60,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -325,13 +331,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emptyListContainer: {
-    flex: 1,
+    flexGrow: 1,
   },
   emptyState: {
-    flex: 1,
+    paddingVertical: 60,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 32,
+    minHeight: 200,
   },
   emptyText: {
     fontSize: 18,

@@ -5,6 +5,7 @@ import { BlockHeader } from "@/components/BlockHeader";
 import { DisplayAd } from "@/components/DisplayAd";
 import GradientHeader from "@/components/GradientHeader";
 import { NativeAdListItem } from "@/components/NativeAdListItem";
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -42,6 +43,7 @@ export default function ClinicalScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
   const contentBackground = useThemeColor({}, "contentBackground");
 
   // Initialize display ad manager and native ad variant manager with brand config
@@ -221,7 +223,11 @@ export default function ClinicalScreen() {
       <ThemedView
         style={[styles.container, { backgroundColor: contentBackground }]}
       >
-        <GradientHeader onSearchPress={handleSearchPress} />
+        <GradientHeader
+          onSearchPress={handleSearchPress}
+          showUserIcon={true}
+          onUserPress={() => setSettingsDrawerVisible(true)}
+        />
         <SkeletonLoader variant="list" count={8} />
       </ThemedView>
     );
@@ -230,7 +236,11 @@ export default function ClinicalScreen() {
   if (error && !categoryContent) {
     return (
       <ThemedView style={[styles.container, styles.centerContent]}>
-        <GradientHeader onSearchPress={handleSearchPress} />
+        <GradientHeader
+          onSearchPress={handleSearchPress}
+          showUserIcon={true}
+          onUserPress={() => setSettingsDrawerVisible(true)}
+        />
         <ThemedText style={styles.errorText}>{error}</ThemedText>
         <TouchableOpacity
           style={styles.retryButton}
@@ -268,7 +278,11 @@ export default function ClinicalScreen() {
     <ThemedView
       style={[styles.container, { backgroundColor: contentBackground }]}
     >
-      <GradientHeader onSearchPress={handleSearchPress} />
+      <GradientHeader
+        onSearchPress={handleSearchPress}
+        showUserIcon={true}
+        onUserPress={() => setSettingsDrawerVisible(true)}
+      />
       {!hasContent && !loading ? (
         <ThemedView style={styles.centerContent}>
           <ThemedText style={styles.emptyText}>
@@ -300,6 +314,10 @@ export default function ClinicalScreen() {
           stickySectionHeadersEnabled={false}
         />
       )}
+      <SettingsDrawer
+        visible={settingsDrawerVisible}
+        onClose={() => setSettingsDrawerVisible(false)}
+      />
     </ThemedView>
   );
 }
