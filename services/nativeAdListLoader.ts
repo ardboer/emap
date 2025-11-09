@@ -10,6 +10,14 @@ interface CachedAd {
   position: number;
 }
 
+interface AdLoadResult {
+  ad: NativeAd | null;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
 /**
  * Handles loading and caching of list view native ads
  * Manages ad lifecycle for list item variants
@@ -32,14 +40,14 @@ class NativeAdListLoader {
   async loadAdForListPosition(
     viewType: ListViewType,
     position: number
-  ): Promise<NativeAd | null> {
+  ): Promise<AdLoadResult> {
     const cacheKey = this.getCacheKey(viewType, position);
 
     // Check if already loaded
     const cached = this.cache.get(cacheKey);
     if (cached) {
       console.log(`✅ Using cached ad for ${viewType} at position ${position}`);
-      return cached.ad;
+      return { ad: cached.ad };
     }
 
     // Check if already loading
@@ -47,20 +55,32 @@ class NativeAdListLoader {
       console.log(
         `⏳ Ad already loading for ${viewType} at position ${position}`
       );
-      return null;
+      return {
+        ad: null,
+        error: { code: "loading", message: "Ad is already loading" },
+      };
     }
 
     // Check if variant is enabled
     if (!nativeAdVariantManager.isVariantEnabled("listItem")) {
       console.log("⚠️ List view native ads are not enabled");
-      return null;
+      return {
+        ad: null,
+        error: {
+          code: "disabled",
+          message: "List view native ads are not enabled",
+        },
+      };
     }
 
     // Get ad unit ID
     const adUnitId = nativeAdVariantManager.getAdUnitId("listItem");
     if (!adUnitId) {
       console.warn("⚠️ No ad unit ID configured for list view native ads");
-      return null;
+      return {
+        ad: null,
+        error: { code: "no_ad_unit", message: "No ad unit ID configured" },
+      };
     }
 
     // Start loading
@@ -110,7 +130,7 @@ class NativeAdListLoader {
         `✅ Native ad loaded for ${viewType} at position ${position} in ${loadTime}ms`
       );
 
-      return ad;
+      return { ad };
     } catch (error: any) {
       console.error(
         `❌ Failed to load native ad for ${viewType} at position ${position}:`,
@@ -126,7 +146,13 @@ class NativeAdListLoader {
         platform: Platform.OS,
       });
 
-      return null;
+      return {
+        ad: null,
+        error: {
+          code: error?.code || "unknown",
+          message: error?.message || "Unknown error",
+        },
+      };
     } finally {
       this.loadingQueue.delete(cacheKey);
     }

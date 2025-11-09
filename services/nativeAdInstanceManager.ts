@@ -14,6 +14,10 @@ export interface AdInstance {
   loadEndTime?: number;
   viewStartTime?: number;
   impressionLogged: boolean;
+  error?: {
+    code: string;
+    message: string;
+  };
 }
 
 /**
@@ -133,9 +137,13 @@ class NativeAdInstanceManager {
         error
       );
 
-      // Update instance to failed
+      // Update instance to failed with error info
       instance.status = "failed";
       instance.loadEndTime = Date.now();
+      instance.error = {
+        code: error?.code || "unknown",
+        message: error?.message || "Unknown error",
+      };
       this.adInstances.set(position, instance);
 
       // Log failure

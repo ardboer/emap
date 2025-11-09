@@ -1,11 +1,14 @@
+import { AdDebugData, AdDebugInfo } from "@/components/AdDebugInfo";
 import { FadeInImage } from "@/components/FadeInImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { analyticsService } from "@/services/analytics";
 import { nativeAdInstanceManager } from "@/services/nativeAdInstanceManager";
+import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { Article } from "@/types";
 import { hexToRgba } from "@/utils/colors";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import React, { useEffect, useRef, useState } from "react";
@@ -51,7 +54,18 @@ export function NativeAdCarouselItem({
   const [nativeAd, setNativeAd] = useState<NativeAd | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [loadStartTime, setLoadStartTime] = useState<number>(0);
+  const [loadTimeMs, setLoadTimeMs] = useState<number | undefined>(undefined);
+  const [debugEnabled, setDebugEnabled] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | undefined>(undefined);
   const hasLoggedImpression = useRef(false);
+
+  // Load debug setting
+  useEffect(() => {
+    AsyncStorage.getItem("debug_ads_enabled").then((value) => {
+      setDebugEnabled(value === "true");
+    });
+  }, []);
 
   // Effect to handle lazy loading based on shouldLoad prop
   useEffect(() => {
@@ -85,12 +99,15 @@ export function NativeAdCarouselItem({
   }, [nativeAd, position]);
 
   const loadAd = async () => {
+    setLoadStartTime(Date.now());
+
     // Check if ad is already loaded in instance manager
     const existingInstance = nativeAdInstanceManager.getAdInstance(position);
     if (existingInstance?.nativeAd && existingInstance.status === "loaded") {
       console.log(`✅ Using pre-loaded ad at position ${position}`);
       setNativeAd(existingInstance.nativeAd);
       setIsLoading(false);
+      setLoadTimeMs(0); // Cached, instant load
       onLoadComplete?.(true);
       return;
     }
@@ -104,23 +121,38 @@ export function NativeAdCarouselItem({
       // Use instance manager to load ad
       const ad = await nativeAdInstanceManager.loadAdForPosition(position);
 
+      const loadTime = Date.now() - loadStartTime;
+      setLoadTimeMs(loadTime);
+
       if (ad) {
         setNativeAd(ad);
         setIsLoading(false);
         setHasError(false);
+        setErrorMsg(undefined);
         onLoadComplete?.(true);
         console.log(`✅ Ad loaded successfully at position ${position}`);
       } else {
-        // Ad failed to load or is still loading
+        // Ad failed to load - get error from instance manager
+        const instance = nativeAdInstanceManager.getAdInstance(position);
+        const errorMessage = instance?.error
+          ? `${instance.error.message} (${instance.error.code})`
+          : "Ad failed to load";
+
         setIsLoading(false);
         setHasError(true);
+        setErrorMsg(errorMessage);
         onLoadComplete?.(false);
-        console.log(`❌ Ad failed to load at position ${position}`);
+        console.log(
+          `❌ Ad failed to load at position ${position}: ${errorMessage}`
+        );
       }
     } catch (error: any) {
       console.error(`❌ Error loading ad at position ${position}:`, error);
+      const loadTime = Date.now() - loadStartTime;
+      setLoadTimeMs(loadTime);
       setHasError(true);
       setIsLoading(false);
+      setErrorMsg(error?.message || "Unknown error");
       onLoadComplete?.(false);
     }
   };
@@ -184,11 +216,40 @@ export function NativeAdCarouselItem({
     }
   };
 
-  // If ad failed to load and skipIfNotReady is true, skip this position
+  // Get ad unit ID for debug info - with safe fallback
+  let adUnitId = "Unknown";
+  try {
+    if (nativeAdVariantManager.isInitialized()) {
+      adUnitId = nativeAdVariantManager.getAdUnitId("carousel") || "Unknown";
+    }
+  } catch (error) {
+    console.warn("Could not get ad unit ID for debug:", error);
+  }
+  const isTestAd = true;
+
+  // Prepare debug data (before early returns so it's available for debug display)
+  const debugData: AdDebugData = {
+    adUnitId,
+    adType: "native_carousel",
+    requestResult: isLoading ? "loading" : hasError ? "failed" : "success",
+    loadTimeMs,
+    isTestAd,
+    errorMessage: errorMsg,
+    position,
+  };
+
+  // If ad failed to load and skipIfNotReady is true, show debug or skip
   if (hasError) {
     const config = brandConfig?.nativeAds as any;
     if (config?.skipIfNotReady !== false) {
       // Default to true (skip if not ready)
+      if (debugEnabled) {
+        return (
+          <View style={styles.loadingContainer}>
+            <AdDebugInfo data={debugData} variant="overlay" />
+          </View>
+        );
+      }
       return null;
     }
   }
@@ -211,11 +272,18 @@ export function NativeAdCarouselItem({
     return null;
   }
 
-  // If ad not loaded yet and skipIfNotReady, skip
+  // If ad not loaded yet and skipIfNotReady, show debug or skip
   if (!nativeAd) {
     const config = brandConfig?.nativeAds as any;
     if (config?.skipIfNotReady !== false) {
       // Default to true (skip if not ready)
+      if (debugEnabled) {
+        return (
+          <View style={styles.loadingContainer}>
+            <AdDebugInfo data={debugData} variant="overlay" />
+          </View>
+        );
+      }
       return null;
     }
     // Otherwise show loading (handled above)
@@ -359,6 +427,9 @@ export function NativeAdCarouselItem({
           </ThemedView>
         </LinearGradient>
       </TouchableOpacity>
+
+      {/* Debug Info Overlay */}
+      {debugEnabled && <AdDebugInfo data={debugData} variant="overlay" />}
     </NativeAdView>
   );
 }

@@ -56,6 +56,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   const [useColorGradient, setUseColorGradient] = React.useState(false);
   const [pushToken, setPushToken] = React.useState<string | null>(null);
   const [debugModeEnabled, setDebugModeEnabled] = React.useState(false);
+  const [debugAdsEnabled, setDebugAdsEnabled] = React.useState(false);
   const [topicSubscriptions, setTopicSubscriptions] = React.useState<
     TopicSubscription[]
   >([]);
@@ -146,6 +147,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     AsyncStorage.getItem("debug_mode_enabled").then((value) => {
       if (value !== null) {
         setDebugModeEnabled(value === "true");
+      }
+    });
+  }, []);
+
+  // Load debug ads flag
+  React.useEffect(() => {
+    AsyncStorage.getItem("debug_ads_enabled").then((value) => {
+      if (value !== null) {
+        setDebugAdsEnabled(value === "true");
       }
     });
   }, []);
@@ -449,6 +459,19 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     Alert.alert(
       "Setting Updated",
       "Pull to refresh the highlights tab to see the changes.",
+      [{ text: "OK" }]
+    );
+  };
+
+  const handleDebugAdsToggle = async (value: boolean) => {
+    setDebugAdsEnabled(value);
+    await AsyncStorage.setItem("debug_ads_enabled", value.toString());
+
+    Alert.alert(
+      "Setting Updated",
+      value
+        ? "Ad debug information will now be displayed on all ads."
+        : "Ad debug information has been hidden.",
       [{ text: "OK" }]
     );
   };
@@ -768,6 +791,24 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
                 onPress={handleCopyPushToken}
               />
             )}
+            {/* Debug Ads Toggle */}
+            <SettingsItem
+              title="Debug Ads"
+              subtitle={
+                debugAdsEnabled
+                  ? "Show ad debug info (unit ID, load time, etc.)"
+                  : "Hide ad debug information"
+              }
+              icon="info.circle.fill"
+              rightElement={
+                <Switch
+                  value={debugAdsEnabled}
+                  onValueChange={handleDebugAdsToggle}
+                  trackColor={{ false: "#767577", true: primaryColor }}
+                  thumbColor={debugAdsEnabled ? "#00334C" : "#fff"}
+                />
+              }
+            />
           </ThemedView>
         </ThemedView>
       )}

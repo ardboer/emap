@@ -1,5 +1,7 @@
+import { AdDebugData, AdDebugInfo } from "@/components/AdDebugInfo";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { adMobService, AdSizes } from "@/services/admob";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import {
@@ -58,7 +60,18 @@ export function BannerAdComponent({
   const [hasError, setHasError] = useState(false);
   const [isNoFillError, setIsNoFillError] = useState(false);
   const [adUnitId, setAdUnitId] = useState<string>("");
+  const [loadStartTime, setLoadStartTime] = useState<number>(0);
+  const [loadTimeMs, setLoadTimeMs] = useState<number | undefined>(undefined);
+  const [debugEnabled, setDebugEnabled] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | undefined>(undefined);
   const { brandConfig } = useBrandConfig();
+
+  // Load debug setting
+  useEffect(() => {
+    AsyncStorage.getItem("debug_ads_enabled").then((value) => {
+      setDebugEnabled(value === "true");
+    });
+  }, []);
 
   useEffect(() => {
     initializeAd();
@@ -66,6 +79,8 @@ export function BannerAdComponent({
 
   const initializeAd = async () => {
     try {
+      setLoadStartTime(Date.now());
+
       // Initialize AdMob service with brand configuration
       await adMobService.initialize({
         useTestAds: true, // Always use test ads for now
@@ -78,21 +93,29 @@ export function BannerAdComponent({
 
       setIsLoading(true);
       setHasError(false);
-    } catch (error) {
+      setErrorMsg(undefined);
+    } catch (error: any) {
       console.error("Failed to initialize banner ad:", error);
       setHasError(true);
       setIsLoading(false);
+      setErrorMsg(error?.message || "Initialization failed");
       onAdFailedToLoad?.(error);
     }
   };
 
   const handleAdLoaded = () => {
+    const loadTime = Date.now() - loadStartTime;
+    setLoadTimeMs(loadTime);
     setIsLoading(false);
     setHasError(false);
+    setErrorMsg(undefined);
     onAdLoaded?.();
   };
 
   const handleAdFailedToLoad = (error: any) => {
+    const loadTime = Date.now() - loadStartTime;
+    setLoadTimeMs(loadTime);
+
     // Check if this is a "no-fill" error (no ad available)
     const noFill =
       error?.message?.includes("no-fill") ||
@@ -107,6 +130,7 @@ export function BannerAdComponent({
     setIsLoading(false);
     setHasError(true);
     setIsNoFillError(noFill);
+    setErrorMsg(error?.message || error?.code || "Unknown error");
     onAdFailedToLoad?.(error);
   };
 
@@ -114,8 +138,29 @@ export function BannerAdComponent({
     onAdClicked?.();
   };
 
-  // Don't render anything if AdMob is not initialized, no ad unit ID, or no-fill error
+  // Prepare debug data (before early return so it's available for debug display)
+  const debugData: AdDebugData = {
+    adUnitId: adUnitId || "Not initialized",
+    adType: "banner",
+    requestResult: isLoading ? "loading" : hasError ? "failed" : "success",
+    loadTimeMs,
+    isTestAd: adMobService.isInitialized()
+      ? adMobService.getConfig().useTestAds
+      : true,
+    errorMessage:
+      errorMsg || (isNoFillError ? "No ad available (no-fill)" : undefined),
+  };
+
+  // Don't render ad if AdMob is not initialized, no ad unit ID, or no-fill error
+  // But still show debug info if enabled
   if (!adMobService.isInitialized() || !adUnitId || isNoFillError) {
+    if (debugEnabled) {
+      return (
+        <ThemedView style={[styles.container, style]}>
+          <AdDebugInfo data={debugData} variant="inline" />
+        </ThemedView>
+      );
+    }
     return null;
   }
 
@@ -152,6 +197,9 @@ export function BannerAdComponent({
           onAdOpened={handleAdClicked}
         />
       )}
+
+      {/* Debug Info */}
+      {debugEnabled && <AdDebugInfo data={debugData} variant="inline" />}
     </ThemedView>
   );
 }

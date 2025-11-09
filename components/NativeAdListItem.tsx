@@ -1,3 +1,4 @@
+import { AdDebugData, AdDebugInfo } from "@/components/AdDebugInfo";
 import { FadeInImage } from "@/components/FadeInImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -7,6 +8,7 @@ import { analyticsService } from "@/services/analytics";
 import { nativeAdListLoader } from "@/services/nativeAdListLoader";
 import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { ListViewType } from "@/types/ads";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Linking from "expo-linking";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -69,7 +71,18 @@ export function NativeAdListItem({
   const [nativeAd, setNativeAd] = useState<NativeAd | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [loadStartTime, setLoadStartTime] = useState<number>(0);
+  const [loadTimeMs, setLoadTimeMs] = useState<number | undefined>(undefined);
+  const [debugEnabled, setDebugEnabled] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | undefined>(undefined);
   const hasLoggedImpression = useRef(false);
+
+  // Load debug setting
+  useEffect(() => {
+    AsyncStorage.getItem("debug_ads_enabled").then((value) => {
+      setDebugEnabled(value === "true");
+    });
+  }, []);
 
   // Initialize variant manager
   useEffect(() => {
@@ -98,12 +111,15 @@ export function NativeAdListItem({
   }, []);
 
   const loadAd = async () => {
+    setLoadStartTime(Date.now());
+
     // Check if ad is already cached
     const cachedAd = nativeAdListLoader.getCachedAd(viewType, position);
     if (cachedAd) {
       console.log(`✅ Using cached ad for ${viewType} at position ${position}`);
       setNativeAd(cachedAd);
       setIsLoading(false);
+      setLoadTimeMs(0); // Cached, instant load
       onAdLoaded?.(position);
       return;
     }
@@ -112,23 +128,32 @@ export function NativeAdListItem({
     adViewStartTime.current = Date.now();
 
     try {
-      const ad = await nativeAdListLoader.loadAdForListPosition(
+      const result = await nativeAdListLoader.loadAdForListPosition(
         viewType,
         position
       );
 
-      if (ad) {
-        setNativeAd(ad);
+      const loadTime = Date.now() - loadStartTime;
+      setLoadTimeMs(loadTime);
+
+      if (result.ad) {
+        setNativeAd(result.ad);
         setIsLoading(false);
         setHasError(false);
+        setErrorMsg(undefined);
         onAdLoaded?.(position);
         console.log(`✅ Ad loaded for ${viewType} at position ${position}`);
       } else {
         setIsLoading(false);
         setHasError(true);
+        // Use the specific error message from the loader
+        const errorMessage = result.error
+          ? `${result.error.message} (${result.error.code})`
+          : "Ad failed to load";
+        setErrorMsg(errorMessage);
         onAdFailed?.(position);
         console.log(
-          `❌ Ad failed to load for ${viewType} at position ${position}`
+          `❌ Ad failed to load for ${viewType} at position ${position}: ${errorMessage}`
         );
       }
     } catch (error: any) {
@@ -136,8 +161,11 @@ export function NativeAdListItem({
         `❌ Error loading ad for ${viewType} at position ${position}:`,
         error
       );
+      const loadTime = Date.now() - loadStartTime;
+      setLoadTimeMs(loadTime);
       setHasError(true);
       setIsLoading(false);
+      setErrorMsg(error?.message || "Unknown error");
       onAdFailed?.(position);
     }
   };
@@ -193,15 +221,46 @@ export function NativeAdListItem({
   };
 
   // Get configuration
-  const config = nativeAdVariantManager.getListViewGlobalConfig();
+  const adConfig = nativeAdVariantManager.getListViewGlobalConfig();
 
-  // If ad failed to load and skipIfNotReady is true, skip this position
-  if (hasError && config?.skipIfNotReady !== false) {
+  // Get ad unit ID for debug info - with safe fallback
+  let adUnitId = "Unknown";
+  try {
+    if (nativeAdVariantManager.isInitialized()) {
+      adUnitId = nativeAdVariantManager.getAdUnitId("listItem") || "Unknown";
+    }
+  } catch (error) {
+    console.warn("Could not get ad unit ID for debug:", error);
+  }
+  // Test mode is at the root config level, default to true for safety
+  const isTestAd = true;
+
+  // Prepare debug data (before early returns so it's available for debug display)
+  const debugData: AdDebugData = {
+    adUnitId,
+    adType: "native_list",
+    requestResult: isLoading ? "loading" : hasError ? "failed" : "success",
+    loadTimeMs,
+    isTestAd,
+    errorMessage: errorMsg,
+    position,
+    viewType,
+  };
+
+  // If ad failed to load and skipIfNotReady is true, show debug or skip
+  if (hasError && adConfig?.skipIfNotReady !== false) {
+    if (debugEnabled) {
+      return (
+        <View style={styles.container}>
+          <AdDebugInfo data={debugData} variant="inline" />
+        </View>
+      );
+    }
     return null;
   }
 
   // Show loading state if configured (only in development)
-  if (isLoading && config?.showLoadingIndicator && __DEV__) {
+  if (isLoading && adConfig?.showLoadingIndicator && __DEV__) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator
@@ -213,13 +272,27 @@ export function NativeAdListItem({
     );
   }
 
-  // If still loading but not showing indicator, skip
+  // If still loading but not showing indicator, show debug or skip
   if (isLoading) {
+    if (debugEnabled) {
+      return (
+        <View style={styles.container}>
+          <AdDebugInfo data={debugData} variant="inline" />
+        </View>
+      );
+    }
     return null;
   }
 
-  // If ad not loaded yet, skip
+  // If ad not loaded yet, show debug or skip
   if (!nativeAd) {
+    if (debugEnabled) {
+      return (
+        <View style={styles.container}>
+          <AdDebugInfo data={debugData} variant="inline" />
+        </View>
+      );
+    }
     return null;
   }
 
@@ -316,6 +389,9 @@ export function NativeAdListItem({
           </NativeAsset>
         </ThemedView>
       </TouchableOpacity>
+
+      {/* Debug Info */}
+      {debugEnabled && <AdDebugInfo data={debugData} variant="inline" />}
     </NativeAdView>
   );
 }
