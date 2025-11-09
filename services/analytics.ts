@@ -136,7 +136,8 @@ class AnalyticsService {
     screenName: string,
     screenClass?: string,
     articleId?: string,
-    articleTitle?: string
+    articleTitle?: string,
+    source?: string
   ): Promise<void> {
     if (!this.isInitialized) return;
 
@@ -154,6 +155,9 @@ class AnalyticsService {
       }
       if (articleTitle) {
         screenViewParams.article_title = articleTitle;
+      }
+      if (source) {
+        screenViewParams.source = source;
       }
 
       await logScreenView(this.analytics, screenViewParams);

@@ -46,7 +46,10 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const HEADER_HEIGHT = screenHeight * 0.4;
 
 export default function ArticleScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>(); // const id = 345162; //
+  const { id, source } = useLocalSearchParams<{
+    id: string;
+    source?: string;
+  }>(); // const id = 345162; //
   const { user, isAuthenticated } = useAuth();
   const colorScheme = useColorScheme() ?? "light";
   const { brandConfig } = useBrandConfig();
@@ -130,12 +133,13 @@ export default function ArticleScreen() {
 
         setArticle(fullArticle);
 
-        // Track screen view with article metadata
+        // Track screen view with article metadata and source
         await analyticsService.logScreenView(
           "ArticleDetail",
           "ArticleScreen",
           fullArticle.id,
-          fullArticle.title
+          fullArticle.title,
+          source || "direct"
         );
 
         // Track article view with Miso
@@ -319,7 +323,7 @@ export default function ArticleScreen() {
       setCurrentRelatedIndex(nextIndex);
 
       // Navigate to next article
-      router.push(`/article/${nextArticle.id}`);
+      router.push(`/article/${nextArticle.id}?source=related_article`);
     } else {
       console.log("Next article has no ID");
     }

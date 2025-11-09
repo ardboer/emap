@@ -144,7 +144,7 @@ export default function NewsScreen() {
   }, []);
 
   const handleArticlePress = (article: Article) => {
-    router.push(`/article/${article.id}`);
+    router.push(`/article/${article.id}?source=news`);
   };
 
   const handleSearchPress = () => {
@@ -223,9 +223,21 @@ export default function NewsScreen() {
 
     // Use hero variant for the first article in each block (index 0)
     if (index === 0) {
-      return <ArticleTeaserHero article={item} onPress={handleArticlePress} />;
+      return (
+        <ArticleTeaserHero
+          article={item}
+          onPress={handleArticlePress}
+          source="news"
+        />
+      );
     }
-    return <ArticleTeaser article={item} onPress={handleArticlePress} />;
+    return (
+      <ArticleTeaser
+        article={item}
+        onPress={handleArticlePress}
+        source="news"
+      />
+    );
   };
 
   const renderSectionFooter = ({
@@ -280,6 +292,7 @@ export default function NewsScreen() {
         renderItem={({ item }) => (
           <ArticleTeaserHorizontal
             article={item}
+            source="news"
             onPress={handleArticlePress}
           />
         )}

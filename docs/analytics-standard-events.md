@@ -48,6 +48,22 @@ These standard Firebase events are explicitly logged in the application code:
 
 ### screen_view
 
+**Additional Parameters for Article Screens:**
+
+- `article_id` - Article identifier (when viewing article detail)
+- `article_title` - Article title (when viewing article detail)
+- `source` - Source of navigation to article:
+  - `highlights` - From highlights carousel
+  - `news` - From news tab (includes hero, list, and horizontal teasers)
+  - `clinical` - From clinical tab (includes hero, list, and horizontal teasers)
+  - `events` - From events tab list
+  - `search` - From search results
+  - `push_notification` - From push notification
+  - `related_article` - From related articles in article detail
+  - `trending_block` - From trending articles block below article detail
+  - `settings_test` - From settings test article button
+  - `direct` - Direct navigation or deep link
+
 Logged when a user views a screen with screen name and class parameters
 
 ### search

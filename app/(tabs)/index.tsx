@@ -134,7 +134,7 @@ export default function HighlightedScreen() {
       articles.length,
       wordpressArticleCount
     );
-    router.push(`/article/${article.id}`);
+    router.push(`/article/${article.id}?source=highlights`);
   };
 
   const handleProgressComplete = () => {

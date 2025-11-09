@@ -118,14 +118,12 @@ function RootLayoutContent() {
       nextAppState === "active"
     ) {
       // App came to foreground
-      await analyticsService.logAppForeground(appState.current);
       console.log("📱 App came to foreground");
     } else if (
       appState.current === "active" &&
       nextAppState.match(/inactive|background/)
     ) {
       // App went to background
-      await analyticsService.logAppBackground(nextAppState);
       console.log("📱 App went to background");
     }
 
@@ -175,7 +173,7 @@ function RootLayoutContent() {
       console.log("📰 Opening article:", data.articleId);
       // Use setTimeout to ensure router is ready
       setTimeout(() => {
-        router.push(`/article/${data.articleId}`);
+        router.push(`/article/${data.articleId}?source=push_notification`);
       }, 100);
     } else {
       console.log("⚠️ No article data found in notification");

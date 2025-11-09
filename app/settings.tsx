@@ -85,7 +85,7 @@ export default function SettingsScreen() {
 
   const handleTestArticle = () => {
     if (brandConfig?.testArticleId) {
-      router.push(`/article/${brandConfig.testArticleId}`);
+      router.push(`/article/${brandConfig.testArticleId}?source=settings_test`);
     }
   };
 

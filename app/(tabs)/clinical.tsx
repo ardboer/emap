@@ -90,7 +90,7 @@ export default function ClinicalScreen() {
   }, []);
 
   const handleArticlePress = (article: Article) => {
-    router.push(`/article/${article.id}`);
+    router.push(`/article/${article.id}?source=clinical`);
   };
 
   const handleSearchPress = () => {
@@ -136,9 +136,21 @@ export default function ClinicalScreen() {
 
     // Use hero variant for the first article in each block (index 0)
     if (index === 0) {
-      return <ArticleTeaserHero article={item} onPress={handleArticlePress} />;
+      return (
+        <ArticleTeaserHero
+          article={item}
+          onPress={handleArticlePress}
+          source="clinical"
+        />
+      );
     }
-    return <ArticleTeaser article={item} onPress={handleArticlePress} />;
+    return (
+      <ArticleTeaser
+        article={item}
+        onPress={handleArticlePress}
+        source="clinical"
+      />
+    );
   };
 
   const renderSectionFooter = ({
@@ -163,6 +175,7 @@ export default function ClinicalScreen() {
         renderItem={({ item }) => (
           <ArticleTeaserHorizontal
             article={item}
+            source="clinical"
             onPress={handleArticlePress}
           />
         )}

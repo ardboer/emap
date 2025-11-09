@@ -21,11 +21,13 @@ const CARD_SPACING = 12;
 interface ArticleTeaserHorizontalProps {
   article: Article;
   onPress?: (article: Article) => void;
+  source?: string;
 }
 
 export default function ArticleTeaserHorizontal({
   article,
   onPress,
+  source = "article_list",
 }: ArticleTeaserHorizontalProps) {
   const colorScheme = useColorScheme() ?? "light";
 
@@ -34,7 +36,7 @@ export default function ArticleTeaserHorizontal({
       onPress(article);
     } else {
       console.log("opening article.id", article.id);
-      router.push(`/article/${article.id}`);
+      router.push(`/article/${article.id}?source=${source}`);
     }
   };
 

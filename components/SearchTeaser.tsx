@@ -30,7 +30,7 @@ export default function SearchTeaser({ result, onPress }: SearchTeaserProps) {
     } else {
       // Navigate to the article using the ID
       const articleId = result.id.toString();
-      router.push(`/article/${articleId}`);
+      router.push(`/article/${articleId}?source=search`);
     }
   };
 

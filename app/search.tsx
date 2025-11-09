@@ -94,7 +94,7 @@ export default function SearchScreen() {
   const handleResultPress = (result: SearchResult) => {
     // Navigate to the article using the ID from the URL or the result ID
     const articleId = result.id.toString();
-    router.push(`/article/${articleId}`);
+    router.push(`/article/${articleId}?source=search`);
   };
 
   const renderSearchResult = ({ item }: { item: SearchResult }) => (
