@@ -273,7 +273,7 @@ export function NativeAdListItem({
             </View>
 
             {/* AdChoices Icon */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={handleAdChoicesPress}
               activeOpacity={0.7}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -282,7 +282,7 @@ export function NativeAdListItem({
               <View style={styles.adChoicesIcon}>
                 <ThemedText style={styles.adChoicesText}>ⓘ</ThemedText>
               </View>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* Ad Headline */}

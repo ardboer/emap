@@ -117,7 +117,7 @@
     "secondaryButtonText": "Sign In"
   },
   "features": {
-    "enablePodcasts": true,
+    "enablePodcasts": false,
     "enableClinical": true,
     "enableEvents": true,
     "enableAsk": true,
