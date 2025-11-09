@@ -8,6 +8,11 @@ import { useColorSchemeContext } from "@/contexts/ColorSchemeContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import {
+  getStoredTokens,
+  refreshAccessToken,
+  storeTokens,
+} from "@/services/auth";
+import {
   checkNotificationPermission,
   getStoredFCMToken,
   subscribeToTopic,
@@ -108,12 +113,21 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   // Auto-refresh notification status when app comes to foreground
   React.useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
+      console.log("🔍 [DEBUG-SETTINGS] AppState changed to:", nextAppState);
       if (nextAppState === "active") {
+        console.log(
+          "🔍 [DEBUG-SETTINGS] App became active, current auth state:",
+          {
+            isAuthenticated,
+            isLoading,
+            hasUser: !!user,
+          }
+        );
         loadNotificationStatus();
       }
     });
     return () => subscription.remove();
-  }, []);
+  }, [isAuthenticated, isLoading, user]);
 
   // Load paywall debug setting
   React.useEffect(() => {
@@ -499,6 +513,100 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     }
   };
 
+  const handleTestRefreshToken = async () => {
+    try {
+      const tokens = await getStoredTokens();
+
+      if (!tokens || !user?.userId) {
+        Alert.alert(
+          "Cannot Test Refresh",
+          "You must be logged in to test token refresh functionality.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+
+      Alert.alert(
+        "Test Refresh Token",
+        "This will attempt to refresh your access token using the stored refresh token. Check the console logs for details.",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Test Refresh",
+            onPress: async () => {
+              try {
+                console.log("🧪 Testing refresh token functionality...");
+                console.log("📋 Current tokens:", {
+                  accessToken: tokens.access_token.substring(0, 20) + "...",
+                  refreshToken: tokens.refresh_token.substring(0, 20) + "...",
+                });
+
+                const result = await refreshAccessToken(
+                  tokens.refresh_token,
+                  user.userId
+                );
+
+                if (
+                  result.success &&
+                  result.access_token &&
+                  result.refresh_token
+                ) {
+                  console.log("✅ Token refresh successful!");
+                  console.log("📋 New tokens:", {
+                    accessToken: result.access_token.substring(0, 20) + "...",
+                    refreshToken: result.refresh_token.substring(0, 20) + "...",
+                  });
+
+                  // IMPORTANT: Store the new tokens to replace the old ones
+                  // The old refresh token is now invalid (refresh token rotation)
+                  await storeTokens({
+                    access_token: result.access_token,
+                    refresh_token: result.refresh_token,
+                  });
+                  console.log("💾 New tokens stored successfully!");
+
+                  Alert.alert(
+                    "Refresh Successful",
+                    "Token refresh completed successfully! New tokens have been stored. Check console logs for details.",
+                    [{ text: "OK" }]
+                  );
+                } else {
+                  console.error("❌ Token refresh failed:", result.message);
+                  Alert.alert(
+                    "Refresh Failed",
+                    `Token refresh failed: ${
+                      result.message || "Unknown error"
+                    }`,
+                    [{ text: "OK" }]
+                  );
+                }
+              } catch (error) {
+                console.error("❌ Error testing refresh token:", error);
+                Alert.alert(
+                  "Error",
+                  `Failed to test refresh token: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                  }`,
+                  [{ text: "OK" }]
+                );
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error("❌ Error preparing refresh token test:", error);
+      Alert.alert(
+        "Error",
+        "Failed to prepare refresh token test. Please try again.",
+        [{ text: "OK" }]
+      );
+    }
+  };
+
   const SettingsItem = ({
     title,
     subtitle,
@@ -557,7 +665,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
               title="Login"
               subtitle="Sign in to access your account"
               icon="person.circle.fill"
-              onPress={login}
+              onPress={() => {
+                // CRITICAL FIX: Close the drawer BEFORE opening the browser
+                // This prevents the WebBrowser promise from hanging when the drawer unmounts
+                onClose?.();
+                // Small delay to ensure drawer closes before browser opens
+                setTimeout(() => {
+                  login();
+                }, 300);
+              }}
               rightElement={
                 isLoading ? (
                   <ActivityIndicator size="small" color={primaryColor} />
@@ -809,6 +925,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
                 />
               }
             />
+            {/* Test Refresh Token Button - Only show when authenticated */}
+            {isAuthenticated && (
+              <SettingsItem
+                title="Test Refresh Token"
+                subtitle="Test the refresh token functionality and view console logs"
+                icon="arrow.clockwise.circle.fill"
+                onPress={handleTestRefreshToken}
+              />
+            )}
           </ThemedView>
         </ThemedView>
       )}

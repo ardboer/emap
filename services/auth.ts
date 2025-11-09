@@ -383,23 +383,35 @@ export async function refreshAccessToken(
     const apiBaseUrl = baseUrl;
     const apiHash = hash;
 
-    const url = `${apiBaseUrl}/wp-json/mbm-apps/v1/jwt-refresh-token/?hash=${apiHash}&refresh_token=${encodeURIComponent(
-      refreshToken
-    )}&user_id=${encodeURIComponent(userId)}`;
+    const url = `${apiBaseUrl}/wp-json/mbm-apps/v1/jwt-refresh-token/?hash=${apiHash}`;
 
     console.log("🔄 Refreshing access token...");
 
+    // const response = await fetch(url, {
+    //   method: "GET",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
     const response = await fetch(url, {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        hash: apiHash,
+        refresh_token: refreshToken,
+        user_id: userId,
+      }),
     });
-
     const data = await response.json();
 
     if (!response.ok) {
-      console.warn("⚠️ Token refresh failed:", data.message || "Unknown error");
+      console.warn(
+        "⚠️ Token refresh failed:",
+        data.message || "Unknown error",
+        data
+      );
       return {
         success: false,
         message: data.message || "Token refresh failed",
