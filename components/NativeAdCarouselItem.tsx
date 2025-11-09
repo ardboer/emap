@@ -5,7 +5,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { analyticsService } from "@/services/analytics";
 import { nativeAdInstanceManager } from "@/services/nativeAdInstanceManager";
-import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
+import { nativeAdLoader } from "@/services/nativeAdLoader";
 import { Article } from "@/types";
 import { hexToRgba } from "@/utils/colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -216,11 +216,11 @@ export function NativeAdCarouselItem({
     }
   };
 
-  // Get ad unit ID for debug info - with safe fallback
+  // Get ad unit ID for debug info - use nativeAdLoader which is already initialized
   let adUnitId = "Unknown";
   try {
-    if (nativeAdVariantManager.isInitialized()) {
-      adUnitId = nativeAdVariantManager.getAdUnitId("carousel") || "Unknown";
+    if (nativeAdLoader.isInitialized()) {
+      adUnitId = nativeAdLoader.getAdUnitId() || "Unknown";
     }
   } catch (error) {
     console.warn("Could not get ad unit ID for debug:", error);
