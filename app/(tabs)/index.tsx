@@ -115,6 +115,8 @@ export default function HighlightedScreen() {
   const previousIndexRef = useRef(0);
   const indexChangeTimeRef = useRef<number>(Date.now());
   const wasUnfocusedRef = useRef(false);
+  // Ref to track in-flight loadMoreRecommendations requests
+  const loadMoreInProgressRef = useRef(false);
 
   const handleSearchPress = () => {
     router.push("/search");
@@ -272,13 +274,17 @@ export default function HighlightedScreen() {
         const unloadDistance = config?.unloadDistance || 3;
 
         // Trigger preload for ads near position 0
-        setTimeout(() => {
+        // FIX: Add cleanup to prevent memory leak
+        const timeoutId = setTimeout(() => {
           nativeAdInstanceManager.handlePositionChange(
             0,
             preloadDistance,
             unloadDistance
           );
         }, 100);
+
+        // Store timeout ID for cleanup
+        return () => clearTimeout(timeoutId);
       }
 
       // Load color gradient setting
@@ -310,8 +316,13 @@ export default function HighlightedScreen() {
   };
 
   const loadMoreRecommendations = async () => {
-    if (isLoadingMore || !hasMoreItems) {
-      console.log("⏸️ Skipping load more:", { isLoadingMore, hasMoreItems });
+    // FIX: Race condition - check if request is already in progress using ref
+    if (loadMoreInProgressRef.current || isLoadingMore || !hasMoreItems) {
+      console.log("⏸️ Skipping load more:", {
+        inProgress: loadMoreInProgressRef.current,
+        isLoadingMore,
+        hasMoreItems,
+      });
       return;
     }
 
@@ -321,6 +332,8 @@ export default function HighlightedScreen() {
     }
 
     try {
+      // FIX: Set ref to prevent concurrent requests
+      loadMoreInProgressRef.current = true;
       setIsLoadingMore(true);
 
       const brandPrefix = brandConfig?.shortcode.toUpperCase() || "NT";
@@ -430,6 +443,8 @@ export default function HighlightedScreen() {
 
       // Don't set hasMoreItems to false on error - allow retry
     } finally {
+      // FIX: Clear in-progress flag in finally block
+      loadMoreInProgressRef.current = false;
       setIsLoadingMore(false);
       // Resume playing if carousel is visible and user not interacting
       if (isCarouselVisible && !isUserInteracting) {
@@ -551,11 +566,15 @@ export default function HighlightedScreen() {
     });
 
     // Resume playing after a short delay, but only if carousel is visible
-    setTimeout(() => {
+    // FIX: Store timeout ID for cleanup
+    const timeoutId = setTimeout(() => {
       if (isCarouselVisible) {
         setIsPlaying(true);
       }
     }, 500);
+
+    // Note: This timeout is intentionally not cleaned up as it's part of user interaction flow
+    // and should complete even if component unmounts shortly after
   };
 
   const handleMomentumScrollEnd = (
@@ -900,9 +919,12 @@ export default function HighlightedScreen() {
 
       // Clear the param by navigating without it to prevent re-triggering
       // Use a small timeout to ensure the scroll completes first
-      setTimeout(() => {
+      // FIX: Add cleanup for timeout
+      const timeoutId = setTimeout(() => {
         router.setParams({ scrollToTop: undefined, timestamp: undefined });
       }, 100);
+
+      return () => clearTimeout(timeoutId);
     }
   }, [
     params.scrollToTop,

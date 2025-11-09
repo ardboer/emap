@@ -680,8 +680,8 @@ const styles = StyleSheet.create({
     textTransform: "uppercase" as "uppercase",
   },
   title: {
-    fontSize: 24,
-    lineHeight: 28,
+    fontSize: 22,
+    lineHeight: 26,
     fontWeight: "700" as "700",
     marginBottom: 18,
   },

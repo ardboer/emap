@@ -245,6 +245,56 @@ function LogoComponent() {
 - Test API endpoints manually
 - Check network connectivity and CORS settings
 
+## API Architecture
+
+The app uses a **modular API architecture** organized by domain:
+
+```
+services/api/
+├── index.ts              # Main barrel export (backward compatible)
+├── types.ts              # Shared type definitions
+├── wordpress/            # WordPress CMS API
+│   ├── articles.ts       # Article fetching & management
+│   ├── content.ts        # Content parsing & transformation
+│   ├── media.ts          # Media URL resolution
+│   ├── menu.ts           # Navigation & menus
+│   ├── events.ts         # Events management
+│   ├── clinical.ts       # Clinical posts
+│   ├── search.ts         # Search functionality
+│   └── category.ts       # Category content
+├── miso/                 # AI-powered recommendations
+│   ├── highlights.ts     # Highlights generation
+│   ├── recommended.ts    # Recommended articles
+│   ├── related.ts        # Related content
+│   └── trending.ts       # Trending articles
+├── magazine/             # Digital magazine/ePaper
+│   ├── editions.ts       # Edition management
+│   └── articles.ts       # Magazine articles
+└── utils/                # Shared utilities
+    ├── formatters.ts     # Date & text formatting
+    ├── parsers.ts        # HTML parsing & sanitization
+    ├── transformers.ts   # Content transformation
+    └── validators.ts     # Data validation
+```
+
+### Using the API
+
+**Option 1: Import from main barrel (recommended for compatibility)**
+
+```typescript
+import { fetchArticles, fetchSingleArticle } from "@/services/api";
+```
+
+**Option 2: Import from specific modules (better tree-shaking)**
+
+```typescript
+import { fetchArticles } from "@/services/api/wordpress";
+import { fetchHighlights } from "@/services/api/miso";
+import { fetchEditions } from "@/services/api/magazine";
+```
+
+📖 **[Complete API Refactoring Documentation](docs/api-refactoring-complete.md)**
+
 ## Example Brands
 
 ### Nursing Times (nt)
