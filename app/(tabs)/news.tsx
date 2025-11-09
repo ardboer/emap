@@ -8,6 +8,7 @@ import { NativeAdListItem } from "@/components/NativeAdListItem";
 import RecommendedBlockHorizontal from "@/components/RecommendedBlockHorizontal";
 import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import SwipeableTabView from "@/components/SwipeableTabView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TopicsTabBar from "@/components/TopicsTabBar";
@@ -302,6 +303,7 @@ export default function NewsScreen() {
       description: string;
       index: number;
       isTrendingBlock?: boolean;
+      data: Article[];
     };
   }) => {
     // Hide the first block's title
@@ -309,10 +311,14 @@ export default function NewsScreen() {
       return null;
     }
 
+    // Get total sections count from the section's parent list
+    // We'll pass this through the section data structure
+    const totalSections = section.data?.length || 0;
+
     // Check if we should show an ad before this block
     const shouldShowAd = displayAdManager.shouldShowListAd(
       section.index,
-      sections.length
+      totalSections
     );
 
     return (
@@ -357,10 +363,160 @@ export default function NewsScreen() {
     );
   }
 
+  // Helper function to prepare sections for a given tab index
+  const prepareSectionsForTab = (tabIndex: number) => {
+    const menuItemKey = menuItems[tabIndex]?.object_id.toString() || "default";
+    const content = tabContent[menuItemKey];
+
+    // All tabs now use CategoryContentResponse with blocks
+    const isCategoryContent =
+      content && typeof content === "object" && "blocks" in content;
+
+    // Prepare sections for SectionList
+    let sections: {
+      title: string;
+      layout: string;
+      description: string;
+      data: Article[];
+      index: number;
+      originalIndex?: number;
+      isTrendingBlock?: boolean;
+      isRecommendedBlock?: boolean;
+    }[] = [];
+
+    if (isCategoryContent) {
+      // All tabs now have category content with blocks
+      const categoryContent = content as CategoryContentResponse;
+      sections = categoryContent.blocks.map((block, index) => ({
+        title: block.blockTitle,
+        layout: block.blockLayout,
+        description: block.blockDescription,
+        data: block.articles,
+        index,
+        originalIndex: index, // Store original index before trending/recommended injection
+      }));
+
+      // Check if trending block should be injected
+      const brandConfig = brandManager.getCurrentBrand();
+      const trendingConfig = brandConfig.trendingBlockListView;
+
+      if (
+        trendingConfig &&
+        trendingConfig.enabled &&
+        trendingConfig.position !== null &&
+        trendingConfig.position !== undefined
+      ) {
+        const position = trendingConfig.position;
+
+        // Only inject if position is valid (within bounds or at the end)
+        if (position >= 0 && position <= sections.length) {
+          // Create trending block section
+          const trendingSection = {
+            title: "Trending",
+            layout: "horizontal",
+            description: "",
+            data: [], // Empty data array since we render custom content
+            index: position,
+            isTrendingBlock: true,
+          };
+
+          // Insert at the specified position and update indices of following blocks
+          sections.splice(position, 0, trendingSection);
+
+          // Update indices for blocks after the trending block (but keep originalIndex)
+          sections = sections.map((section, idx) => ({
+            ...section,
+            index: idx,
+          }));
+        }
+      }
+
+      // Check if recommended block should be injected
+      const recommendedConfig = brandConfig.recommendedBlockListView;
+
+      if (
+        recommendedConfig &&
+        recommendedConfig.enabled &&
+        recommendedConfig.position !== null &&
+        recommendedConfig.position !== undefined
+      ) {
+        const position = recommendedConfig.position;
+
+        // Only inject if position is valid (within bounds or at the end)
+        if (position >= 0 && position <= sections.length) {
+          // Create recommended block section
+          const recommendedSection = {
+            title: "Recommended",
+            layout: "horizontal",
+            description: "",
+            data: [], // Empty data array since we render custom content
+            index: position,
+            isRecommendedBlock: true,
+          };
+
+          // Insert at the specified position and update indices of following blocks
+          sections.splice(position, 0, recommendedSection);
+
+          // Update indices for blocks after the recommended block (but keep originalIndex)
+          sections = sections.map((section, idx) => ({
+            ...section,
+            index: idx,
+          }));
+        }
+      }
+    }
+
+    return sections;
+  };
+
+  // Render content for a specific tab
+  const renderTabContent = (tabIndex: number) => {
+    const menuItemKey = menuItems[tabIndex]?.object_id.toString() || "default";
+    const isTabLoading = tabLoadingStates[menuItemKey] || false;
+    const isTabRefreshing = tabRefreshingStates[menuItemKey] || false;
+    const sections = prepareSectionsForTab(tabIndex);
+    const hasContent =
+      sections.length > 0 && sections.some((s) => s.data.length > 0);
+
+    if (isTabLoading && !hasContent) {
+      return <SkeletonLoader variant="list" count={6} />;
+    }
+
+    return (
+      <SectionList
+        sections={sections}
+        renderItem={renderArticle}
+        renderSectionHeader={renderSectionHeader}
+        renderSectionFooter={renderSectionFooter}
+        keyExtractor={(item, index) => item.id + index.toString()}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isTabRefreshing}
+            onRefresh={() => onRefreshTab(tabIndex)}
+          />
+        }
+        contentContainerStyle={[
+          styles.listContainer,
+          { backgroundColor: Colors[colorScheme].articleListBackground },
+        ]}
+        ListEmptyComponent={
+          <ThemedView style={styles.centerContent}>
+            <ThemedText style={styles.emptyText}>
+              No articles available
+            </ThemedText>
+          </ThemedView>
+        }
+        stickySectionHeadersEnabled={false}
+      />
+    );
+  };
+
   // Create tabs from menu items
-  const tabs = menuItems.map((item) => ({
+  const tabs = menuItems.map((item, index) => ({
     id: item.object_id.toString(),
     title: item.title,
+    content: renderTabContent(index),
   }));
 
   // If no menu items, show default tab
@@ -368,118 +524,9 @@ export default function NewsScreen() {
     tabs.push({
       id: "default",
       title: "News",
+      content: renderTabContent(0),
     });
   }
-
-  // Get current tab's content
-  const currentMenuItemKey =
-    menuItems[activeTabIndex]?.object_id.toString() || "default";
-  const currentContent = tabContent[currentMenuItemKey];
-  const isCurrentTabLoading = tabLoadingStates[currentMenuItemKey] || false;
-  const isCurrentTabRefreshing =
-    tabRefreshingStates[currentMenuItemKey] || false;
-
-  // All tabs now use CategoryContentResponse with blocks
-  const isCategoryContent =
-    currentContent &&
-    typeof currentContent === "object" &&
-    "blocks" in currentContent;
-
-  // Prepare sections for SectionList
-  let sections: {
-    title: string;
-    layout: string;
-    description: string;
-    data: Article[];
-    index: number;
-    originalIndex?: number;
-    isTrendingBlock?: boolean;
-  }[] = [];
-
-  if (isCategoryContent) {
-    // All tabs now have category content with blocks
-    const categoryContent = currentContent as CategoryContentResponse;
-    sections = categoryContent.blocks.map((block, index) => ({
-      title: block.blockTitle,
-      layout: block.blockLayout,
-      description: block.blockDescription,
-      data: block.articles,
-      index,
-      originalIndex: index, // Store original index before trending/recommended injection
-    }));
-
-    // Check if trending block should be injected
-    const brandConfig = brandManager.getCurrentBrand();
-    const trendingConfig = brandConfig.trendingBlockListView;
-
-    if (
-      trendingConfig &&
-      trendingConfig.enabled &&
-      trendingConfig.position !== null &&
-      trendingConfig.position !== undefined
-    ) {
-      const position = trendingConfig.position;
-
-      // Only inject if position is valid (within bounds or at the end)
-      if (position >= 0 && position <= sections.length) {
-        // Create trending block section
-        const trendingSection = {
-          title: "Trending",
-          layout: "horizontal",
-          description: "",
-          data: [], // Empty data array since we render custom content
-          index: position,
-          isTrendingBlock: true,
-        };
-
-        // Insert at the specified position and update indices of following blocks
-        sections.splice(position, 0, trendingSection);
-
-        // Update indices for blocks after the trending block (but keep originalIndex)
-        sections = sections.map((section, idx) => ({
-          ...section,
-          index: idx,
-        }));
-      }
-    }
-
-    // Check if recommended block should be injected
-    const recommendedConfig = brandConfig.recommendedBlockListView;
-
-    if (
-      recommendedConfig &&
-      recommendedConfig.enabled &&
-      recommendedConfig.position !== null &&
-      recommendedConfig.position !== undefined
-    ) {
-      const position = recommendedConfig.position;
-
-      // Only inject if position is valid (within bounds or at the end)
-      if (position >= 0 && position <= sections.length) {
-        // Create recommended block section
-        const recommendedSection = {
-          title: "Recommended",
-          layout: "horizontal",
-          description: "",
-          data: [], // Empty data array since we render custom content
-          index: position,
-          isRecommendedBlock: true,
-        };
-
-        // Insert at the specified position and update indices of following blocks
-        sections.splice(position, 0, recommendedSection);
-
-        // Update indices for blocks after the recommended block (but keep originalIndex)
-        sections = sections.map((section, idx) => ({
-          ...section,
-          index: idx,
-        }));
-      }
-    }
-  }
-
-  const hasContent =
-    sections.length > 0 && sections.some((s) => s.data.length > 0);
 
   return (
     <ThemedView
@@ -491,40 +538,15 @@ export default function NewsScreen() {
         onUserPress={() => setSettingsDrawerVisible(true)}
       />
       <TopicsTabBar
+        tabs={tabs.map((t) => ({ id: t.id, title: t.title }))}
+        activeTabIndex={activeTabIndex}
+        onTabChange={handleTabChange}
+      />
+      <SwipeableTabView
         tabs={tabs}
         activeTabIndex={activeTabIndex}
         onTabChange={handleTabChange}
       />
-      {isCurrentTabLoading && !hasContent ? (
-        <SkeletonLoader variant="list" count={6} />
-      ) : (
-        <SectionList
-          sections={sections}
-          renderItem={renderArticle}
-          renderSectionHeader={renderSectionHeader}
-          renderSectionFooter={renderSectionFooter}
-          keyExtractor={(item, index) => item.id + index.toString()}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isCurrentTabRefreshing}
-              onRefresh={() => onRefreshTab(activeTabIndex)}
-            />
-          }
-          contentContainerStyle={[
-            styles.listContainer,
-            { backgroundColor: Colors[colorScheme].articleListBackground },
-          ]}
-          ListEmptyComponent={
-            <ThemedView style={styles.centerContent}>
-              <ThemedText style={styles.emptyText}>
-                No articles available
-              </ThemedText>
-            </ThemedView>
-          }
-          stickySectionHeadersEnabled={false}
-        />
-      )}
       <SettingsDrawer
         visible={settingsDrawerVisible}
         onClose={() => setSettingsDrawerVisible(false)}
