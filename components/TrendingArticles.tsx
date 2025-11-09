@@ -104,22 +104,12 @@ export default function TrendingArticles() {
             return (
               <React.Fragment key={`ad-${index}`}>
                 <NativeAdListItem position={index} viewType="trending" />
-                <ArticleTeaser
-                  key={article.id}
-                  article={article}
-                  source="trending_block"
-                />
+                <ArticleTeaser key={article.id} article={article} />
               </React.Fragment>
             );
           }
 
-          return (
-            <ArticleTeaser
-              key={article.id}
-              article={article}
-              source="trending_block"
-            />
-          );
+          return <ArticleTeaser key={article.id} article={article} />;
         })}
       </ThemedView>
     </ThemedView>

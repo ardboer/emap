@@ -11,7 +11,6 @@ import { getCenteredContentStyle } from "@/constants/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { analyticsService } from "@/services/analytics";
 import { getAnonymousId } from "@/services/anonymousId";
 import { displayAdManager } from "@/services/displayAdManager";
 import { trackArticleView } from "@/services/miso";
@@ -46,10 +45,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const HEADER_HEIGHT = screenHeight * 0.4;
 
 export default function ArticleScreen() {
-  const { id, source } = useLocalSearchParams<{
-    id: string;
-    source?: string;
-  }>(); // const id = 345162; //
+  const { id } = useLocalSearchParams<{ id: string }>(); // const id = 345162; //
   const { user, isAuthenticated } = useAuth();
   const colorScheme = useColorScheme() ?? "light";
   const { brandConfig } = useBrandConfig();
@@ -132,15 +128,6 @@ export default function ArticleScreen() {
         const fullArticle = await fetchSingleArticle(id);
 
         setArticle(fullArticle);
-
-        // Track screen view with article metadata and source
-        await analyticsService.logScreenView(
-          "ArticleDetail",
-          "ArticleScreen",
-          fullArticle.id,
-          fullArticle.title,
-          source || "direct"
-        );
 
         // Track article view with Miso
         const anonymousId = await getAnonymousId();
@@ -323,7 +310,7 @@ export default function ArticleScreen() {
       setCurrentRelatedIndex(nextIndex);
 
       // Navigate to next article
-      router.push(`/article/${nextArticle.id}?source=related_article`);
+      router.push(`/article/${nextArticle.id}`);
     } else {
       console.log("Next article has no ID");
     }

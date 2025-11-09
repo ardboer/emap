@@ -108,11 +108,7 @@ export default function EventsScreen() {
     }
 
     return (
-      <ArticleTeaser
-        article={item}
-        onPress={() => handleEventPress(item)}
-        source="events"
-      />
+      <ArticleTeaser article={item} onPress={() => handleEventPress(item)} />
     );
   };
 

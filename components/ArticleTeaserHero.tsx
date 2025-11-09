@@ -17,13 +17,11 @@ const { width: screenWidth } = Dimensions.get("window");
 interface ArticleTeaserHeroProps {
   article: Article;
   onPress?: (article: Article) => void;
-  source?: string;
 }
 
 export default function ArticleTeaserHero({
   article,
   onPress,
-  source = "article_list",
 }: ArticleTeaserHeroProps) {
   const colorScheme = useColorScheme() ?? "light";
 
@@ -32,7 +30,7 @@ export default function ArticleTeaserHero({
       onPress(article);
     } else {
       console.log("opening article.id", article.id);
-      router.push(`/article/${article.id}?source=${source}`);
+      router.push(`/article/${article.id}`);
     }
   };
 

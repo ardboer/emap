@@ -39,13 +39,11 @@ const thumbnailSize = getResponsiveThumbnailSize();
 interface ArticleTeaserProps {
   article: Article;
   onPress?: (article: Article) => void;
-  source?: string;
 }
 
 export default function ArticleTeaser({
   article,
   onPress,
-  source = "article_list",
 }: ArticleTeaserProps) {
   const colorScheme = useColorScheme() ?? "light";
 
@@ -54,7 +52,7 @@ export default function ArticleTeaser({
       onPress(article);
     } else {
       console.log("opening article.id", article.id);
-      router.push(`/article/${article.id}?source=${source}`);
+      router.push(`/article/${article.id}`);
     }
   };
 

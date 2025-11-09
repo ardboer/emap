@@ -402,7 +402,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
 
   const handleTestArticle = () => {
     if (brandConfig?.testArticleId) {
-      router.push(`/article/${brandConfig.testArticleId}?source=settings_test`);
+      router.push(`/article/${brandConfig.testArticleId}`);
       onClose?.(); // Close the drawer after navigation
     }
   };
