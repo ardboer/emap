@@ -89,6 +89,7 @@ function injectNativeAds(articles: Article[], brandConfig: any): Article[] {
   const adFrequency =
     carouselConfig.adFrequency || brandConfig.nativeAds.adFrequency;
   const interval = adInterval || adFrequency || 5;
+  const maxAdsPerSession = carouselConfig.maxAdsPerSession;
 
   if (adFrequency && !adInterval) {
     console.warn(
@@ -100,7 +101,7 @@ function injectNativeAds(articles: Article[], brandConfig: any): Article[] {
   let adCounter = 0;
 
   console.log(
-    `📢 Injecting native ads: firstAdPosition=${firstAdPosition}, interval=${interval}`
+    `📢 Injecting native ads: firstAdPosition=${firstAdPosition}, interval=${interval}, maxAdsPerSession=${maxAdsPerSession}`
   );
 
   for (let i = 0; i < articles.length; i++) {
@@ -109,7 +110,13 @@ function injectNativeAds(articles: Article[], brandConfig: any): Article[] {
       i === firstAdPosition ||
       (i > firstAdPosition && (i - firstAdPosition) % interval === 0);
 
-    if (shouldInsertAd) {
+    // Only insert ad if we haven't reached the session limit
+    if (
+      shouldInsertAd &&
+      (maxAdsPerSession === null ||
+        maxAdsPerSession === undefined ||
+        adCounter < maxAdsPerSession)
+    ) {
       // Create a mock native ad article
       const nativeAd: Article = {
         id: `native-ad-${adCounter}`,

@@ -179,8 +179,8 @@
       "adInterval": 5,
       "preloadDistance": 1,
       "unloadDistance": 3,
-      "maxCachedAds": 3,
-      "maxAdsPerSession": null,
+      "maxCachedAds": 1,
+      "maxAdsPerSession": 1,
       "showLoadingIndicator": true,
       "skipIfNotReady": false
     },
@@ -189,26 +189,14 @@
       "views": {
         "news": {
           "enabled": true,
-          "positions": [
-            2,
-            5,
-            15,
-            22
-          ],
+          "positions": [2, 5, 15, 22],
           "maxAdsPerList": 4,
-          "blockPositions": [
-            0,
-            2
-          ],
+          "blockPositions": [0, 2],
           "maxAdsPerBlock": 2
         },
         "clinical": {
           "enabled": true,
-          "positions": [
-            5,
-            12,
-            20
-          ],
+          "positions": [5, 12, 20],
           "maxAdsPerList": 3
         },
         "events": {
@@ -218,9 +206,7 @@
         },
         "trending": {
           "enabled": true,
-          "positions": [
-            2
-          ],
+          "positions": [2],
           "maxAdsPerList": 1
         }
       },
@@ -252,10 +238,7 @@
       "enabled": true,
       "maxAdsPerPage": 3,
       "paragraphInterval": 3,
-      "allowedSizes": [
-        "MEDIUM_RECTANGLE",
-        "BANNER"
-      ],
+      "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
       "positions": [
         {
           "type": "after_lead",
@@ -274,9 +257,7 @@
       "enabled": true,
       "maxAdsPerPage": 4,
       "blockInterval": 3,
-      "allowedSizes": [
-        "BANNER"
-      ],
+      "allowedSizes": ["BANNER"],
       "positions": [
         {
           "type": "between_blocks",
