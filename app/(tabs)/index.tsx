@@ -1,7 +1,6 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import { CarouselProgressIndicator } from "@/components/CarouselProgressIndicator";
-import { FadeInImage } from "@/components/FadeInImage";
-import { NativeAdCarouselItem } from "@/components/NativeAdCarouselItem";
+import { HighlightsFlatList } from "@/components/highlights/HighlightsFlatList";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -17,18 +16,15 @@ import {
 } from "@/services/api";
 import { nativeAdInstanceManager } from "@/services/nativeAdInstanceManager";
 import { Article } from "@/types";
-import { hexToRgba } from "@/utils/colors";
 import { Ionicons } from "@expo/vector-icons";
 import {
   useIsFocused,
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   AppState,
   Dimensions,
   FlatList,
@@ -36,7 +32,6 @@ import {
   NativeSyntheticEvent,
   StyleSheet,
   TouchableOpacity,
-  View,
 } from "react-native";
 import { getColors } from "react-native-image-colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -722,303 +717,6 @@ export default function HighlightedScreen() {
       flex: 1,
       backgroundColor: contentBackground,
     },
-    carouselItem: {
-      width: screenWidth,
-      height: screenHeight,
-      position: "relative" as const,
-    },
-    loadingFooter: {
-      height: screenHeight,
-      justifyContent: "center" as const,
-      alignItems: "center" as const,
-    },
-  };
-  const renderCarouselItem = ({
-    item,
-    index,
-  }: {
-    item: Article;
-    index: number;
-  }) => {
-    // Handle native ad items
-    if (item.isNativeAd) {
-      return (
-        <NativeAdCarouselItem
-          item={item}
-          position={index}
-          shouldLoad={true}
-          onAdClicked={() => {
-            analyticsService.logEvent("native_ad_click", {
-              position: index,
-              ad_id: item.id,
-            });
-          }}
-          onLoadComplete={(success) => {
-            if (!success) {
-              console.warn(`Native ad at position ${index} failed to load`);
-            }
-          }}
-          insets={insets}
-          showingProgress={false}
-        />
-      );
-    }
-
-    // Render recommended badge for Miso articles
-    const renderRecommendedBadge = () => {
-      return (
-        <View
-          style={[
-            styles.recommendedBadge,
-            { top: insets.top + 60, backgroundColor: recommendedBadgeBg },
-          ]}
-        >
-          <ThemedText
-            style={[
-              styles.recommendedBadgeText,
-              { fontFamily: brandConfig?.theme.fonts.primarySemiBold },
-            ]}
-          >
-            {item.isRecommended ? "Recommended for you" : "Editors Pick"}
-          </ThemedText>
-        </View>
-      );
-    };
-
-    // For landscape images OR when no portrait image is available, use landscape layout
-    // This provides a fallback when portrait images are missing
-    if (item.isLandscape || !item.imageUrl) {
-      if (useColorGradient) {
-        // Get extracted colors for this image, or use default gradient
-        const extractedColors = imageColors[item.id] || [
-          "#1a1a2e",
-          "#16213e",
-          "#0f3460",
-        ];
-        // Ensure we have at least 2 colors for the gradient
-        const colors =
-          extractedColors.length >= 2
-            ? (extractedColors as [string, string, ...string[]])
-            : (["#1a1a2e", "#16213e", "#0f3460"] as [
-                string,
-                string,
-                ...string[]
-              ]);
-
-        // Color gradient background version
-        return (
-          <TouchableOpacity
-            style={styles.carouselItem}
-            onPress={() => handleArticlePress(item)}
-            activeOpacity={1}
-          >
-            {/* Color gradient background - using extracted colors from image */}
-            <LinearGradient
-              colors={colors}
-              style={styles.backgroundImageBlurred}
-            />
-            {/* Main centered image - use contain to maintain aspect ratio */}
-            <FadeInImage
-              source={{ uri: item.imageUrl }}
-              style={styles.centeredImage}
-              contentFit="contain"
-              contentPosition="center"
-            />
-            {/* Top gradient for header visibility */}
-            <LinearGradient
-              colors={["rgba(0, 0, 0, 0.6)", "transparent"] as const}
-              style={styles.topGradient}
-              pointerEvents="none"
-            />
-            {renderRecommendedBadge()}
-            <LinearGradient
-              colors={
-                [
-                  "transparent",
-                  hexToRgba(
-                    brandConfig?.theme.colors.light.overlayGradientEnd ||
-                      "#011620",
-                    0.85
-                  ),
-                ] as const
-              }
-              style={styles.overlay}
-            >
-              <ThemedView
-                transparant
-                style={[
-                  styles.contentContainer,
-                  audioState.showMiniPlayer &&
-                    styles.contentContainerWithMiniPlayer,
-                ]}
-              >
-                <ThemedText
-                  type="title"
-                  style={[
-                    styles.title,
-                    { fontFamily: brandConfig?.theme.fonts.primaryBold },
-                    { paddingBottom: 16 },
-                  ]}
-                >
-                  {item.title}
-                </ThemedText>
-                {/* <ThemedView transparant style={styles.metaContainer}>
-                  <ThemedText
-                    style={[
-                      styles.category,
-                      { fontFamily: brandConfig?.theme.fonts.primarySemiBold },
-                    ]}
-                  >
-                    {item.category}
-                  </ThemedText>
-                </ThemedView> */}
-              </ThemedView>
-            </LinearGradient>
-          </TouchableOpacity>
-        );
-      } else {
-        // Blurred background version
-        return (
-          <TouchableOpacity
-            style={styles.carouselItem}
-            onPress={() => handleArticlePress(item)}
-            activeOpacity={1}
-          >
-            {/* Blurred background image */}
-            <FadeInImage
-              source={{ uri: item.imageUrl }}
-              style={styles.backgroundImageBlurred}
-              contentFit="cover"
-              blurRadius={50}
-            />
-            {/* Dark overlay for blurred background */}
-            <View style={styles.darkOverlay} />
-            {/* Main centered image - use contain to maintain aspect ratio */}
-            <FadeInImage
-              source={{ uri: item.imageUrl }}
-              style={styles.centeredImage}
-              contentFit="contain"
-              contentPosition="center"
-            />
-            {/* Top gradient for header visibility */}
-            <LinearGradient
-              colors={["rgba(0, 0, 0, 0.6)", "transparent"] as const}
-              style={styles.topGradient}
-              pointerEvents="none"
-            />
-            {renderRecommendedBadge()}
-            <LinearGradient
-              colors={
-                [
-                  "transparent",
-                  hexToRgba(
-                    brandConfig?.theme.colors.light.overlayGradientEnd ||
-                      "#011620",
-                    0.85
-                  ),
-                ] as const
-              }
-              style={styles.overlay}
-            >
-              <ThemedView
-                transparant
-                style={[
-                  styles.contentContainer,
-                  audioState.showMiniPlayer &&
-                    styles.contentContainerWithMiniPlayer,
-                ]}
-              >
-                <ThemedText
-                  type="title"
-                  style={[
-                    styles.title,
-                    { fontFamily: brandConfig?.theme.fonts.primaryBold },
-                  ]}
-                >
-                  {item.title}
-                </ThemedText>
-                {item.leadText && (
-                  <ThemedText
-                    numberOfLines={3}
-                    style={[
-                      styles.leadText,
-                      { fontFamily: brandConfig?.theme.fonts.primaryMedium },
-                    ]}
-                  >
-                    {item.leadText}
-                  </ThemedText>
-                )}
-              </ThemedView>
-            </LinearGradient>
-          </TouchableOpacity>
-        );
-      }
-    }
-
-    // Portrait images use the original layout
-    return (
-      <TouchableOpacity
-        style={styles.carouselItem}
-        onPress={() => handleArticlePress(item)}
-        activeOpacity={1}
-      >
-        <FadeInImage
-          source={{ uri: item.imageUrl }}
-          style={styles.backgroundImage}
-          contentFit="cover"
-          contentPosition="center"
-        />
-        {/* Top gradient for header visibility */}
-        <LinearGradient
-          colors={["rgba(0, 0, 0, 0.6)", "transparent"] as const}
-          style={styles.topGradient}
-          pointerEvents="none"
-        />
-        {renderRecommendedBadge()}
-        <LinearGradient
-          colors={
-            [
-              "transparent",
-              hexToRgba(
-                brandConfig?.theme.colors.light.overlayGradientEnd || "#011620",
-                0.85
-              ),
-            ] as const
-          }
-          style={styles.overlay}
-        >
-          <ThemedView
-            transparant
-            style={[
-              styles.contentContainer,
-              audioState.showMiniPlayer &&
-                styles.contentContainerWithMiniPlayer,
-            ]}
-          >
-            <ThemedText
-              type="title"
-              style={[
-                styles.title,
-                { fontFamily: brandConfig?.theme.fonts.primaryBold },
-              ]}
-            >
-              {item.title}
-            </ThemedText>
-            {item.leadText && (
-              <ThemedText
-                numberOfLines={3}
-                style={[
-                  styles.leadText,
-                  { fontFamily: brandConfig?.theme.fonts.primaryMedium },
-                ]}
-              >
-                {item.leadText}
-              </ThemedText>
-            )}
-          </ThemedView>
-        </LinearGradient>
-      </TouchableOpacity>
-    );
   };
 
   if (loading) {
@@ -1067,22 +765,6 @@ export default function HighlightedScreen() {
     );
   }
 
-  const renderFooterComponent = () => {
-    if (!isLoadingMore) return null;
-
-    return (
-      <View style={styles.loadingFooter}>
-        <ActivityIndicator
-          size="large"
-          color={brandConfig?.theme.colors.light.primary}
-        />
-        <ThemedText style={styles.loadingText}>
-          Loading more recommendations...
-        </ThemedText>
-      </View>
-    );
-  };
-
   return (
     <ThemedView style={styles.container}>
       {!isLoadingMore && (
@@ -1116,31 +798,21 @@ export default function HighlightedScreen() {
         </TouchableOpacity>
       </ThemedView>
 
-      <FlatList
-        key={`${screenWidth}x${screenHeight}`}
-        ref={flatListRef}
-        data={articles}
-        renderItem={renderCarouselItem}
-        keyExtractor={(item) => item.id}
-        horizontal={false}
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        //showsVerticalScrollIndicator={false}
-        snapToInterval={screenHeight}
-        snapToAlignment="start"
-        disableIntervalMomentum={true}
-        decelerationRate="fast"
+      <HighlightsFlatList
+        articles={articles}
+        flatListRef={flatListRef}
+        screenWidth={screenWidth}
+        screenHeight={screenHeight}
+        imageColors={imageColors}
+        useColorGradient={useColorGradient}
+        insets={insets}
+        isLoadingMore={isLoadingMore}
+        brandConfig={brandConfig}
         onScroll={handleScroll}
         onScrollBeginDrag={handleScrollBeginDrag}
         onScrollEndDrag={handleScrollEndDrag}
         onMomentumScrollEnd={handleMomentumScrollEnd}
-        scrollEventThrottle={16}
-        getItemLayout={(data, index) => ({
-          length: screenHeight,
-          offset: screenHeight * index,
-          index,
-        })}
-        ListFooterComponent={renderFooterComponent}
+        onArticlePress={handleArticlePress}
       />
 
       {/* Settings Drawer */}
@@ -1164,101 +836,9 @@ const staticStyles = StyleSheet.create({
     borderRadius: 8,
     padding: 8,
   },
-  backgroundImage: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  backgroundImageBlurred: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  darkOverlay: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-  },
-  centeredImage: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  topGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 200,
-    zIndex: 5,
-  },
-  overlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  contentContainer: {
-    paddingTop: 48,
-    paddingHorizontal: 16,
-    paddingBottom: 100, // Reduced to match Figma spacing
-  },
-  contentContainerWithMiniPlayer: {
-    paddingBottom: 160, // Adjusted for mini player
-  },
-  title: {
-    color: "#FFFFFF",
-    fontSize: 24,
-    lineHeight: 26,
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
-  subtitle: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "600",
-    marginBottom: 0,
-  },
-  leadText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "600",
-    marginBottom: 16,
-  },
-  metaContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  category: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "600",
-  },
-  timestamp: {
-    color: "white",
-    fontSize: 14,
-    opacity: 0.7,
-  },
   centerContent: {
     justifyContent: "center",
     alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
   },
   errorText: {
     fontSize: 16,
@@ -1294,19 +874,5 @@ const staticStyles = StyleSheet.create({
   userIcon: {
     fontSize: 20,
     color: "white",
-  },
-  recommendedBadge: {
-    position: "absolute",
-    top: 80,
-    left: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    zIndex: 20,
-  },
-  recommendedBadgeText: {
-    color: "#011620",
-    fontSize: 12,
-    fontWeight: "600",
   },
 });
