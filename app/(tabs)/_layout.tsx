@@ -84,7 +84,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="news"
           options={{
-            title: "Articles",
+            title: "Latest",
             headerShown: false, // Hide header - using custom GradientHeader in news.tsx
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="newspaper.fill" color={color} />

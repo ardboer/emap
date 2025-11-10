@@ -193,6 +193,7 @@ export default function ClinicalScreen() {
       layout: string;
       description: string;
       index: number;
+      totalSections?: number;
     };
   }) => {
     // Hide the first block's title
@@ -200,10 +201,13 @@ export default function ClinicalScreen() {
       return null;
     }
 
+    // Use the totalSections passed from the section data
+    const totalSections = section.totalSections || 0;
+
     // Check if we should show an ad before this block
     const shouldShowAd = displayAdManager.shouldShowListAd(
       section.index,
-      sections.length
+      totalSections
     );
 
     return (
@@ -267,6 +271,7 @@ export default function ClinicalScreen() {
     description: string;
     data: Article[];
     index: number;
+    totalSections?: number;
   }[] = [];
 
   if (categoryContent) {
@@ -276,6 +281,13 @@ export default function ClinicalScreen() {
       description: block.blockDescription,
       data: block.articles,
       index,
+    }));
+
+    // Add totalSections to each section for display ad calculation
+    const totalSections = sections.length;
+    sections = sections.map((section) => ({
+      ...section,
+      totalSections,
     }));
   }
 

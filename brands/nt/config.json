@@ -98,7 +98,7 @@
     "iconBackgroundColor": "#00334c"
   },
   "onboarding": {
-    "editorQuote": "Welcome to the Nursing Times app, allowing you to take our content with you wherever you go.",
+    "editorQuote": "Welcome to the Nursing Times app, putting news, views and clinical practice in your pocket.",
     "editorImage": "editor.jpg",
     "editorName": "Steve Ford",
     "editorJobTitle": "Editor-in-Chief"
@@ -158,12 +158,12 @@
   ],
   "trendingBlockListView": {
     "enabled": true,
-    "position": 1,
+    "position": 3,
     "itemCount": 5
   },
   "recommendedBlockListView": {
     "enabled": true,
-    "position": 3,
+    "position": 1,
     "itemCount": 5
   },
   "trendingArticlesDetail": {
@@ -257,13 +257,19 @@
       "enabled": true,
       "maxAdsPerPage": 4,
       "blockInterval": 3,
-      "allowedSizes": ["BANNER"],
+      "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
       "positions": [
         {
           "type": "between_blocks",
-          "size": "BANNER",
+          "size": "MEDIUM_RECTANGLE",
           "enabled": true,
           "afterBlock": 1
+        },
+        {
+          "type": "between_blocks",
+          "size": "MEDIUM_RECTANGLE",
+          "enabled": true,
+          "afterBlock": 3
         }
       ]
     },

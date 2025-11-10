@@ -312,6 +312,7 @@ export default function NewsScreen() {
       index: number;
       isTrendingBlock?: boolean;
       data: Article[];
+      totalSections?: number;
     };
   }) => {
     // Hide the first block's title
@@ -319,9 +320,9 @@ export default function NewsScreen() {
       return null;
     }
 
-    // Get total sections count from the section's parent list
-    // We'll pass this through the section data structure
-    const totalSections = section.data?.length || 0;
+    // Use the totalSections passed from prepareSectionsForTab
+    // This includes injected trending/recommended blocks
+    const totalSections = section.totalSections || 0;
 
     // Check if we should show an ad before this block
     const shouldShowAd = displayAdManager.shouldShowListAd(
@@ -390,6 +391,7 @@ export default function NewsScreen() {
       originalIndex?: number;
       isTrendingBlock?: boolean;
       isRecommendedBlock?: boolean;
+      totalSections?: number;
     }[] = [];
 
     if (isCategoryContent) {
@@ -404,8 +406,42 @@ export default function NewsScreen() {
         originalIndex: index, // Store original index before trending/recommended injection
       }));
 
-      // Check if trending block should be injected
+      // Check if recommended block should be injected (inject first to appear before trending)
       const brandConfig = brandManager.getCurrentBrand();
+      const recommendedConfig = brandConfig.recommendedBlockListView;
+
+      if (
+        recommendedConfig &&
+        recommendedConfig.enabled &&
+        recommendedConfig.position !== null &&
+        recommendedConfig.position !== undefined
+      ) {
+        const position = recommendedConfig.position;
+
+        // Only inject if position is valid (within bounds or at the end)
+        if (position >= 0 && position <= sections.length) {
+          // Create recommended block section
+          const recommendedSection = {
+            title: "Recommended for you",
+            layout: "horizontal",
+            description: "",
+            data: [], // Empty data array since we render custom content
+            index: position,
+            isRecommendedBlock: true,
+          };
+
+          // Insert at the specified position and update indices of following blocks
+          sections.splice(position, 0, recommendedSection);
+
+          // Update indices for blocks after the recommended block (but keep originalIndex)
+          sections = sections.map((section, idx) => ({
+            ...section,
+            index: idx,
+          }));
+        }
+      }
+
+      // Check if trending block should be injected (inject second to appear after recommended)
       const trendingConfig = brandConfig.trendingBlockListView;
 
       if (
@@ -439,39 +475,12 @@ export default function NewsScreen() {
         }
       }
 
-      // Check if recommended block should be injected
-      const recommendedConfig = brandConfig.recommendedBlockListView;
-
-      if (
-        recommendedConfig &&
-        recommendedConfig.enabled &&
-        recommendedConfig.position !== null &&
-        recommendedConfig.position !== undefined
-      ) {
-        const position = recommendedConfig.position;
-
-        // Only inject if position is valid (within bounds or at the end)
-        if (position >= 0 && position <= sections.length) {
-          // Create recommended block section
-          const recommendedSection = {
-            title: "Recommended",
-            layout: "horizontal",
-            description: "",
-            data: [], // Empty data array since we render custom content
-            index: position,
-            isRecommendedBlock: true,
-          };
-
-          // Insert at the specified position and update indices of following blocks
-          sections.splice(position, 0, recommendedSection);
-
-          // Update indices for blocks after the recommended block (but keep originalIndex)
-          sections = sections.map((section, idx) => ({
-            ...section,
-            index: idx,
-          }));
-        }
-      }
+      // Add totalSections to each section for display ad calculation
+      const totalSections = sections.length;
+      sections = sections.map((section) => ({
+        ...section,
+        totalSections,
+      }));
     }
 
     return sections;
