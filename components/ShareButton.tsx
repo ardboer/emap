@@ -1,14 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React from "react";
-import {
-  Alert,
-  Platform,
-  Share,
-  StyleSheet,
-  TouchableOpacity,
-  ViewStyle,
-} from "react-native";
+import { Alert, StyleSheet, TouchableOpacity, ViewStyle } from "react-native";
+import Share from "react-native-share";
 
 interface ShareButtonProps {
   title: string;
@@ -43,35 +37,31 @@ export default function ShareButton({
       // Haptic feedback
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-      // Construct share content
-      const shareContent: {
-        title?: string;
-        message: string;
-        url?: string;
-      } = {
-        message: `${title}\n\n${message}\n\nRead more: ${url}`,
+      // Clean the title by removing any surrounding quotes that might be added
+      const cleanTitle = title.replace(/^['"]|['"]$/g, "").trim();
+
+      // Use react-native-share for better email subject line support
+      // For email: subject line gets the title, url is added as clickable link
+      // For WhatsApp/other apps: message includes title + line break + url
+      const shareOptions = {
+        title: cleanTitle,
+        // message: `${cleanTitle}\n\n`,
+        url: url,
+        subject: cleanTitle, // Explicitly set email subject
       };
 
-      // On iOS, we can use the url parameter separately
-      if (Platform.OS === "ios") {
-        shareContent.title = title;
-        shareContent.url = url;
-        shareContent.message = message;
-      }
+      const result = await Share.open(shareOptions);
 
-      const result = await Share.share(shareContent);
-
-      if (result.action === Share.sharedAction) {
-        console.log("[ShareButton] Article shared successfully");
-        if (result.activityType) {
-          console.log(`[ShareButton] Shared via: ${result.activityType}`);
-        }
-        console.log("[ShareButton] Shared URL:", url);
-        onShareSuccess?.();
-      } else if (result.action === Share.dismissedAction) {
+      console.log("[ShareButton] Article shared successfully");
+      console.log("[ShareButton] Shared URL:", url);
+      onShareSuccess?.();
+    } catch (error: any) {
+      // User cancelled the share dialog
+      if (error?.message === "User did not share") {
         console.log("[ShareButton] Share dismissed by user");
+        return;
       }
-    } catch (error) {
+
       const errorMessage =
         error instanceof Error ? error.message : "Failed to share article";
       console.error("Error sharing article:", errorMessage);

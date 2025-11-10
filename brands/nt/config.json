@@ -247,7 +247,7 @@
         },
         {
           "type": "in_content",
-          "size": "BANNER",
+          "size": "MEDIUM_RECTANGLE",
           "enabled": true,
           "afterParagraph": 4
         }
