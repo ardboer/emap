@@ -84,7 +84,7 @@ export function SkeletonLoader({
         {/* Content skeleton at bottom */}
         <View style={styles.contentSkeleton}>
           {/* Category skeleton */}
-          <View
+          {/* <View
             style={[
               styles.categorySkeleton,
               { backgroundColor: skeletonBaseColor },
@@ -99,7 +99,7 @@ export function SkeletonLoader({
                 },
               ]}
             />
-          </View>
+          </View> */}
 
           {/* Title skeleton - 2 lines */}
           <View
@@ -170,7 +170,7 @@ export function SkeletonLoader({
           </View>
 
           {/* Meta info skeleton */}
-          <View style={styles.metaSkeleton}>
+          {/* <View style={styles.metaSkeleton}>
             <View
               style={[styles.metaItem, { backgroundColor: skeletonBaseColor }]}
             >
@@ -197,7 +197,7 @@ export function SkeletonLoader({
                 ]}
               />
             </View>
-          </View>
+          </View> */}
         </View>
       </View>
     );
