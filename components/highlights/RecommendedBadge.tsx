@@ -16,7 +16,9 @@ export const RecommendedBadge: React.FC<RecommendedBadgeProps> = ({
 }) => {
   const { brandConfig } = useBrandConfig();
   const recommendedBadgeBg = useThemeColor({}, "recommendedBadgeBg");
-
+  if (!isRecommended) {
+    return true;
+  }
   return (
     <View
       style={[
