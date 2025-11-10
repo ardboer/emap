@@ -12,11 +12,13 @@ interface SkeletonLoaderProps {
     | "podcast-horizontal"
     | "podcast-vertical";
   count?: number; // Number of skeleton items to show for list/magazine/podcast variant
+  showHero?: boolean; // Whether to show a hero skeleton at the start (for list variant)
 }
 
 export function SkeletonLoader({
   variant = "carousel",
   count = 5,
+  showHero = true,
 }: SkeletonLoaderProps) {
   const shimmerAnimation = useRef(new Animated.Value(0)).current;
   const backgroundColor = useThemeColor({}, "background");
@@ -210,6 +212,64 @@ export function SkeletonLoader({
           { backgroundColor: backgroundColorContent },
         ]}
       >
+        {/* Hero skeleton (first item) - resembles ArticleTeaserHero */}
+        {showHero && (
+          <View style={styles.listHeroContainer}>
+            <View
+              style={[
+                styles.listHeroImageSkeleton,
+                { backgroundColor: skeletonBaseColor },
+              ]}
+            >
+              <Animated.View
+                style={[
+                  styles.shimmer,
+                  {
+                    backgroundColor: skeletonHighlightColor,
+                    transform: [{ translateX: shimmerTranslate }],
+                  },
+                ]}
+              />
+            </View>
+            {/* Hero title overlay at bottom */}
+            <View style={styles.listHeroContentSkeleton}>
+              <View
+                style={[
+                  styles.listHeroTitleSkeleton,
+                  { backgroundColor: skeletonBaseColor },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.shimmer,
+                    {
+                      backgroundColor: skeletonHighlightColor,
+                      transform: [{ translateX: shimmerTranslate }],
+                    },
+                  ]}
+                />
+              </View>
+              <View
+                style={[
+                  styles.listHeroTitleSkeleton,
+                  { backgroundColor: skeletonBaseColor, width: "80%" },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    styles.shimmer,
+                    {
+                      backgroundColor: skeletonHighlightColor,
+                      transform: [{ translateX: shimmerTranslate }],
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Regular list items */}
         {Array.from({ length: count }).map((_, index) => (
           <View key={index} style={styles.listItemSkeleton}>
             {/* Image skeleton */}
@@ -624,6 +684,32 @@ const styles = StyleSheet.create({
   // List variant styles
   listContainer: {
     padding: 16,
+  },
+  listHeroContainer: {
+    width: "100%",
+    marginBottom: 16,
+    borderRadius: 4,
+    overflow: "hidden",
+    position: "relative",
+  },
+  listHeroImageSkeleton: {
+    width: "100%",
+    aspectRatio: 3 / 2,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  listHeroContentSkeleton: {
+    position: "absolute",
+    bottom: 16,
+    left: 16,
+    right: 16,
+  },
+  listHeroTitleSkeleton: {
+    width: "100%",
+    height: 24,
+    borderRadius: 4,
+    marginBottom: 8,
+    overflow: "hidden",
   },
   listItemSkeleton: {
     flexDirection: "row",
