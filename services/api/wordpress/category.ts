@@ -29,7 +29,8 @@ function transformCategoryPostToArticle(post: any): Article {
     leadText: "", // Category posts don't have excerpts in the provided structure
     content: "", // Will be replaced with full content when viewing article
     imageUrl,
-    timestamp: formatDate(post.post_publish_date),
+    timestamp: formatDate(post.post_publish_date), // Pre-formatted for list views
+    publishDate: post.post_publish_date, // Raw ISO date for detail view
     category,
   };
 }

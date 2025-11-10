@@ -125,7 +125,8 @@ export function transformMisoProductToArticle(product: MisoProduct): Article {
     leadText: "", // Miso doesn't provide lead text
     content: product.html || "",
     imageUrl,
-    timestamp: formatDate(product.published_at || new Date().toISOString()),
+    timestamp: formatDate(product.published_at || new Date().toISOString()), // Pre-formatted for list views
+    publishDate: product.published_at || new Date().toISOString(), // Raw ISO date for detail view
     category,
   };
 }

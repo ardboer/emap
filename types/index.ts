@@ -5,7 +5,8 @@ export interface Article {
   leadText: string;
   content: string | StructuredContentNode[];
   imageUrl: string;
-  timestamp: string;
+  timestamp: string; // Pre-formatted date for list views (e.g., "5 hours ago")
+  publishDate?: string; // Raw ISO 8601 date for detail view formatting
   category: string;
   link?: string; // Shareable link from API
   isLandscape?: boolean;

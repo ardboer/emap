@@ -38,6 +38,68 @@ export function formatDate(dateString: string): string {
 }
 
 /**
+ * Formats a date for article detail pages with enhanced granularity
+ *
+ * Converts ISO date strings into appropriate format based on age:
+ * - Less than 1 minute: "Just now"
+ * - 1-59 minutes: "X minute(s) ago"
+ * - 1-11 hours: "X hour(s) ago"
+ * - 12+ hours: "10 Nov 2025" format (day month year)
+ *
+ * @param dateString - ISO 8601 date string to format
+ * @returns Formatted date string for article detail display
+ *
+ * @example
+ * formatArticleDetailDate('2024-01-10T14:30:00Z') // Returns: "5 minutes ago" (if 5 mins old)
+ * formatArticleDetailDate('2024-01-10T10:00:00Z') // Returns: "3 hours ago" (if 3 hours old)
+ * formatArticleDetailDate('2024-01-09T10:00:00Z') // Returns: "9 Jan 2024" (if > 12 hours old)
+ */
+export function formatArticleDetailDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+
+  // Less than 1 minute
+  if (diffInMinutes < 1) {
+    return "Just now";
+  }
+
+  // 1-59 minutes
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
+  }
+
+  // 1-11 hours (less than 12 hours)
+  if (diffInHours < 12) {
+    return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+  }
+
+  // 12+ hours: format as "10 Nov 2025"
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const day = date.getDate();
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+
+  return `${day} ${month} ${year}`;
+}
+
+/**
  * Extracts a category name from a WordPress article URL
  *
  * Analyzes the URL path to identify category segments based on common patterns.

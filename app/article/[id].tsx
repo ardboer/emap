@@ -13,6 +13,7 @@ import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { analyticsService } from "@/services/analytics";
 import { getAnonymousId } from "@/services/anonymousId";
+import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { displayAdManager } from "@/services/displayAdManager";
 import { trackArticleView } from "@/services/miso";
 import { Article, StructuredContentNode } from "@/types";
@@ -525,7 +526,9 @@ export default function ArticleScreen() {
                   },
                 ]}
               >
-                {article.timestamp?.toUpperCase() || "65 DAYS AGO"}
+                {article.publishDate
+                  ? formatArticleDetailDate(article.publishDate).toUpperCase()
+                  : article.timestamp?.toUpperCase() || "RECENTLY"}
               </Text>
             </View>
 

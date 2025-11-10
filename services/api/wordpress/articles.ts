@@ -161,7 +161,8 @@ async function transformHighlightsItemToArticle(
     leadText: stripHtml(item.post_excerpt),
     content: stripHtml(item.post_excerpt), // Will be replaced with full content when viewing article
     imageUrl,
-    timestamp: formatDate(item.post_publish_date),
+    timestamp: formatDate(item.post_publish_date), // Pre-formatted for list views
+    publishDate: item.post_publish_date, // Raw ISO date for detail view
     category,
     isLandscape,
   };
@@ -371,7 +372,8 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
       leadText: stripHtml(postData.excerpt.rendered),
       content,
       imageUrl,
-      timestamp: formatDate(postData.date),
+      timestamp: formatDate(postData.date), // Pre-formatted for list views
+      publishDate: postData.date, // Raw ISO date for detail view
       category,
       link: postData.link, // Include the shareable link from API
     };
