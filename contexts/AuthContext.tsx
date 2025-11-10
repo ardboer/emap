@@ -272,18 +272,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // const redirectUri = authBaseUrl.endsWith("/")
       //   ? authBaseUrl
       //   : `${authBaseUrl}/`;
+
+      // Use authUrl if available, otherwise fall back to baseUrl
+      const authUrl = apiConfig.authUrl || authBaseUrl;
+
       // Get login page URL from brand config
-      const loginPageUrl = `${authBaseUrl}/mobile-app-login/`;
+      const loginPageUrl = `${authUrl}/mobile-app-login/`;
 
       // Get secret from brand config, then environment, then fallback
+      // Use authHash if available, otherwise fall back to hash
       const secret =
+        apiConfig.authHash ||
         apiConfig.jwtSecret ||
         process.env.EXPO_PUBLIC_JWT_SECRET ||
         "your-secret-key";
 
       if (secret === "your-secret-key") {
         console.warn(
-          "⚠️ Using default JWT secret! Please configure jwtSecret in brand config or EXPO_PUBLIC_JWT_SECRET environment variable"
+          "⚠️ Using default JWT secret! Please configure authHash or jwtSecret in brand config or EXPO_PUBLIC_JWT_SECRET environment variable"
         );
       }
 
@@ -291,6 +297,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         secret,
         redirectUri,
         loginPageUrl,
+        authUrl: apiConfig.authUrl ? "Using authUrl" : "Using baseUrl",
+        authHash: apiConfig.authHash ? "Using authHash" : "Using fallback",
         brand: shortcode,
       });
 

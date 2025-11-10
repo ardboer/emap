@@ -19,6 +19,8 @@ export interface BrandConfig {
     baseUrl: string;
     jwtSecret?: string;
     hash: string;
+    authUrl?: string;
+    authHash?: string;
     menuId?: number;
     maxNbOfItems?: number;
   };
