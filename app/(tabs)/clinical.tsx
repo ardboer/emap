@@ -12,11 +12,12 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { getCenteredContentStyle } from "@/constants/Layout";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { analyticsService } from "@/services/analytics";
 import { brandManager, fetchCategoryContent } from "@/services/api";
 import { displayAdManager } from "@/services/displayAdManager";
 import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { Article, CategoryContentResponse } from "@/types";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
@@ -88,6 +89,13 @@ export default function ClinicalScreen() {
   useEffect(() => {
     loadClinicalContent();
   }, []);
+
+  // Track screen view when tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      analyticsService.logScreenView("Clinical", "ClinicalScreen");
+    }, [])
+  );
 
   const handleArticlePress = (article: Article) => {
     router.push(`/article/${article.id}`);

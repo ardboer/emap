@@ -6,15 +6,17 @@ import {
   logScreenView,
   logSearch,
   setAnalyticsCollectionEnabled,
+  setUserId,
   setUserProperty,
 } from "@react-native-firebase/analytics";
 import { getApp } from "@react-native-firebase/app";
+import { getUserInfo } from "./auth";
 
 const ANALYTICS_ENABLED_KEY = "analytics_enabled";
 
 /**
  * Firebase Analytics Service
- * Provides comprehensive tracking for user behavior, screen views, and carousel interactions
+ * Provides tracking for user behavior, screen views, and key interactions
  */
 class AnalyticsService {
   private sessionStartTime: number | null = null;
@@ -83,6 +85,9 @@ class AnalyticsService {
         brandConfig.bundleId || ""
       );
 
+      // Set user ID if available
+      await this.setUserIdFromAuth();
+
       // Start session tracking
       // Note: Using 'app_session_start' instead of 'session_start' because 'session_start' is a reserved Firebase event
       this.sessionStartTime = Date.now();
@@ -132,31 +137,66 @@ class AnalyticsService {
   }
 
   /**
-   * Log screen view with automatic time tracking
+   * Set user ID from authentication if available
    */
-  async logScreenView(screenName: string, screenClass?: string): Promise<void> {
+  async setUserIdFromAuth(): Promise<void> {
+    try {
+      const userInfo = await getUserInfo();
+      if (userInfo && userInfo.user_id) {
+        if (!this.analytics) {
+          const app = getApp();
+          this.analytics = getAnalytics(app);
+        }
+        await setUserId(this.analytics, userInfo.user_id);
+        console.log(`📊 User ID set: ${userInfo.user_id}`);
+      }
+    } catch (error) {
+      console.error("Error setting user ID:", error);
+    }
+  }
+
+  /**
+   * Clear user ID from analytics (e.g., when user logs out)
+   */
+  async clearUserId(): Promise<void> {
+    try {
+      if (!this.analytics) {
+        const app = getApp();
+        this.analytics = getAnalytics(app);
+      }
+      await setUserId(this.analytics, null);
+      console.log("📊 User ID cleared from analytics");
+    } catch (error) {
+      console.error("Error clearing user ID:", error);
+    }
+  }
+
+  /**
+   * Log screen view
+   */
+  async logScreenView(
+    screenName: string,
+    screenClass?: string,
+    additionalParams?: Record<string, any>
+  ): Promise<void> {
     if (!this.isInitialized) return;
 
     try {
-      // Calculate time on previous screen
-      if (this.currentScreen && this.screenStartTime) {
-        const timeOnScreen = Date.now() - this.screenStartTime;
-        await this.logEvent("screen_time", {
-          screen_name: this.currentScreen,
-          duration_ms: timeOnScreen,
-          duration_seconds: Math.round(timeOnScreen / 1000),
-        });
-      }
-
-      // Log new screen view
       if (!this.analytics) return;
-      await logScreenView(this.analytics, {
+
+      const params: Record<string, any> = {
         screen_name: screenName,
         screen_class: screenClass || screenName,
-      });
+      };
+
+      // Add any additional parameters (e.g., article_id, source for article detail)
+      if (additionalParams) {
+        Object.assign(params, additionalParams);
+      }
+
+      await logScreenView(this.analytics, params);
 
       this.currentScreen = screenName;
-      this.screenStartTime = Date.now();
     } catch (error) {
       console.error("Error logging screen view:", error);
     }
@@ -246,93 +286,6 @@ class AnalyticsService {
   }
 
   /**
-   * Calculate scroll depth metrics for carousel
-   */
-  calculateScrollDepthMetrics(
-    maxIndex: number,
-    totalArticles: number,
-    indexesViewed: Set<number>
-  ): {
-    scroll_depth_percentage: number;
-    unique_view_percentage: number;
-    completion_rate: number;
-    reached_end: boolean;
-    drop_off_index: number | null;
-  } {
-    const scrollDepthPercentage = ((maxIndex + 1) / totalArticles) * 100;
-    const uniqueViewPercentage = (indexesViewed.size / totalArticles) * 100;
-    const completionRate =
-      maxIndex === totalArticles - 1 ? 100 : scrollDepthPercentage;
-
-    return {
-      scroll_depth_percentage: Math.round(scrollDepthPercentage),
-      unique_view_percentage: Math.round(uniqueViewPercentage),
-      completion_rate: Math.round(completionRate),
-      reached_end: maxIndex === totalArticles - 1,
-      drop_off_index: maxIndex < totalArticles - 1 ? maxIndex : null,
-    };
-  }
-
-  /**
-   * Analyze scroll velocity patterns
-   */
-  analyzeScrollVelocity(
-    velocityData: { from: number; to: number; duration: number }[]
-  ): {
-    avg_transition_duration_ms: number;
-    min_transition_duration_ms: number;
-    max_transition_duration_ms: number;
-    total_transitions: number;
-  } | null {
-    if (velocityData.length === 0) return null;
-
-    const durations = velocityData.map((v) => v.duration);
-    const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
-    const minDuration = Math.min(...durations);
-    const maxDuration = Math.max(...durations);
-
-    return {
-      avg_transition_duration_ms: Math.round(avgDuration),
-      min_transition_duration_ms: minDuration,
-      max_transition_duration_ms: maxDuration,
-      total_transitions: velocityData.length,
-    };
-  }
-
-  /**
-   * Log app foreground event
-   */
-  async logAppForeground(previousState: string): Promise<void> {
-    await this.logEvent("app_foreground", {
-      previous_state: previousState,
-    });
-  }
-
-  /**
-   * Log app background event
-   */
-  async logAppBackground(nextState: string): Promise<void> {
-    await this.logEvent("app_went_background", {
-      next_state: nextState,
-    });
-  }
-
-  /**
-   * Log navigation event
-   */
-  async logNavigation(
-    fromScreen: string,
-    toScreen: string,
-    params?: Record<string, any>
-  ): Promise<void> {
-    await this.logEvent("screen_navigation", {
-      from_screen: fromScreen,
-      to_screen: toScreen,
-      params: params ? JSON.stringify(params) : undefined,
-    });
-  }
-
-  /**
    * Log article view
    */
   async logArticleView(
@@ -344,6 +297,36 @@ class AnalyticsService {
       article_id: articleId,
       article_title: articleTitle,
       article_category: category,
+    });
+  }
+
+  /**
+   * Log highlights view event
+   */
+  async logHighlightsView(
+    index: number,
+    articleId: string,
+    articleTitle: string
+  ): Promise<void> {
+    await this.logEvent("highlights_view", {
+      index,
+      article_id: articleId,
+      article_title: articleTitle,
+    });
+  }
+
+  /**
+   * Log highlights click event
+   */
+  async logHighlightsClick(
+    index: number,
+    articleId: string,
+    articleTitle: string
+  ): Promise<void> {
+    await this.logEvent("highlights_click", {
+      index,
+      article_id: articleId,
+      article_title: articleTitle,
     });
   }
 

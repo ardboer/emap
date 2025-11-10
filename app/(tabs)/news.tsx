@@ -16,6 +16,7 @@ import TrendingBlockHorizontal from "@/components/TrendingBlockHorizontal";
 import { Colors } from "@/constants/Colors";
 import { getCenteredContentStyle } from "@/constants/Layout";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { analyticsService } from "@/services/analytics";
 import {
   brandManager,
   fetchCategoryContent,
@@ -24,8 +25,8 @@ import {
 import { displayAdManager } from "@/services/displayAdManager";
 import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { Article, CategoryContentResponse } from "@/types";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -142,6 +143,13 @@ export default function NewsScreen() {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Track screen view when tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      analyticsService.logScreenView("News", "NewsScreen");
+    }, [])
+  );
 
   const handleArticlePress = (article: Article) => {
     router.push(`/article/${article.id}`);

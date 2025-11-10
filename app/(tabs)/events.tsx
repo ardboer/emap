@@ -6,11 +6,12 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { getCenteredContentStyle } from "@/constants/Layout";
+import { analyticsService } from "@/services/analytics";
 import { fetchEvents } from "@/services/api";
 import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -65,6 +66,13 @@ export default function EventsScreen() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Track screen view when tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      analyticsService.logScreenView("Events", "EventsScreen");
+    }, [])
+  );
 
   const handleEventPress = async (event: any) => {
     // Check if event has a valid link property

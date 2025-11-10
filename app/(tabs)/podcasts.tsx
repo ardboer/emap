@@ -9,10 +9,11 @@ import { getCenteredContentStyle } from "@/constants/Layout";
 import { useAudio } from "@/contexts/AudioContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { analyticsService } from "@/services/analytics";
 import { fetchPodcastsByBrand } from "@/services/podcast";
 import { PodcastCategory, PodcastEpisode } from "@/types";
-import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   ScrollView,
@@ -28,6 +29,15 @@ export default function PodcastsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
+
+  // Track screen view when tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (features?.enablePodcasts) {
+        analyticsService.logScreenView("Podcasts", "PodcastsScreen");
+      }
+    }, [features?.enablePodcasts])
+  );
 
   useEffect(() => {
     if (!features?.enablePodcasts) {

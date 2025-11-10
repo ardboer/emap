@@ -2,6 +2,7 @@ import { brandManager } from "@/config/BrandManager";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
 import QuickCrypto from "react-native-quick-crypto";
+import { analyticsService } from "./analytics";
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -589,6 +590,10 @@ export async function logout(): Promise<void> {
       STORAGE_KEYS.REFRESH_TOKEN,
       STORAGE_KEYS.USER_INFO,
     ]);
+
+    // Clear user ID from analytics
+    await analyticsService.clearUserId();
+
     console.log("✅ User logged out successfully");
   } catch (error) {
     console.error("❌ Error during logout:", error);

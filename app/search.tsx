@@ -3,11 +3,12 @@ import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { analyticsService } from "@/services/analytics";
 import { fetchSearchResults } from "@/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -83,6 +84,9 @@ export default function SearchScreen() {
     try {
       const searchResults = await fetchSearchResults(query.trim());
       setResults(searchResults);
+
+      // Track search with both standard Firebase and custom events
+      analyticsService.logSearch(query.trim(), searchResults.length);
     } catch (err) {
       setError("Failed to search. Please try again.");
       console.error("Search error:", err);
@@ -91,10 +95,17 @@ export default function SearchScreen() {
     }
   };
 
+  // Track screen view when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      analyticsService.logScreenView("Search", "SearchScreen");
+    }, [])
+  );
+
   const handleResultPress = (result: SearchResult) => {
     // Navigate to the article using the ID from the URL or the result ID
     const articleId = result.id.toString();
-    router.push(`/article/${articleId}`);
+    router.push(`/article/${articleId}?source=search`);
   };
 
   const renderSearchResult = ({ item }: { item: SearchResult }) => (

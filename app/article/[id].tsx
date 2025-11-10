@@ -11,6 +11,7 @@ import { getCenteredContentStyle } from "@/constants/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { analyticsService } from "@/services/analytics";
 import { getAnonymousId } from "@/services/anonymousId";
 import { displayAdManager } from "@/services/displayAdManager";
 import { trackArticleView } from "@/services/miso";
@@ -45,7 +46,10 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const HEADER_HEIGHT = screenHeight * 0.4;
 
 export default function ArticleScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>(); // const id = 345162; //
+  const { id, source } = useLocalSearchParams<{
+    id: string;
+    source?: string;
+  }>();
   const { user, isAuthenticated } = useAuth();
   const colorScheme = useColorScheme() ?? "light";
   const { brandConfig } = useBrandConfig();
@@ -128,6 +132,20 @@ export default function ArticleScreen() {
         const fullArticle = await fetchSingleArticle(id);
 
         setArticle(fullArticle);
+
+        // Track screen_view with source parameter
+        analyticsService.logScreenView("Article Detail", "ArticleScreen", {
+          article_id: id,
+          article_title: fullArticle.title,
+          source: source || "direct",
+        });
+
+        // Track article_view custom event
+        analyticsService.logArticleView(
+          id,
+          fullArticle.title,
+          fullArticle.category
+        );
 
         // Track article view with Miso
         const anonymousId = await getAnonymousId();

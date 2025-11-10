@@ -3,14 +3,24 @@ import MagazineListView from "@/components/MagazineListView";
 import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { analyticsService } from "@/services/analytics";
 import { MagazineEdition } from "@/types";
-import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 
 export default function MagazineScreen() {
   const { features } = useBrandConfig();
   const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
+
+  // Track screen view when tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (features?.enableMagazine) {
+        analyticsService.logScreenView("Magazine", "MagazineScreen");
+      }
+    }, [features?.enableMagazine])
+  );
 
   useEffect(() => {
     if (!features?.enableMagazine) {

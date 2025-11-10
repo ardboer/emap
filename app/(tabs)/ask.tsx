@@ -3,8 +3,9 @@ import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
-import { router } from "expo-router";
-import React, { useMemo, useRef, useState } from "react";
+import { analyticsService } from "@/services/analytics";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -34,6 +35,15 @@ export default function AskScreen() {
     );
     return `${brandConfig.apiConfig.baseUrl}/mobile-app-ai-search/?hash=${brandConfig.apiConfig.hash}`;
   }, [brandConfig]);
+
+  // Track screen view when tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (!brandLoading && brandConfig) {
+        analyticsService.logScreenView("Ask", "AskScreen");
+      }
+    }, [brandLoading, brandConfig])
+  );
 
   // Show loading state while brand config is loading
   if (brandLoading) {

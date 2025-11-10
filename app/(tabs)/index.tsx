@@ -91,29 +91,12 @@ export default function HighlightedScreen() {
     brandConfig?.highlightsRecommendations?.slideDurationSeconds || 5;
   const SLIDE_DURATION = slideDurationSeconds * 1000; // Convert to milliseconds
 
-  // Analytics tracking state
-  const [carouselStartTime, setCarouselStartTime] = useState<number | null>(
-    null
-  );
-  const [articleViewStartTime, setArticleViewStartTime] = useState<
-    number | null
-  >(null);
+  // Simplified tracking state for highlights
   const [viewedArticles, setViewedArticles] = useState<Set<string>>(new Set());
   const [maxIndexReached, setMaxIndexReached] = useState(0);
   const [indexesViewed, setIndexesViewed] = useState<Set<number>>(new Set([0]));
-  const [scrollProgression, setScrollProgression] = useState<number[]>([0]);
-  const [scrollInteractions, setScrollInteractions] = useState(0);
-  const [scrollVelocityData, setScrollVelocityData] = useState<
-    {
-      from: number;
-      to: number;
-      duration: number;
-      timestamp: number;
-    }[]
-  >([]);
 
   const previousIndexRef = useRef(0);
-  const indexChangeTimeRef = useRef<number>(Date.now());
   const wasUnfocusedRef = useRef(false);
   // Ref to track in-flight loadMoreRecommendations requests
   const loadMoreInProgressRef = useRef(false);
@@ -123,35 +106,14 @@ export default function HighlightedScreen() {
   };
 
   const handleArticlePress = (article: Article) => {
-    const dwellTime = articleViewStartTime
-      ? Date.now() - articleViewStartTime
-      : 0;
+    // Track highlights click
+    analyticsService.logHighlightsClick(
+      currentIndex,
+      article.id,
+      article.title
+    );
 
-    analyticsService.logEvent("carousel_article_click", {
-      article_id: article.id,
-      article_title: article.title,
-      article_category: article.category,
-      article_source: article.source || "wordpress",
-      is_recommended: article.isRecommended || false,
-      position: currentIndex,
-      dwell_time_before_click_ms: dwellTime,
-      dwell_time_before_click_seconds: Math.round(dwellTime / 1000),
-      total_articles: articles.length,
-      wordpress_count: wordpressArticleCount,
-      miso_count: articles.length - wordpressArticleCount,
-      articles_viewed_before_click: viewedArticles.size,
-      max_index_reached: maxIndexReached,
-      scroll_depth_percentage: Math.round(
-        ((maxIndexReached + 1) / articles.length) * 100
-      ),
-      click_depth_percentage: Math.round(
-        ((currentIndex + 1) / articles.length) * 100
-      ),
-      clicked_before_completion: currentIndex < articles.length - 1,
-      articles_remaining: articles.length - currentIndex - 1,
-    });
-
-    router.push(`/article/${article.id}`);
+    router.push(`/article/${article.id}?source=highlights`);
   };
 
   const extractImageColors = async (imageUrl: string, articleId: string) => {
@@ -373,11 +335,7 @@ export default function HighlightedScreen() {
         console.log("✅ No more recommendations available");
         setHasMoreItems(false);
 
-        analyticsService.logEvent("carousel_endless_scroll_exhausted", {
-          total_items_loaded: articles.length,
-          total_miso_items: totalMisoItemsLoaded,
-          wordpress_count: wordpressArticleCount,
-        });
+        // Endless scroll exhausted (analytics removed)
         return;
       }
 
@@ -419,14 +377,7 @@ export default function HighlightedScreen() {
       }
       setImageColors((prev) => ({ ...prev, ...colors }));
 
-      // Analytics
-      analyticsService.logEvent("carousel_endless_scroll_loaded", {
-        items_loaded: newArticles.length,
-        total_articles_now: articles.length + newArticles.length,
-        total_miso_items: totalMisoItemsLoaded + newArticles.length,
-        trigger_index: currentIndex,
-        exclude_list_size: excludeIds.length,
-      });
+      // Endless scroll loaded (analytics removed)
 
       console.log("✅ Loaded more recommendations:", {
         newItems: newArticles.length,
@@ -436,11 +387,7 @@ export default function HighlightedScreen() {
     } catch (error) {
       console.error("❌ Error loading more recommendations:", error);
 
-      analyticsService.logEvent("carousel_endless_scroll_error", {
-        error_message: error instanceof Error ? error.message : "Unknown error",
-        trigger_index: currentIndex,
-        total_articles: articles.length,
-      });
+      // Endless scroll error (analytics removed)
 
       // Don't set hasMoreItems to false on error - allow retry
     } finally {
@@ -497,14 +444,6 @@ export default function HighlightedScreen() {
     });
 
     if (!isUserInteracting && isCarouselVisible) {
-      analyticsService.logEvent("carousel_auto_advance", {
-        from_position: currentIndex,
-        to_position: (currentIndex + 1) % articles.length,
-        total_articles: articles.length,
-        max_index_reached: maxIndexReached,
-        article_source: currentArticle?.source || "native-ad",
-        is_native_ad: currentArticle?.isNativeAd || false,
-      });
       goToNextSlide();
     }
   };
@@ -543,28 +482,10 @@ export default function HighlightedScreen() {
   const handleScrollBeginDrag = () => {
     setIsUserInteracting(true);
     setIsPlaying(false);
-    setScrollInteractions((prev) => prev + 1);
-
-    analyticsService.logEvent("carousel_manual_scroll_start", {
-      current_index: currentIndex,
-      max_index_reached: maxIndexReached,
-      scroll_depth_percentage: Math.round(
-        ((maxIndexReached + 1) / articles.length) * 100
-      ),
-      total_articles: articles.length,
-    });
   };
 
   const handleScrollEndDrag = () => {
     setIsUserInteracting(false);
-
-    analyticsService.logEvent("carousel_manual_scroll_end", {
-      current_index: currentIndex,
-      max_index_reached: maxIndexReached,
-      scroll_depth_percentage: Math.round(
-        ((maxIndexReached + 1) / articles.length) * 100
-      ),
-    });
 
     // Resume playing after a short delay, but only if carousel is visible
     // FIX: Store timeout ID for cleanup
@@ -611,238 +532,35 @@ export default function HighlightedScreen() {
     }
   }, [isAuthLoading, isAuthenticated, user?.userId]);
 
-  // Track carousel session start/end
+  // Track when articles are loaded (removed carousel session tracking)
   useEffect(() => {
     if (articles.length === 0) return;
 
-    const startTime = Date.now();
-    setCarouselStartTime(startTime);
+    // Reset tracking state
     setMaxIndexReached(0);
     setIndexesViewed(new Set([0]));
-    setScrollProgression([0]);
     setViewedArticles(new Set());
-    setScrollInteractions(0);
-    setScrollVelocityData([]);
-
-    analyticsService.logEvent("carousel_session_start", {
-      total_articles: articles.length,
-      wordpress_count: wordpressArticleCount,
-      miso_count: articles.length - wordpressArticleCount,
-      first_article_id: articles[0]?.id,
-      first_article_title: articles[0]?.title,
-      first_article_source: articles[0]?.source || "wordpress",
-      session_start_time: new Date().toISOString(),
-    });
-
-    return () => {
-      // Track carousel exit with comprehensive scroll depth data
-      if (carouselStartTime) {
-        const sessionDuration = Date.now() - carouselStartTime;
-        const scrollDepthPercentage =
-          ((maxIndexReached + 1) / articles.length) * 100;
-        const uniqueIndexesViewed = indexesViewed.size;
-        const completionRate = (uniqueIndexesViewed / articles.length) * 100;
-        const reachedEnd = maxIndexReached === articles.length - 1;
-
-        const velocityAnalysis =
-          analyticsService.analyzeScrollVelocity(scrollVelocityData);
-
-        analyticsService.logEvent("carousel_session_end", {
-          // Session metrics
-          session_duration_ms: sessionDuration,
-          session_duration_seconds: Math.round(sessionDuration / 1000),
-
-          // Scroll depth metrics
-          max_index_reached: maxIndexReached,
-          scroll_depth_percentage: Math.round(scrollDepthPercentage),
-          unique_indexes_viewed: uniqueIndexesViewed,
-          completion_rate: Math.round(completionRate),
-          reached_end: reachedEnd,
-
-          // Progression data
-          scroll_progression: JSON.stringify(scrollProgression),
-          indexes_viewed: JSON.stringify(
-            Array.from(indexesViewed).sort((a, b) => a - b)
-          ),
-
-          // Content metrics
-          total_articles: articles.length,
-          articles_viewed_ids: JSON.stringify(
-            Array.from(indexesViewed)
-              .map((idx) => articles[idx]?.id)
-              .filter(Boolean)
-          ),
-
-          // Interaction metrics
-          scroll_interactions: scrollInteractions,
-          avg_time_per_article:
-            uniqueIndexesViewed > 0
-              ? Math.round(sessionDuration / uniqueIndexesViewed)
-              : 0,
-
-          // Velocity metrics
-          ...(velocityAnalysis || {}),
-        });
-
-        // Log drop-off point if user didn't complete
-        if (!reachedEnd) {
-          analyticsService.logEvent("carousel_drop_off", {
-            drop_off_index: maxIndexReached,
-            drop_off_percentage: Math.round(scrollDepthPercentage),
-            articles_remaining: articles.length - maxIndexReached - 1,
-            time_before_drop_off_ms: sessionDuration,
-            last_article_id: articles[maxIndexReached]?.id,
-            last_article_title: articles[maxIndexReached]?.title,
-          });
-        }
-      }
-    };
   }, [articles]);
 
-  // Track article view changes with scroll depth analysis
+  // Track highlights view when article changes
   useEffect(() => {
     if (articles.length === 0) return;
 
     const currentArticle = articles[currentIndex];
     if (!currentArticle) return;
 
-    // Calculate scroll direction
-    const direction =
-      currentIndex > previousIndexRef.current
-        ? "forward"
-        : currentIndex < previousIndexRef.current
-        ? "backward"
-        : null;
+    // Track highlights view
+    analyticsService.logHighlightsView(
+      currentIndex,
+      currentArticle.id,
+      currentArticle.title
+    );
 
-    if (direction) {
-      // Track scroll velocity
-      const now = Date.now();
-      const transitionDuration = now - indexChangeTimeRef.current;
-
-      setScrollVelocityData((prev) => [
-        ...prev,
-        {
-          from: previousIndexRef.current,
-          to: currentIndex,
-          duration: transitionDuration,
-          timestamp: now,
-        },
-      ]);
-
-      indexChangeTimeRef.current = now;
-    }
-
-    // Log previous article dwell time
-    if (articleViewStartTime && previousIndexRef.current !== currentIndex) {
-      const previousArticle = articles[previousIndexRef.current];
-      if (previousArticle) {
-        const dwellTime = Date.now() - articleViewStartTime;
-
-        analyticsService.logEvent("carousel_article_dwell", {
-          article_id: previousArticle.id,
-          article_title: previousArticle.title,
-          article_category: previousArticle.category,
-          dwell_time_ms: dwellTime,
-          dwell_time_seconds: Math.round(dwellTime / 1000),
-          position: previousIndexRef.current,
-          was_auto_play: !isUserInteracting,
-        });
-      }
-    }
-
-    // Update max index reached (only for forward progression)
+    // Update tracking state
+    setIndexesViewed((prev) => new Set(prev).add(currentIndex));
+    setViewedArticles((prev) => new Set(prev).add(currentArticle.id));
     if (currentIndex > maxIndexReached) {
       setMaxIndexReached(currentIndex);
-
-      // Log milestone achievements
-      const scrollDepthPercentage =
-        ((currentIndex + 1) / articles.length) * 100;
-      const timeToMilestone = carouselStartTime
-        ? Date.now() - carouselStartTime
-        : 0;
-
-      if (scrollDepthPercentage >= 25 && scrollDepthPercentage < 50) {
-        analyticsService.logEvent("carousel_milestone_25", {
-          index: currentIndex,
-          article_id: currentArticle.id,
-          time_to_milestone_ms: timeToMilestone,
-        });
-      } else if (scrollDepthPercentage >= 50 && scrollDepthPercentage < 75) {
-        analyticsService.logEvent("carousel_milestone_50", {
-          index: currentIndex,
-          article_id: currentArticle.id,
-          time_to_milestone_ms: timeToMilestone,
-        });
-      } else if (scrollDepthPercentage >= 75 && scrollDepthPercentage < 100) {
-        analyticsService.logEvent("carousel_milestone_75", {
-          index: currentIndex,
-          article_id: currentArticle.id,
-          time_to_milestone_ms: timeToMilestone,
-        });
-      } else if (currentIndex === articles.length - 1) {
-        analyticsService.logEvent("carousel_milestone_100", {
-          index: currentIndex,
-          article_id: currentArticle.id,
-          time_to_milestone_ms: timeToMilestone,
-          total_time_seconds: Math.round(timeToMilestone / 1000),
-        });
-      }
-    }
-
-    // Track all indexes viewed (including backward scrolling)
-    setIndexesViewed((prev) => new Set(prev).add(currentIndex));
-    setScrollProgression((prev) => [...prev, currentIndex]);
-    setViewedArticles((prev) => new Set(prev).add(currentArticle.id));
-
-    // Start tracking new article view time
-    setArticleViewStartTime(Date.now());
-
-    // Log detailed article view with scroll context
-    analyticsService.logEvent("carousel_article_view", {
-      // Article info
-      article_id: currentArticle.id,
-      article_title: currentArticle.title,
-      article_category: currentArticle.category,
-      article_source: currentArticle.source || "wordpress",
-      is_recommended: currentArticle.isRecommended || false,
-
-      // Position info
-      position: currentIndex,
-      total_articles: articles.length,
-      wordpress_count: wordpressArticleCount,
-      miso_count: articles.length - wordpressArticleCount,
-      position_percentage: Math.round(
-        ((currentIndex + 1) / articles.length) * 100
-      ),
-
-      // Scroll depth info
-      is_new_max: currentIndex > maxIndexReached,
-      max_index_so_far: Math.max(maxIndexReached, currentIndex),
-      scroll_depth_percentage: Math.round(
-        ((Math.max(maxIndexReached, currentIndex) + 1) / articles.length) * 100
-      ),
-
-      // Scroll behavior
-      scroll_direction: direction,
-      is_backward_scroll: direction === "backward",
-      is_auto_play: !isUserInteracting,
-
-      // Session context
-      unique_indexes_viewed: indexesViewed.size + 1,
-      session_duration_ms: carouselStartTime
-        ? Date.now() - carouselStartTime
-        : 0,
-    });
-
-    // Track backward scrolling specifically
-    if (direction === "backward") {
-      analyticsService.logEvent("carousel_backward_scroll", {
-        from_index: previousIndexRef.current,
-        to_index: currentIndex,
-        scroll_distance: previousIndexRef.current - currentIndex,
-        max_index_reached: maxIndexReached,
-        article_id: currentArticle.id,
-      });
     }
 
     previousIndexRef.current = currentIndex;
@@ -910,13 +628,6 @@ export default function HighlightedScreen() {
       console.log("🔄 Tab pressed while in view - refreshing content");
       nativeAdInstanceManager.clearAll();
       loadArticles();
-
-      // Analytics
-      analyticsService.logEvent("carousel_tab_press_scroll_to_top", {
-        previous_index: currentIndex,
-        total_articles: articles.length,
-        scroll_distance: currentIndex,
-      });
 
       // Clear the param by navigating without it to prevent re-triggering
       // Use a small timeout to ensure the scroll completes first

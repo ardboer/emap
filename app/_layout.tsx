@@ -118,14 +118,12 @@ function RootLayoutContent() {
       nextAppState === "active"
     ) {
       // App came to foreground
-      await analyticsService.logAppForeground(appState.current);
       console.log("📱 App came to foreground");
     } else if (
       appState.current === "active" &&
       nextAppState.match(/inactive|background/)
     ) {
       // App went to background
-      await analyticsService.logAppBackground(nextAppState);
       console.log("📱 App went to background");
     }
 
@@ -139,10 +137,6 @@ function RootLayoutContent() {
     const currentRoute = pathname;
 
     if (previousRoute.current && previousRoute.current !== currentRoute) {
-      // Log navigation event
-      analyticsService.logNavigation(previousRoute.current, currentRoute, {
-        segments: segments.join("/"),
-      });
       console.log(`📍 Navigation: ${previousRoute.current} → ${currentRoute}`);
     }
 
