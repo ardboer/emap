@@ -300,6 +300,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         pageUrl: loginPageUrl,
         ttl: 3600,
         secret,
+        brandkey: shortcode,
       });
 
       console.log("🌐 Opening authentication session...");

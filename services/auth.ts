@@ -28,6 +28,7 @@ export interface LoginUrlParams {
   pageUrl: string;
   ttl?: number;
   secret: string;
+  brandkey?: string;
 }
 
 export interface TokenValidationResponse {
@@ -111,7 +112,7 @@ export async function generateLoginUrl(
   params: LoginUrlParams
 ): Promise<string> {
   try {
-    const { redirectUri, pageUrl, ttl = 3600, secret } = params;
+    const { redirectUri, pageUrl, ttl = 3600, secret, brandkey } = params;
 
     // Generate random nonce using expo-crypto
     const nonceBytes = await Crypto.getRandomBytesAsync(16);
@@ -136,8 +137,11 @@ export async function generateLoginUrl(
     // Create JWT token using our custom function
     const signature = createJWT(payload, secret);
 
-    // Construct login URL with signature
-    const loginUrl = `${pageUrl}?signature=${encodeURIComponent(signature)}`;
+    // Construct login URL with signature and optional brandkey
+    let loginUrl = `${pageUrl}?signature=${encodeURIComponent(signature)}`;
+    if (brandkey) {
+      loginUrl += `&brandkey=${encodeURIComponent(brandkey)}`;
+    }
 
     console.log("🔐 Generated login URL:", {
       pageUrl,
