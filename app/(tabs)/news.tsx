@@ -166,7 +166,7 @@ export default function NewsScreen() {
     const menuItem = menuItems[index];
     const tabKey = menuItem.object_id.toString();
 
-    if (!tabContent[tabKey] && !tabLoadingStates[tabKey]) {
+    if (!tabContent[tabKey]) {
       await loadTabContent(index);
     }
   };
@@ -491,11 +491,13 @@ export default function NewsScreen() {
     const menuItemKey = menuItems[tabIndex]?.object_id.toString() || "default";
     const isTabLoading = tabLoadingStates[menuItemKey] || false;
     const isTabRefreshing = tabRefreshingStates[menuItemKey] || false;
+    const hasTabContent = !!tabContent[menuItemKey];
     const sections = prepareSectionsForTab(tabIndex);
     const hasContent =
       sections.length > 0 && sections.some((s) => s.data.length > 0);
 
-    if (isTabLoading && !hasContent) {
+    // Show skeleton if loading OR if we haven't loaded content yet
+    if ((isTabLoading || !hasTabContent) && !hasContent) {
       return <SkeletonLoader variant="list" count={6} />;
     }
 
@@ -518,11 +520,13 @@ export default function NewsScreen() {
           { backgroundColor: Colors[colorScheme].articleListBackground },
         ]}
         ListEmptyComponent={
-          <ThemedView style={styles.centerContent}>
-            <ThemedText style={styles.emptyText}>
-              No articles available
-            </ThemedText>
-          </ThemedView>
+          hasTabContent && !isTabLoading ? (
+            <ThemedView style={styles.centerContent}>
+              <ThemedText style={styles.emptyText}>
+                No articles available
+              </ThemedText>
+            </ThemedView>
+          ) : null
         }
         stickySectionHeadersEnabled={false}
       />

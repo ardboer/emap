@@ -303,37 +303,31 @@ export default function ClinicalScreen() {
         showUserIcon={true}
         onUserPress={() => setSettingsDrawerVisible(true)}
       />
-      {!hasContent && !loading ? (
-        <ThemedView style={styles.centerContent}>
-          <ThemedText style={styles.emptyText}>
-            No clinical articles available
-          </ThemedText>
-        </ThemedView>
-      ) : (
-        <SectionList
-          sections={sections}
-          renderItem={renderArticle}
-          renderSectionHeader={renderSectionHeader}
-          renderSectionFooter={renderSectionFooter}
-          keyExtractor={(item, index) => item.id + index.toString()}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          contentContainerStyle={[
-            styles.listContainer,
-            { backgroundColor: Colors[colorScheme].articleListBackground },
-          ]}
-          ListEmptyComponent={
+      <SectionList
+        sections={sections}
+        renderItem={renderArticle}
+        renderSectionHeader={renderSectionHeader}
+        renderSectionFooter={renderSectionFooter}
+        keyExtractor={(item, index) => item.id + index.toString()}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        contentContainerStyle={[
+          styles.listContainer,
+          { backgroundColor: Colors[colorScheme].articleListBackground },
+        ]}
+        ListEmptyComponent={
+          !loading && !hasContent ? (
             <ThemedView style={styles.centerContent}>
               <ThemedText style={styles.emptyText}>
                 No clinical articles available
               </ThemedText>
             </ThemedView>
-          }
-          stickySectionHeadersEnabled={false}
-        />
-      )}
+          ) : null
+        }
+        stickySectionHeadersEnabled={false}
+      />
       <SettingsDrawer
         visible={settingsDrawerVisible}
         onClose={() => setSettingsDrawerVisible(false)}
