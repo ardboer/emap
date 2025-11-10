@@ -612,11 +612,13 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     subtitle,
     icon,
     onPress,
+    noBackground,
     rightElement,
   }: {
     title: string;
     subtitle?: string;
     icon: any;
+    noBackground?: boolean;
     onPress?: () => void;
     rightElement?: React.ReactNode;
   }) => (
@@ -624,9 +626,12 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
       style={[
         styles.settingsItem,
         {
-          backgroundColor: (themeColors as any)?.highlightBoxBg || "#00334C",
+          backgroundColor: noBackground
+            ? null
+            : (themeColors as any)?.highlightBoxBg || "#00334C",
         },
       ]}
+      disabled={noBackground}
       onPress={onPress}
     >
       <ThemedView transparant style={styles.settingsItemLeft}>
@@ -863,6 +868,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           title="Version"
           subtitle="1.0.0"
           icon="info.circle.fill"
+          noBackground
         />
       </ThemedView>
 
