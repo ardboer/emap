@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { brandManager } from "@/config/BrandManager";
 import { getPostBySlug } from "@/services/api";
+import { completeAuthentication, parseTokensFromUrl } from "@/services/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -41,18 +42,79 @@ export default function DeepLinkHandler() {
         console.log("🔗 Current slug from URL:", slug);
         console.log("🔗 ========================================");
 
-        // Check if this is an authentication-related path or tab route
-        const excludedPaths = [
-          "auth",
+        const firstSegment = slug.split("/")[0].toLowerCase();
+
+        // Handle authentication callback with tokens (e.g., auth/callback?access_token=...)
+        // These should NEVER open in browser - they contain tokens to process in-app
+        if (firstSegment === "auth") {
+          console.log("🔗 Auth callback detected with tokens");
+          console.log("🔗 Full slug:", slug);
+
+          try {
+            // Reconstruct the full URL with scheme to parse tokens
+            // The URL might be: auth/callback?access_token=...&refresh_token=...
+            const brandConfig = brandManager.getCurrentBrand();
+            const fullUrl = `${brandConfig.shortcode}://${slug}`;
+            console.log("🔗 Reconstructed URL for token parsing:", fullUrl);
+
+            // Parse tokens from the URL
+            const tokens = parseTokensFromUrl(fullUrl);
+
+            if (tokens) {
+              console.log("🔑 Tokens parsed successfully from deep link");
+
+              // Complete authentication with the tokens
+              const success = await completeAuthentication(tokens);
+
+              if (success) {
+                console.log("✅ Authentication completed from deep link");
+                setError(null);
+              } else {
+                console.error("❌ Failed to complete authentication");
+                setError("Authentication failed");
+              }
+            } else {
+              console.warn("⚠️ No tokens found in auth callback URL");
+              setError("Invalid authentication callback");
+            }
+          } catch (authError) {
+            console.error("❌ Error processing auth callback:", authError);
+            setError("Authentication error");
+          }
+
+          // Always redirect to home after handling auth
+          console.log("🔗 Redirecting to home after auth handling");
+          setTimeout(() => {
+            router.replace("/");
+          }, 1000);
+          return;
+        }
+
+        // Check if this is other auth-related paths that should open in browser
+        // (login, register, etc. - NOT auth/callback which is handled above)
+        const browserAuthPaths = [
           "login",
           "register",
           "account",
-          "callback",
           "oauth",
           "signin",
           "signup",
           "mobile-app-login",
-          // Tab routes that should not be treated as deep links
+        ];
+
+        if (browserAuthPaths.includes(firstSegment)) {
+          console.log("🔗 Auth page detected, opening in browser:", slug);
+          const brandConfig = brandManager.getCurrentBrand();
+          await Linking.openURL(`https://${brandConfig.domain}/${slug}`);
+          console.log(
+            "🔗 Redirecting back to home after opening auth URL in browser"
+          );
+          router.replace("/");
+          return;
+        }
+
+        // Check if this is a tab route that should not be treated as deep link
+        const tabRoutes = [
           "(tabs)",
           "index",
           "news",
@@ -64,33 +126,8 @@ export default function DeepLinkHandler() {
           "search",
           "settings",
         ];
-        const firstSegment = slug.split("/")[0].toLowerCase();
 
-        if (excludedPaths.includes(firstSegment)) {
-          // Check if it's an auth path that needs to open in browser
-          const authPaths = [
-            "auth",
-            "login",
-            "register",
-            "account",
-            "callback",
-            "oauth",
-            "signin",
-            "signup",
-            "mobile-app-login",
-          ];
-
-          if (authPaths.includes(firstSegment)) {
-            console.log("🔗 Auth path detected, opening in browser:", slug);
-            const brandConfig = brandManager.getCurrentBrand();
-            await Linking.openURL(`https://${brandConfig.domain}/${slug}`);
-            console.log(
-              "🔗 Redirecting back to home after opening auth URL in browser"
-            );
-            router.replace("/");
-            return;
-          }
-
+        if (tabRoutes.includes(firstSegment)) {
           // For tab routes, just redirect to home without trying to resolve
           console.log("🔗 Tab route detected, redirecting to home:", slug);
           router.replace("/");

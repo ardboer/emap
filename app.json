@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "Journal of Nursing Leadership",
+    "name": "Nursing Times",
     "owner": "emap-publishing",
     "slug": "emap",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./brands/jnl/assets/icon.png",
+    "icon": "./brands/nt/assets/icon.png",
     "scheme": "nt",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "metropolis.net.jnl",
+      "bundleIdentifier": "metropolis.net.nursingtimes",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -22,11 +22,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./brands/jnl/assets/adaptive-icon.png",
-        "backgroundColor": "#df7446"
+        "foregroundImage": "./brands/nt/assets/adaptive-icon.png",
+        "backgroundColor": "#00334c"
       },
       "edgeToEdgeEnabled": true,
-      "package": "metropolis.net.jnl",
+      "package": "metropolis.net.nursingtimes",
       "intentFilters": [
         {
           "action": "VIEW",
@@ -1466,17 +1466,17 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./brands/jnl/assets/favicon.png"
+      "favicon": "./brands/nt/assets/favicon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./brands/jnl/assets/splash-icon.png",
+          "image": "./brands/nt/assets/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#df7446"
+          "backgroundColor": "#00334c"
         }
       ],
       [
@@ -1502,10 +1502,10 @@
         "dynamicIcon": true,
         "dynamicSplash": true,
         "dynamicColors": true,
-        "brand": "jnl",
-        "brandName": "Journal of Nursing Leadership",
-        "bundleIdentifier": "metropolis.net.jnl",
-        "actualIOSBundleId": "metropolis.net.jnl"
+        "brand": "nt",
+        "brandName": "Nursing Times",
+        "bundleIdentifier": "metropolis.net.nursingtimes",
+        "actualIOSBundleId": "metropolis.net.nursingtimes"
       }
     },
     "runtimeVersion": {
