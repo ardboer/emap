@@ -5,7 +5,7 @@ import {
   NativeAdVariant,
   NativeAdsConfig,
 } from "@/types/ads";
-import { Platform } from "react-native";
+import { gamService } from "./gam";
 
 /**
  * Manages different native ad variants and their configurations
@@ -79,24 +79,16 @@ class NativeAdVariantManager {
 
   /**
    * Get the appropriate ad unit ID for a specific variant
+   * Now uses GAM service as single source of truth for ad unit IDs
    */
   getAdUnitId(variant: NativeAdVariant): string {
     if (!this.config) {
       throw new Error("Native Ad Variant Manager not initialized");
     }
 
-    const platform = Platform.OS as "ios" | "android";
-
-    // Map variant to config key
-    const configKey = variant === "listItem" ? "listView" : variant;
-    const adUnitIds = this.config.adUnitIds[configKey];
-
-    if (!adUnitIds) {
-      console.warn(`No ad unit IDs configured for variant: ${variant}`);
-      return "";
-    }
-
-    return adUnitIds[platform] || "";
+    // Use GAM service to get native ad unit ID (single source of truth)
+    // This will return test IDs in test mode, or GAM production IDs
+    return gamService.getNativeAdUnitId();
   }
 
   /**

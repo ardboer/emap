@@ -1,13 +1,10 @@
 import { AdDebugData, AdDebugInfo } from "@/components/AdDebugInfo";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
-import { adMobService, AdSizes } from "@/services/admob";
+import { AdSizes, AdTargeting, gamService } from "@/services/gam";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import {
-  BannerAdSize,
-  BannerAd as GoogleBannerAd,
-} from "react-native-google-mobile-ads";
+import { BannerAdSize, GAMBannerAd } from "react-native-google-mobile-ads";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -33,6 +30,14 @@ export interface BannerAdProps {
    */
   errorMessage?: string;
   /**
+   * Ad format type (banner or mpu)
+   */
+  format?: "banner" | "mpu";
+  /**
+   * Targeting parameters for the ad request
+   */
+  targeting?: AdTargeting;
+  /**
    * Callback when ad loads successfully
    */
   onAdLoaded?: () => void;
@@ -52,6 +57,8 @@ export function BannerAdComponent({
   showLoadingIndicator = true,
   showErrorMessage = __DEV__, // Only show errors in development
   errorMessage = "Unable to load advertisement",
+  format = "banner",
+  targeting,
   onAdLoaded,
   onAdFailedToLoad,
   onAdClicked,
@@ -64,6 +71,7 @@ export function BannerAdComponent({
   const [loadTimeMs, setLoadTimeMs] = useState<number | undefined>(undefined);
   const [debugEnabled, setDebugEnabled] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | undefined>(undefined);
+  const [canRequestAds, setCanRequestAds] = useState(false);
   const { brandConfig } = useBrandConfig();
 
   // Load debug setting
@@ -81,14 +89,29 @@ export function BannerAdComponent({
     try {
       setLoadStartTime(Date.now());
 
-      // Initialize AdMob service with brand configuration
-      await adMobService.initialize({
+      // Initialize GAM service with brand configuration
+      await gamService.initialize({
         useTestAds: true, // Always use test ads for now
         brand: brandConfig?.shortcode === "cn" ? "cn" : "nt",
       });
 
-      // Get the appropriate ad unit ID
-      const unitId = adMobService.getBannerAdUnitId();
+      // Check if we can request ads (consent obtained)
+      const canRequest = gamService.canRequestAds();
+      setCanRequestAds(canRequest);
+
+      if (!canRequest) {
+        console.warn("[BannerAd] Cannot request ads - consent not obtained");
+        setHasError(true);
+        setIsLoading(false);
+        setErrorMsg("Waiting for consent");
+        return;
+      }
+
+      // Get the appropriate ad unit ID based on format
+      const unitId =
+        format === "mpu"
+          ? gamService.getMPUAdUnitId()
+          : gamService.getBannerAdUnitId();
       setAdUnitId(unitId);
 
       setIsLoading(true);
@@ -141,23 +164,28 @@ export function BannerAdComponent({
   // Prepare debug data (before early return so it's available for debug display)
   const debugData: AdDebugData = {
     adUnitId: adUnitId || "Not initialized",
-    adType: "banner",
+    adType: format === "mpu" ? "mpu" : "banner",
     requestResult: isLoading ? "loading" : hasError ? "failed" : "success",
     loadTimeMs,
-    isTestAd: adMobService.isInitialized()
-      ? adMobService.getConfig().useTestAds
+    isTestAd: gamService.isInitialized()
+      ? gamService.getConfig().useTestAds
       : true,
     errorMessage:
       errorMsg || (isNoFillError ? "No ad available (no-fill)" : undefined),
   };
 
-  // Don't render ad if AdMob is not initialized, no ad unit ID, or no-fill error
+  // Don't render ad if GAM is not initialized, no ad unit ID, consent not obtained, or no-fill error
   // But still show debug info if enabled
-  if (!adMobService.isInitialized() || !adUnitId || isNoFillError) {
+  if (
+    !gamService.isInitialized() ||
+    !adUnitId ||
+    !canRequestAds ||
+    isNoFillError
+  ) {
     if (debugEnabled) {
       return (
         <ThemedView style={[styles.container, style]}>
-          <AdDebugInfo data={debugData} variant="inline" />
+          <AdDebugInfo data={debugData} variant="compact" />
         </ThemedView>
       );
     }
@@ -184,13 +212,14 @@ export function BannerAdComponent({
         </View>
       )}
 
-      {/* Banner Ad */}
+      {/* GAM Banner Ad */}
       {!hasError && adUnitId && (
-        <GoogleBannerAd
+        <GAMBannerAd
           unitId={adUnitId}
-          size={size}
+          sizes={[size]}
           requestOptions={{
             requestNonPersonalizedAdsOnly: false,
+            customTargeting: gamService.buildTargeting({ targeting }),
           }}
           onAdLoaded={handleAdLoaded}
           onAdFailedToLoad={handleAdFailedToLoad}
@@ -198,8 +227,13 @@ export function BannerAdComponent({
         />
       )}
 
-      {/* Debug Info */}
-      {debugEnabled && <AdDebugInfo data={debugData} variant="inline" />}
+      {/* Debug Info - use compact variant when there's an error */}
+      {debugEnabled && (
+        <AdDebugInfo
+          data={debugData}
+          variant={hasError ? "compact" : "inline"}
+        />
+      )}
     </ThemedView>
   );
 }

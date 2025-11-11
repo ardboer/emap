@@ -172,7 +172,6 @@
   },
   "nativeAds": {
     "enabled": true,
-    "testMode": true,
     "carousel": {
       "enabled": true,
       "firstAdPosition": 2,
@@ -213,21 +212,10 @@
       "preloadAds": true,
       "showLoadingIndicator": false,
       "skipIfNotReady": true
-    },
-    "adUnitIds": {
-      "carousel": {
-        "ios": "ca-app-pub-3940256099942544/3986624511",
-        "android": "ca-app-pub-3940256099942544/2247696110"
-      },
-      "listView": {
-        "ios": "ca-app-pub-3940256099942544/3986624511",
-        "android": "ca-app-pub-3940256099942544/2247696110"
-      }
     }
   },
   "displayAds": {
     "enabled": true,
-    "testMode": true,
     "lazyLoading": {
       "enabled": true,
       "threshold": 250,
@@ -272,14 +260,46 @@
           "afterBlock": 3
         }
       ]
-    },
-    "adUnitIds": {
-      "ios": "ca-app-pub-3940256099942544/2934735716",
-      "android": "ca-app-pub-3940256099942544/6300978111"
     }
   },
   "layout": {
     "maxContentWidth": 800,
     "horizontalBlocks": ""
+  },
+  "gam": {
+    "enabled": true,
+    "adUnits": {
+      "ios": {
+        "banner": "/23325431194/nursingtimes_app_ios/banner",
+        "mpu": "/23325431194/nursingtimes_app_ios/mpu",
+        "native": "/23325431194/nursingtimes_app_ios/native",
+        "video": "/23325431194/nursingtimes_app_ios/video"
+      },
+      "android": {
+        "banner": "/23324774079/nursingtimes_app_android/banner",
+        "mpu": "/23324774079/nursingtimes_app_android/mpu",
+        "native": "/23324774079/nursingtimes_app_android/native",
+        "video": "/23324774079/nursingtimes_app_android/video"
+      }
+    },
+    "adSizes": {
+      "banner": "320x100",
+      "mpu": "300x250",
+      "native": "Fluid, 1x1",
+      "video": "Out-of-page"
+    },
+    "targeting": {
+      "defaultPOS": "default",
+      "enableSlotTargeting": true,
+      "enablePageTargeting": true,
+      "defaultTargeting": {
+        "brand": "nt",
+        "platform": "app"
+      }
+    },
+    "consent": {
+      "privacyPolicyUrl": "https://www.nursingtimes.net/consents/privacy-policy/",
+      "debugGeography": "DISABLED"
+    }
   }
 }

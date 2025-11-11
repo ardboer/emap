@@ -3,6 +3,7 @@
  *
  * Manages display ad placement logic based on brand configuration.
  * Calculates where ads should appear in article content and list views.
+ * Now integrates with GAM service for consent management.
  *
  * Note: This is separate from native ads (carousel ads) which have their own configuration.
  */
@@ -15,28 +16,51 @@ import {
   ListViewAdConfig,
 } from "@/types/ads";
 import { Platform } from "react-native";
+import { gamService } from "./gam";
 
 class DisplayAdManager {
   private config: DisplayAdsConfig | null = null;
+  private canRequestAds = false;
 
   /**
    * Initialize the manager with brand configuration
+   * Now integrates with GAM service for consent management
    */
-  initialize(config: DisplayAdsConfig): void {
+  async initialize(config: DisplayAdsConfig): Promise<void> {
     this.config = config;
-    // console.log("DisplayAdManager initialized:", {
-    //   enabled: config.enabled,
-    //   testMode: config.testMode,
-    //   articleDetailEnabled: config.articleDetail.enabled,
-    //   listViewEnabled: config.listView.enabled,
-    // });
+
+    // Initialize GAM service if not already initialized
+    if (!gamService.isInitialized()) {
+      await gamService.initialize({
+        useTestAds: config.testMode,
+      });
+    }
+
+    // Check if we can request ads (consent obtained)
+    this.canRequestAds = gamService.canRequestAds();
+
+    if (!this.canRequestAds) {
+      console.warn(
+        "[DisplayAdManager] Cannot request ads - consent not obtained"
+      );
+    }
+
+    console.log("[DisplayAdManager] Initialized:", {
+      enabled: config.enabled,
+      testMode: config.testMode,
+      canRequestAds: this.canRequestAds,
+      articleDetailEnabled: config.articleDetail.enabled,
+      listViewEnabled: config.listView.enabled,
+    });
   }
 
   /**
-   * Check if display ads are enabled globally
+   * Check if display ads are enabled globally and can be requested
+   * Now includes consent check
    */
   isEnabled(): boolean {
-    return this.config?.enabled ?? false;
+    const configEnabled = this.config?.enabled ?? false;
+    return configEnabled && this.canRequestAds;
   }
 
   /**
@@ -48,25 +72,34 @@ class DisplayAdManager {
 
   /**
    * Get the ad unit ID for the current platform
+   * Now uses GAM service for ad unit IDs
    */
-  getAdUnitId(): string | null {
+  getAdUnitId(format: "banner" | "mpu" = "banner"): string | null {
     if (!this.config) {
-      console.warn("DisplayAdManager not initialized");
+      console.warn("[DisplayAdManager] Not initialized");
       return null;
     }
 
-    const platform = Platform.OS as "ios" | "android";
-    return this.config.adUnitIds[platform] || null;
+    // Use GAM service to get ad unit ID
+    // This will return test IDs in test mode, or GAM production IDs
+    return format === "mpu"
+      ? gamService.getMPUAdUnitId()
+      : gamService.getBannerAdUnitId();
   }
 
   /**
    * Calculate ad placements for article detail content
+   * Now includes consent check
    *
    * @param paragraphCount Total number of paragraphs in the article
    * @returns Array of ad placements with position and size
    */
   calculateArticleAdPlacements(paragraphCount: number): AdPlacement[] {
-    if (!this.config || !this.config.articleDetail.enabled) {
+    if (
+      !this.config ||
+      !this.config.articleDetail.enabled ||
+      !this.canRequestAds
+    ) {
       return [];
     }
 
@@ -106,7 +139,7 @@ class DisplayAdManager {
     // Limit to maxAdsPerPage
     const limitedPlacements = placements.slice(0, config.maxAdsPerPage);
 
-    // console.log("Article ad placements calculated:", {
+    // console.log("[DisplayAdManager] Article ad placements calculated:", {
     //   paragraphCount,
     //   totalPlacements: limitedPlacements.length,
     //   maxAllowed: config.maxAdsPerPage,
@@ -118,12 +151,13 @@ class DisplayAdManager {
 
   /**
    * Calculate ad placements for list views
+   * Now includes consent check
    *
    * @param blockCount Total number of blocks/items in the list
    * @returns Array of ad placements with position and size
    */
   calculateListAdPlacements(blockCount: number): AdPlacement[] {
-    if (!this.config || !this.config.listView.enabled) {
+    if (!this.config || !this.config.listView.enabled || !this.canRequestAds) {
       return [];
     }
 
@@ -156,7 +190,7 @@ class DisplayAdManager {
     // Limit to maxAdsPerPage
     const limitedPlacements = placements.slice(0, config.maxAdsPerPage);
 
-    console.log("List ad placements calculated:", {
+    console.log("[DisplayAdManager] List ad placements calculated:", {
       blockCount,
       totalPlacements: limitedPlacements.length,
       maxAllowed: config.maxAdsPerPage,
@@ -222,6 +256,25 @@ class DisplayAdManager {
         : this.config.listView.allowedSizes;
 
     return allowedSizes.includes(size);
+  }
+
+  /**
+   * Check if ads can be requested (consent obtained)
+   */
+  canRequest(): boolean {
+    return this.canRequestAds;
+  }
+
+  /**
+   * Refresh consent status
+   * Call this after consent changes
+   */
+  refreshConsentStatus(): void {
+    this.canRequestAds = gamService.canRequestAds();
+    console.log(
+      "[DisplayAdManager] Consent status refreshed:",
+      this.canRequestAds
+    );
   }
 
   /**

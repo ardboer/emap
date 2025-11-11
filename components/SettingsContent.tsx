@@ -62,6 +62,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   const [pushToken, setPushToken] = React.useState<string | null>(null);
   const [debugModeEnabled, setDebugModeEnabled] = React.useState(false);
   const [debugAdsEnabled, setDebugAdsEnabled] = React.useState(false);
+  const [useTestAds, setUseTestAds] = React.useState(true);
   const [topicSubscriptions, setTopicSubscriptions] = React.useState<
     TopicSubscription[]
   >([]);
@@ -170,6 +171,18 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     AsyncStorage.getItem("debug_ads_enabled").then((value) => {
       if (value !== null) {
         setDebugAdsEnabled(value === "true");
+      }
+    });
+  }, []);
+
+  // Load test ads flag
+  React.useEffect(() => {
+    AsyncStorage.getItem("gam_use_test_ads").then((value) => {
+      if (value !== null) {
+        setUseTestAds(value === "true");
+      } else {
+        // Default to true in development, false in production
+        setUseTestAds(__DEV__);
       }
     });
   }, []);
@@ -488,6 +501,32 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
         : "Ad debug information has been hidden.",
       [{ text: "OK" }]
     );
+  };
+
+  const handleTestAdsToggle = async (value: boolean) => {
+    setUseTestAds(value);
+    await AsyncStorage.setItem("gam_use_test_ads", value.toString());
+
+    // Update GAM service
+    try {
+      const { gamService } = await import("@/services/gam");
+      gamService.setTestMode(value);
+
+      Alert.alert(
+        "Setting Updated",
+        value
+          ? "Using Google test ads. Restart the app to see test ads."
+          : "Using production GAM ads. Restart the app to see real ads.",
+        [{ text: "OK" }]
+      );
+    } catch (error) {
+      console.error("Error updating test ads setting:", error);
+      Alert.alert(
+        "Error",
+        "Failed to update test ads setting. Please try again.",
+        [{ text: "OK" }]
+      );
+    }
   };
 
   // Helper function to determine if debug section should be shown
@@ -928,6 +967,25 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
                   onValueChange={handleDebugAdsToggle}
                   trackColor={{ false: "#767577", true: primaryColor }}
                   thumbColor={debugAdsEnabled ? "#00334C" : "#fff"}
+                />
+              }
+            />
+
+            {/* Use Test Ads Toggle */}
+            <SettingsItem
+              icon="flask.fill"
+              title="Use Test Ads"
+              subtitle={
+                useTestAds
+                  ? "Using Google test ads (safe for testing)"
+                  : "Using production GAM ads (real inventory)"
+              }
+              rightElement={
+                <Switch
+                  value={useTestAds}
+                  onValueChange={handleTestAdsToggle}
+                  trackColor={{ false: "#767577", true: primaryColor }}
+                  thumbColor={useTestAds ? "#00334C" : "#fff"}
                 />
               }
             />

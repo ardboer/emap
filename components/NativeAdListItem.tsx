@@ -232,8 +232,8 @@ export function NativeAdListItem({
   } catch (error) {
     console.warn("Could not get ad unit ID for debug:", error);
   }
-  // Test mode is at the root config level, default to true for safety
-  const isTestAd = true;
+  // Check if using test ads from brand config
+  const isTestAd = brandConfig?.nativeAds?.testMode ?? true;
 
   // Prepare debug data (before early returns so it's available for debug display)
   const debugData: AdDebugData = {
@@ -252,7 +252,7 @@ export function NativeAdListItem({
     if (debugEnabled) {
       return (
         <View style={styles.container}>
-          <AdDebugInfo data={debugData} variant="inline" />
+          <AdDebugInfo data={debugData} variant="compact" />
         </View>
       );
     }
@@ -277,7 +277,7 @@ export function NativeAdListItem({
     if (debugEnabled) {
       return (
         <View style={styles.container}>
-          <AdDebugInfo data={debugData} variant="inline" />
+          <AdDebugInfo data={debugData} variant="compact" />
         </View>
       );
     }
@@ -289,7 +289,7 @@ export function NativeAdListItem({
     if (debugEnabled) {
       return (
         <View style={styles.container}>
-          <AdDebugInfo data={debugData} variant="inline" />
+          <AdDebugInfo data={debugData} variant="compact" />
         </View>
       );
     }

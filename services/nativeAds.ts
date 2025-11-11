@@ -1,7 +1,8 @@
 import { brandManager } from "@/config/BrandManager";
 import { CarouselNativeAdConfig, NativeAdsConfig } from "@/types/ads";
 import { Platform } from "react-native";
-import mobileAds, { TestIds } from "react-native-google-mobile-ads";
+import { TestIds } from "react-native-google-mobile-ads";
+import { gamService } from "./gam";
 
 // Test Ad Unit IDs (Google's official test IDs for Native Advanced)
 const TEST_NATIVE_AD_UNITS = {
@@ -32,9 +33,11 @@ class NativeAdService {
   private initialized = false;
   private config: CarouselNativeAdConfig | null = null;
   private fullConfig: NativeAdsConfig | null = null;
+  private canRequestAds = false;
 
   /**
    * Initialize Native Ad service with brand configuration
+   * Now integrates with GAM service for consent management
    */
   async initialize(): Promise<void> {
     if (this.initialized) {
@@ -47,7 +50,7 @@ class NativeAdService {
       this.fullConfig = brandConfig.nativeAds as NativeAdsConfig;
 
       if (!this.fullConfig) {
-        console.warn("Native ads configuration not found in brand config");
+        console.warn("[NativeAds] Configuration not found in brand config");
         this.fullConfig = {
           enabled: false,
           testMode: true,
@@ -71,7 +74,7 @@ class NativeAdService {
       // Handle legacy structure (backward compatibility)
       else if (this.fullConfig.firstAdPosition !== undefined) {
         console.warn(
-          "⚠️ Using legacy native ads config format. Consider updating to new format."
+          "[NativeAds] ⚠️ Using legacy config format. Consider updating to new format."
         );
         const legacyConfig = this.fullConfig as any as LegacyNativeAdConfig;
 
@@ -108,13 +111,24 @@ class NativeAdService {
         };
       }
 
-      // Initialize Mobile Ads SDK
-      await mobileAds().initialize();
+      // Initialize GAM service (includes consent management)
+      await gamService.initialize({
+        useTestAds: this.fullConfig.testMode,
+        brand: brandConfig.shortcode === "cn" ? "cn" : "nt",
+      });
+
+      // Check if we can request ads (consent obtained)
+      this.canRequestAds = gamService.canRequestAds();
+
+      if (!this.canRequestAds) {
+        console.warn("[NativeAds] Cannot request ads - consent not obtained");
+      }
 
       this.initialized = true;
-      console.log("Native Ad Service (Carousel) initialized:", {
+      console.log("[NativeAds] Service initialized:", {
         enabled: this.config.enabled,
         testMode: this.fullConfig.testMode,
+        canRequestAds: this.canRequestAds,
         firstAdPosition: this.config.firstAdPosition,
         adInterval: this.config.adInterval,
         preloadDistance: this.config.preloadDistance,
@@ -123,16 +137,18 @@ class NativeAdService {
         maxAdsPerSession: this.config.maxAdsPerSession,
       });
     } catch (error) {
-      console.error("Failed to initialize Native Ad Service:", error);
+      console.error("[NativeAds] Failed to initialize:", error);
       throw error;
     }
   }
 
   /**
-   * Check if native ads are enabled
+   * Check if native ads are enabled and can be requested
+   * Now includes consent check
    */
   isEnabled(): boolean {
-    return this.config?.enabled ?? false;
+    const configEnabled = this.config?.enabled ?? false;
+    return configEnabled && this.canRequestAds;
   }
 
   /**
@@ -144,30 +160,16 @@ class NativeAdService {
 
   /**
    * Get the appropriate ad unit ID for current platform
+   * Now uses GAM service for ad unit IDs
    */
   getAdUnitId(): string {
     if (!this.fullConfig) {
-      throw new Error("Native Ad Service not initialized");
+      throw new Error("[NativeAds] Service not initialized");
     }
 
-    // Use test ad units if in test mode
-    if (this.fullConfig.testMode) {
-      return Platform.OS === "ios"
-        ? TEST_NATIVE_AD_UNITS.ios
-        : TEST_NATIVE_AD_UNITS.android;
-    }
-
-    // Use production ad units from carousel config
-    const adUnitIds = this.fullConfig.adUnitIds?.carousel;
-    if (!adUnitIds) {
-      // Fallback to legacy format
-      const legacyConfig = this.fullConfig as any;
-      return Platform.OS === "ios"
-        ? legacyConfig.adUnitIds?.ios || TEST_NATIVE_AD_UNITS.ios
-        : legacyConfig.adUnitIds?.android || TEST_NATIVE_AD_UNITS.android;
-    }
-
-    return Platform.OS === "ios" ? adUnitIds.ios : adUnitIds.android;
+    // Use GAM service to get native ad unit ID
+    // This will return test IDs in test mode, or GAM production IDs
+    return gamService.getNativeAdUnitId();
   }
 
   /**
@@ -186,9 +188,10 @@ class NativeAdService {
 
   /**
    * Check if an ad should be shown at a specific index
+   * Now includes consent check
    */
   shouldShowAdAtIndex(index: number): boolean {
-    if (!this.config || !this.config.enabled) {
+    if (!this.config || !this.config.enabled || !this.canRequestAds) {
       return false;
     }
 
@@ -210,9 +213,10 @@ class NativeAdService {
 
   /**
    * Calculate all ad positions for a given total number of items
+   * Now includes consent check
    */
   calculateAdPositions(totalItems: number): number[] {
-    if (!this.config || !this.config.enabled) {
+    if (!this.config || !this.config.enabled || !this.canRequestAds) {
       return [];
     }
 
@@ -259,13 +263,30 @@ class NativeAdService {
   }
 
   /**
+   * Check if ads can be requested (consent obtained)
+   */
+  canRequest(): boolean {
+    return this.canRequestAds;
+  }
+
+  /**
+   * Refresh consent status
+   * Call this after consent changes
+   */
+  refreshConsentStatus(): void {
+    this.canRequestAds = gamService.canRequestAds();
+    console.log("[NativeAds] Consent status refreshed:", this.canRequestAds);
+  }
+
+  /**
    * Reset service (useful for testing)
    */
   reset(): void {
     this.initialized = false;
     this.config = null;
     this.fullConfig = null;
-    console.log("Native Ad Service reset");
+    this.canRequestAds = false;
+    console.log("[NativeAds] Service reset");
   }
 }
 

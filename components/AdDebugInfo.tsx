@@ -5,7 +5,7 @@ import { StyleSheet, View } from "react-native";
 
 export interface AdDebugData {
   adUnitId: string;
-  adType: "banner" | "native_list" | "native_carousel";
+  adType: "banner" | "mpu" | "native_list" | "native_carousel";
   requestResult: "success" | "failed" | "loading";
   loadTimeMs?: number;
   isTestAd: boolean;
@@ -16,7 +16,7 @@ export interface AdDebugData {
 
 interface AdDebugInfoProps {
   data: AdDebugData;
-  variant?: "inline" | "overlay";
+  variant?: "inline" | "overlay" | "compact";
 }
 
 /**
@@ -85,6 +85,30 @@ export function AdDebugInfo({ data, variant = "inline" }: AdDebugInfoProps) {
     );
   }
 
+  // Compact variant for errors - minimal vertical space
+  if (variant === "compact") {
+    return (
+      <ThemedView style={styles.compactContainer}>
+        <View style={styles.compactHeader}>
+          <ThemedText style={styles.compactTitle}>
+            🐛 {getStatusText()}
+          </ThemedText>
+          <ThemedText style={styles.compactMode}>
+            {isTestAd ? "Test" : "Prod"}
+          </ThemedText>
+        </View>
+        <ThemedText style={styles.compactAdUnit} numberOfLines={1}>
+          {adUnitId}
+        </ThemedText>
+        {errorMessage && (
+          <ThemedText style={styles.compactError} numberOfLines={1}>
+            {errorMessage}
+          </ThemedText>
+        )}
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
@@ -131,10 +155,11 @@ export function AdDebugInfo({ data, variant = "inline" }: AdDebugInfoProps) {
         )}
 
         <View style={styles.infoRow}>
-          <ThemedText style={styles.label}>Ad Unit ID:</ThemedText>
-          <ThemedText style={styles.valueSmall} numberOfLines={1}>
-            {adUnitId}
-          </ThemedText>
+          <View>
+            <ThemedText style={styles.valueSmall} numberOfLines={1}>
+              {adUnitId}
+            </ThemedText>
+          </View>
         </View>
 
         {errorMessage && (
@@ -169,6 +194,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     opacity: 0.8,
+    paddingRight: 80,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -192,13 +218,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
     opacity: 0.7,
-    flex: 0.4,
+    flex: 1,
   },
   value: {
     fontSize: 11,
     fontWeight: "500",
     opacity: 0.9,
-    flex: 0.6,
+    flex: 1,
     textAlign: "right",
   },
   valueSmall: {
@@ -220,6 +246,41 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#F44336",
     opacity: 0.9,
+  },
+  compactContainer: {
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    borderRadius: 6,
+    padding: 8,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255, 0, 0, 0.2)",
+  },
+  compactHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  compactTitle: {
+    fontSize: 10,
+    fontWeight: "600",
+    opacity: 0.8,
+  },
+  compactMode: {
+    fontSize: 9,
+    fontWeight: "500",
+    opacity: 0.7,
+  },
+  compactAdUnit: {
+    fontSize: 8,
+    fontWeight: "400",
+    opacity: 0.6,
+    marginTop: 2,
+  },
+  compactError: {
+    fontSize: 9,
+    color: "#F44336",
+    opacity: 0.9,
+    marginTop: 4,
   },
   overlayContainer: {
     position: "absolute",

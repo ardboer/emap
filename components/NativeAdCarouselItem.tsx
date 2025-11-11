@@ -216,16 +216,18 @@ export function NativeAdCarouselItem({
     }
   };
 
-  // Get ad unit ID for debug info - use nativeAdLoader which is already initialized
+  // Get ad unit ID and test mode for debug info
   let adUnitId = "Unknown";
+  let isTestAd = true;
   try {
     if (nativeAdLoader.isInitialized()) {
       adUnitId = nativeAdLoader.getAdUnitId() || "Unknown";
     }
+    // Check if using test ads from brand config
+    isTestAd = brandConfig?.nativeAds?.testMode ?? true;
   } catch (error) {
     console.warn("Could not get ad unit ID for debug:", error);
   }
-  const isTestAd = true;
 
   // Prepare debug data (before early returns so it's available for debug display)
   const debugData: AdDebugData = {
@@ -246,7 +248,7 @@ export function NativeAdCarouselItem({
       if (debugEnabled) {
         return (
           <View style={styles.loadingContainer}>
-            <AdDebugInfo data={debugData} variant="overlay" />
+            <AdDebugInfo data={debugData} variant="compact" />
           </View>
         );
       }
@@ -280,7 +282,7 @@ export function NativeAdCarouselItem({
       if (debugEnabled) {
         return (
           <View style={styles.loadingContainer}>
-            <AdDebugInfo data={debugData} variant="overlay" />
+            <AdDebugInfo data={debugData} variant="compact" />
           </View>
         );
       }

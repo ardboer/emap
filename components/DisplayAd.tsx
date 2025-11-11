@@ -3,14 +3,15 @@
  *
  * Reusable wrapper for banner ads that integrates with brand configuration.
  * Automatically uses the correct ad unit ID and size based on context.
+ * Now uses GAM service with consent management.
  *
- * Now supports lazy loading to improve viewability metrics by loading ads
+ * Supports lazy loading to improve viewability metrics by loading ads
  * just before they come into view (250px threshold by default).
  */
 
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useInView } from "@/hooks/useInView";
-import { AdSizes } from "@/services/admob";
+import { AdSizes, AdTargeting } from "@/services/gam";
 import { displayAdLazyLoadManager } from "@/services/displayAdLazyLoadManager";
 import { displayAdManager } from "@/services/displayAdManager";
 import { AdSizeType } from "@/types/ads";
@@ -45,6 +46,10 @@ interface DisplayAdProps {
    * Show placeholder while loading (default: true)
    */
   showPlaceholder?: boolean;
+  /**
+   * Targeting parameters for the ad request
+   */
+  targeting?: AdTargeting;
   /**
    * Optional callback when ad loads
    */
@@ -86,6 +91,7 @@ export function DisplayAd({
   enableLazyLoad = true,
   lazyLoadThreshold = 250,
   showPlaceholder = true,
+  targeting,
   onAdLoaded,
   onAdFailedToLoad,
   onAdClicked,
@@ -166,16 +172,21 @@ export function DisplayAd({
 
   const bannerSize = mapAdSize(size);
 
+  // Determine ad format based on size
+  const adFormat = size === "MEDIUM_RECTANGLE" ? "mpu" : "banner";
+
   return (
     <View ref={ref} style={[styles.container, style]}>
       {shouldLoad ? (
         <BannerAd
           size={bannerSize}
+          format={adFormat}
+          targeting={targeting}
           showLoadingIndicator={true}
           showErrorMessage={false}
           onAdLoaded={() => {
             displayAdLazyLoadManager.markAsLoaded(adId);
-            // console.log(`Display ad loaded: ${context} - ${size}`);
+            // console.log(`[DisplayAd] Ad loaded: ${context} - ${size}`);
             onAdLoaded?.();
           }}
           onAdFailedToLoad={(error) => {
@@ -189,13 +200,13 @@ export function DisplayAd({
 
             // Only log non-no-fill errors as these are expected and not actual issues
             if (!isNoFillError) {
-              console.log(`Display ad failed: ${context} - ${size}`, error);
+              console.log(`[DisplayAd] Ad failed: ${context} - ${size}`, error);
             }
 
             onAdFailedToLoad?.(error);
           }}
           onAdClicked={() => {
-            console.log(`Display ad clicked: ${context} - ${size}`);
+            console.log(`[DisplayAd] Ad clicked: ${context} - ${size}`);
             onAdClicked?.();
           }}
         />

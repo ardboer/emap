@@ -142,6 +142,41 @@ export interface BrandConfig {
     maxContentWidth?: number; // Maximum width for list content on tablets (default: 800)
     horizontalBlocks?: string; // Comma-separated list of block indices to render horizontally (e.g., "1,4,5")
   };
+  gam?: {
+    enabled: boolean;
+    adUnits: {
+      ios: {
+        banner: string;
+        mpu: string;
+        native: string;
+        video: string;
+      };
+      android: {
+        banner: string;
+        mpu: string;
+        native: string;
+        video: string;
+      };
+    };
+    adSizes?: {
+      banner: string;
+      mpu: string;
+      native: string;
+      video: string;
+    };
+    targeting?: {
+      defaultPOS: string;
+      enableSlotTargeting: boolean;
+      enablePageTargeting: boolean;
+      defaultTargeting?: {
+        [key: string]: string | string[] | number | boolean;
+      };
+    };
+    consent?: {
+      privacyPolicyUrl: string;
+      debugGeography?: string;
+    };
+  };
 }
 
 export interface PodcastFeed {
