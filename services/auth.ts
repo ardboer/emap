@@ -439,6 +439,123 @@ export async function refreshAccessToken(
 }
 
 /**
+ * Check if user has access to a specific article/post
+ *
+ * This function calls the access-control API endpoint to determine if the current
+ * user (authenticated or anonymous) has permission to view the specified article.
+ *
+ * @param postId - The article/post ID to check access for
+ * @param token - Optional JWT access token for authenticated users
+ * @returns Access control response indicating if access is allowed
+ *
+ * @example
+ * ```typescript
+ * // Check access for authenticated user
+ * const result = await checkArticleAccess('338771', userToken);
+ * if (result.allowed) {
+ *   // Show full article
+ * } else {
+ *   // Show paywall
+ * }
+ *
+ * // Check access for anonymous user
+ * const result = await checkArticleAccess('338771');
+ * ```
+ */
+export async function checkArticleAccess(
+  postId: string | number,
+  token?: string
+): Promise<{
+  user_id: number;
+  post_id: number;
+  allowed: boolean;
+  message: string;
+}> {
+  try {
+    const config = brandManager.getApiConfig();
+    const { baseUrl, hash } = config;
+
+    const url = `${baseUrl}/wp-json/mbm-apps/v1/access-control`;
+
+    console.log("🔒 Checking article access...", {
+      postId,
+      hasToken: !!token,
+      url,
+    });
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    // Add Authorization header if token is provided
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const requestBody = {
+      post_id: postId,
+      hash: hash,
+    };
+
+    // Log curl command for debugging (with full token for testing)
+    const curlCommand = [
+      "curl -X POST",
+      `'${url}'`,
+      `-H 'Content-Type: application/json'`,
+      token ? `-H 'Authorization: Bearer ${token}'` : "",
+      `-d '${JSON.stringify(requestBody)}'`,
+    ]
+      .filter(Boolean)
+      .join(" \\\n  ");
+
+    console.log("📋 Curl command to test access control:\n" + curlCommand);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log("📥 Access control response status:", response.status);
+
+    const data = await response.json();
+    console.log("📥 Access control response data:", data);
+
+    if (!response.ok) {
+      console.warn(
+        "⚠️ Access control check failed:",
+        data.message || "Unknown error"
+      );
+      // Fail open: allow access if API fails
+      return {
+        user_id: 0,
+        post_id: Number(postId),
+        allowed: true,
+        message: "Access check failed, allowing access (fail open)",
+      };
+    }
+
+    // Log the result
+    if (data.allowed) {
+      console.log("✅ Access granted for article:", postId);
+    } else {
+      console.log("❌ Access denied for article:", postId);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("❌ Error checking article access:", error);
+    // Fail open: allow access if there's an error
+    return {
+      user_id: 0,
+      post_id: Number(postId),
+      allowed: true,
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
  * Store authentication tokens securely
  *
  * @param tokens - The tokens to store
@@ -755,6 +872,7 @@ export const authService = {
   parseTokensFromUrl,
   validateAccessToken,
   refreshAccessToken,
+  checkArticleAccess,
   storeTokens,
   getStoredTokens,
   storeUserInfo,

@@ -33,6 +33,10 @@ export default function ArticleDetailView({
   const [error, setError] = useState<string | null>(null);
   const colorScheme = useColorScheme() ?? "light";
   const { brandConfig } = useBrandConfig();
+  const { login } = useAuth();
+  const { isAllowed, shouldShowPaywall, recheckAccess } =
+    useArticleAccess(articleId);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const loadArticle = useCallback(async () => {
     try {
@@ -56,6 +60,70 @@ export default function ArticleDetailView({
   useEffect(() => {
     loadArticle();
   }, [loadArticle]);
+
+  // Show paywall when access is denied
+  useEffect(() => {
+    if (shouldShowPaywall) {
+      console.log("🚫 Access denied, showing paywall for article:", articleId);
+      setPaywallVisible(true);
+
+      // Track paywall shown event
+      analyticsService.logEvent("article_paywall_shown", {
+        article_id: articleId,
+        edition_id: editionId,
+        source: "article_detail",
+      });
+    }
+  }, [shouldShowPaywall, articleId, editionId]);
+
+  /**
+   * Handle paywall close
+   */
+  const handlePaywallClose = useCallback(() => {
+    console.log("ℹ️ User closed paywall");
+    setPaywallVisible(false);
+
+    analyticsService.logEvent("article_paywall_dismissed", {
+      article_id: articleId,
+      edition_id: editionId,
+    });
+  }, [articleId, editionId]);
+
+  /**
+   * Handle subscribe button press
+   */
+  const handleSubscribe = useCallback(() => {
+    console.log("💳 User clicked subscribe from paywall");
+
+    analyticsService.logEvent("article_paywall_subscribe_clicked", {
+      article_id: articleId,
+      edition_id: editionId,
+    });
+
+    // PaywallBottomSheet handles opening the subscription URL
+  }, [articleId, editionId]);
+
+  /**
+   * Handle sign in button press
+   */
+  const handleSignIn = useCallback(async () => {
+    console.log("🔐 User clicked sign in from paywall");
+
+    analyticsService.logEvent("article_paywall_signin_clicked", {
+      article_id: articleId,
+      edition_id: editionId,
+    });
+
+    // Close paywall before starting login flow
+    setPaywallVisible(false);
+
+    // Start login flow
+    await login();
+
+    // After successful login, recheck access
+    // The useArticleAccess hook will automatically recheck when auth state changes
+    console.log("✅ Login complete, access will be rechecked automatically");
+  }, [login, articleId, editionId]);
 
   const renderLoading = () => (
     <ThemedView style={styles.centerContainer}>
@@ -249,6 +317,14 @@ export default function ArticleDetailView({
       {loading && renderLoading()}
       {error && !loading && renderError()}
       {article && !loading && !error && renderArticle()}
+
+      {/* Paywall Bottom Sheet */}
+      <PaywallBottomSheet
+        visible={paywallVisible}
+        onClose={handlePaywallClose}
+        onSubscribe={handleSubscribe}
+        onSignIn={handleSignIn}
+      />
     </View>
   );
 }

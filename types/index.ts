@@ -277,3 +277,35 @@ export interface PDFArticleDetail {
     self: string;
   };
 }
+
+// Access Control API types
+/**
+ * Access Control API Response
+ * Response from the access-control endpoint indicating if user can access content
+ */
+export interface AccessControlResponse {
+  user_id: number;
+  post_id: number;
+  allowed: boolean;
+  message: string;
+}
+
+/**
+ * Access Control Request Parameters
+ * Parameters sent to the access-control endpoint
+ */
+export interface AccessControlRequest {
+  post_id: string | number;
+  hash: string;
+}
+
+/**
+ * Access Control State
+ * State management for article access checking
+ */
+export interface AccessControlState {
+  isChecking: boolean;
+  isAllowed: boolean;
+  error: string | null;
+  response: AccessControlResponse | null;
+}

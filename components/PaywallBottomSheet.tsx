@@ -47,10 +47,18 @@ export function PaywallBottomSheet({
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
 
   // Automatically close paywall when user successfully logs in
+  // NOTE: This is disabled when using access control API, as authentication
+  // alone doesn't guarantee access - the API determines that
   React.useEffect(() => {
+    // Only auto-close if user authenticates while paywall is visible
+    // This helps with the sign-in flow, but we rely on the parent component
+    // to control visibility based on actual access permissions
     if (isAuthenticated && visible) {
-      console.log("[PaywallBottomSheet] User authenticated, closing paywall");
-      onClose();
+      console.log(
+        "[PaywallBottomSheet] User authenticated, paywall will be controlled by access check"
+      );
+      // Don't auto-close - let the access control API determine if paywall should close
+      // onClose();
     }
   }, [isAuthenticated, visible, onClose]);
 
@@ -201,15 +209,6 @@ export function PaywallBottomSheet({
             <View style={styles.handle} />
           </View>
 
-          {/* Close Button */}
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <IconSymbol name="xmark" size={24} color={textColor} />
-          </TouchableOpacity>
-
           {/* Content */}
           <View style={styles.content}>
             {/* Logo */}
@@ -289,6 +288,19 @@ export function PaywallBottomSheet({
                   style={[styles.secondaryButtonText, { color: primaryColor }]}
                 >
                   {paywallConfig.secondaryButtonText}
+                </ThemedText>
+              </TouchableOpacity>
+
+              {/* Back Button */}
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={onClose}
+                activeOpacity={0.8}
+              >
+                <ThemedText
+                  style={[styles.backButtonText, { color: textColor }]}
+                >
+                  Go Back
                 </ThemedText>
               </TouchableOpacity>
             </View>
@@ -412,5 +424,16 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     fontSize: 18,
     fontWeight: "600",
+  },
+  backButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: "400",
+    opacity: 0.7,
+    textDecorationLine: "underline",
   },
 });

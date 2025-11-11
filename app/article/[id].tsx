@@ -9,6 +9,7 @@ import TrendingArticles from "@/components/TrendingArticles";
 import { Colors } from "@/constants/Colors";
 import { getCenteredContentStyle } from "@/constants/Layout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useArticleAccess } from "@/hooks/useArticleAccess";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { analyticsService } from "@/services/analytics";
@@ -18,7 +19,6 @@ import { displayAdManager } from "@/services/displayAdManager";
 import { trackArticleView } from "@/services/miso";
 import { Article, StructuredContentNode } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -51,16 +51,18 @@ export default function ArticleScreen() {
     id: string;
     source?: string;
   }>();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, login } = useAuth();
   const colorScheme = useColorScheme() ?? "light";
   const { brandConfig } = useBrandConfig();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showPaywall, setShowPaywall] = useState(false);
   const insets = useSafeAreaInsets();
-  const [paywallEnabled, setPaywallEnabled] = useState(true);
   const contentBackground = useThemeColor({}, "contentBackground");
+
+  // Access control for paywall
+  const { shouldShowPaywall, recheckAccess } = useArticleAccess(id || "");
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   // Initialize display ad manager
   useEffect(() => {
@@ -107,13 +109,6 @@ export default function ArticleScreen() {
     const opacity = interpolate(scrollY.value, [0, 100], [1, 0.8], "clamp");
     return { opacity };
   });
-
-  useEffect(() => {
-    // Load paywall debug setting
-    AsyncStorage.getItem("debug_show_paywall").then((value) => {
-      setPaywallEnabled(value !== "false"); // Default to true if not set
-    });
-  }, []);
 
   useEffect(() => {
     const loadArticle = async () => {
@@ -200,69 +195,77 @@ export default function ArticleScreen() {
     loadRecommendedArticles();
   }, [id, user?.userId, isAuthenticated]);
 
+  // Show paywall when access is denied
   useEffect(() => {
-    if (article && paywallEnabled) {
-      // Check if user is authenticated before showing paywall
-      if (isAuthenticated) {
-        console.log(
-          "[ArticleScreen] Paywall NOT shown - User is authenticated",
-          {
-            articleId: id,
-            userId: user?.userId,
-            userEmail: user?.email,
-          }
-        );
-        return;
-      }
+    console.log("🔍 Paywall check:", {
+      shouldShowPaywall,
+      hasArticle: !!article,
+      articleId: id,
+      paywallVisible,
+    });
 
-      console.log(
-        "[ArticleScreen] Scheduling paywall to show in 2 seconds - User not authenticated",
-        {
-          articleId: id,
-          paywallEnabled,
-        }
-      );
+    if (shouldShowPaywall && article) {
+      console.log("🚫 Access denied, showing paywall for article:", id);
+      setPaywallVisible(true);
 
-      // Show paywall after 2 seconds for unauthenticated users
-      const timer = setTimeout(() => {
-        console.log("[ArticleScreen] Showing paywall now", {
-          articleId: id,
-        });
-        setShowPaywall(true);
-      }, 2000);
-
-      return () => {
-        console.log("[ArticleScreen] Clearing paywall timer", {
-          articleId: id,
-        });
-        clearTimeout(timer);
-      };
-    } else {
-      if (!article) {
-        console.log("[ArticleScreen] Paywall NOT shown - No article loaded");
-      }
-      if (!paywallEnabled) {
-        console.log(
-          "[ArticleScreen] Paywall NOT shown - Paywall disabled in debug settings"
-        );
-      }
+      // Track paywall shown event
+      analyticsService.logEvent("article_paywall_shown", {
+        article_id: id,
+        article_title: article.title,
+        source: source || "direct",
+      });
     }
-  }, [article, paywallEnabled, isAuthenticated, id, user]);
+  }, [shouldShowPaywall, article, id, source, paywallVisible]);
 
+  /**
+   * Handle paywall close - navigate back to previous screen
+   */
   const handleClosePaywall = () => {
-    setShowPaywall(false);
+    console.log("ℹ️ User closed paywall, navigating back");
+
+    analyticsService.logEvent("article_paywall_dismissed", {
+      article_id: id,
+      article_title: article?.title,
+    });
+
+    // Navigate back to previous screen (e.g., highlights carousel)
+    router.back();
   };
 
+  /**
+   * Handle subscribe button press
+   */
   const handleSubscribe = () => {
-    console.log("Subscribe button pressed");
-    // TODO: Implement subscription flow
-    setShowPaywall(false);
+    console.log("💳 User clicked subscribe from paywall");
+
+    analyticsService.logEvent("article_paywall_subscribe_clicked", {
+      article_id: id,
+      article_title: article?.title,
+    });
+
+    // PaywallBottomSheet handles opening the subscription URL
   };
 
-  const handleSignIn = () => {
-    console.log("Sign In button pressed");
-    // TODO: Implement sign in flow
-    setShowPaywall(false);
+  /**
+   * Handle sign in button press
+   */
+  const handleSignIn = async () => {
+    console.log("🔐 User clicked sign in from paywall");
+
+    analyticsService.logEvent("article_paywall_signin_clicked", {
+      article_id: id,
+      article_title: article?.title,
+    });
+
+    // Close paywall before starting login flow
+    setPaywallVisible(false);
+
+    // Start login flow
+    await login();
+
+    // After successful login, recheck access
+    // The useArticleAccess hook will automatically recheck when auth state changes
+    console.log("✅ Login complete, access will be rechecked automatically");
   };
 
   // Helper function to render content based on type
@@ -588,7 +591,7 @@ export default function ArticleScreen() {
         </Animated.ScrollView>
 
         <PaywallBottomSheet
-          visible={showPaywall}
+          visible={paywallVisible}
           onClose={handleClosePaywall}
           onSubscribe={handleSubscribe}
           onSignIn={handleSignIn}
