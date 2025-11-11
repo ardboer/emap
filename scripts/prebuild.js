@@ -224,24 +224,28 @@ appJson.expo.icon = `${brandAssetsPath}/icon.png`;
 appJson.expo.android.adaptiveIcon.foregroundImage = `${brandAssetsPath}/adaptive-icon.png`;
 appJson.expo.web.favicon = `${brandAssetsPath}/favicon.png`;
 
-// Set Android adaptive icon background color from brand config
-if (brandConfig.branding?.iconBackgroundColor) {
-  appJson.expo.android.adaptiveIcon.backgroundColor =
-    brandConfig.branding.iconBackgroundColor;
-  console.log(
-    `✅ Set Android adaptive icon background color: ${brandConfig.branding.iconBackgroundColor}`
-  );
-}
+// Set Android adaptive icon background color from brand config (use light mode)
+const adaptiveIconBgColor =
+  brandConfig.branding?.iconBackgroundColorLight ||
+  brandConfig.branding?.iconBackgroundColor ||
+  "#ffffff";
+appJson.expo.android.adaptiveIcon.backgroundColor = adaptiveIconBgColor;
+console.log(
+  `✅ Set Android adaptive icon background color: ${adaptiveIconBgColor}`
+);
 
 // Update splash screen
 if (appJson.expo.plugins) {
   appJson.expo.plugins.forEach((plugin) => {
     if (Array.isArray(plugin) && plugin[0] === "expo-splash-screen") {
       plugin[1].image = `${brandAssetsPath}/splash-icon.png`;
-      // Set splash screen background color from brand config
-      if (brandConfig.branding?.iconBackgroundColor) {
-        plugin[1].backgroundColor = brandConfig.branding.iconBackgroundColor;
-      }
+      // Set splash screen background color from brand config (use light mode)
+      const splashBgColor =
+        brandConfig.branding?.iconBackgroundColorLight ||
+        brandConfig.branding?.iconBackgroundColor ||
+        "#ffffff";
+      plugin[1].backgroundColor = splashBgColor;
+      console.log(`✅ Set splash screen background color: ${splashBgColor}`);
     }
   });
 }
@@ -420,6 +424,67 @@ const addGoogleServiceInfoToXcode = () => {
 };
 
 copyFirebaseConfig();
+
+// Update Android splash screen colors
+const updateAndroidSplashColors = () => {
+  console.log(`🎨 Updating Android splash screen colors...`);
+
+  const colorsXmlPath = path.join(
+    projectRoot,
+    "android",
+    "app",
+    "src",
+    "main",
+    "res",
+    "values",
+    "colors.xml"
+  );
+
+  if (!fs.existsSync(colorsXmlPath)) {
+    console.log(`ℹ️  colors.xml not found, skipping splash color update`);
+    return;
+  }
+
+  try {
+    let colorsXml = fs.readFileSync(colorsXmlPath, "utf8");
+
+    // Get splash background color from brand config
+    const splashBgColor =
+      brandConfig.branding?.iconBackgroundColorLight ||
+      brandConfig.branding?.iconBackgroundColor ||
+      "#ffffff";
+
+    // Update splashscreen_background color
+    if (colorsXml.includes('name="splashscreen_background"')) {
+      colorsXml = colorsXml.replace(
+        /<color name="splashscreen_background">#[0-9A-Fa-f]{6}<\/color>/,
+        `<color name="splashscreen_background">${splashBgColor}</color>`
+      );
+      console.log(`✅ Updated splashscreen_background to ${splashBgColor}`);
+    }
+
+    // Update iconBackground color (for adaptive icons)
+    const iconBgColor =
+      brandConfig.branding?.iconBackgroundColorLight ||
+      brandConfig.branding?.iconBackgroundColor ||
+      "#ffffff";
+
+    if (colorsXml.includes('name="iconBackground"')) {
+      colorsXml = colorsXml.replace(
+        /<color name="iconBackground">#[0-9A-Fa-f]{6}<\/color>/,
+        `<color name="iconBackground">${iconBgColor}</color>`
+      );
+      console.log(`✅ Updated iconBackground to ${iconBgColor}`);
+    }
+
+    fs.writeFileSync(colorsXmlPath, colorsXml);
+    console.log(`✅ Updated Android colors.xml`);
+  } catch (error) {
+    console.error(`❌ Failed to update Android colors: ${error.message}`);
+  }
+};
+
+updateAndroidSplashColors();
 
 // Generate brand assets from SVG using new icon generator
 const generateBrandAssets = async () => {

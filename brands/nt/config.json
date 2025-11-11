@@ -96,8 +96,9 @@
     "icon": "./assets/icon.png",
     "splash": "./assets/splash.png",
     "iconBackgroundColor": "#00334c",
-    "iconBackgroundColorLight": "#ffffff",
-    "iconBackgroundColorDark": "#00334c"
+    "iconBackgroundColorLight": "#00334C",
+    "iconBackgroundColorDark": "#011620",
+    "iconPadding": 0.15
   },
   "onboarding": {
     "editorQuote": "Welcome to the Nursing Times app, putting news, views and clinical practice in your pocket.",

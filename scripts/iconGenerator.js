@@ -117,6 +117,21 @@ class IconGenerator {
   }
 
   /**
+   * Parse hex color to RGB object
+   */
+  parseHexColor(hex) {
+    // Remove # if present
+    hex = hex.replace(/^#/, "");
+
+    // Parse hex values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    return { r, g, b };
+  }
+
+  /**
    * Generate all icons for a brand
    */
   async generateAllIcons(brand, brandConfig) {
@@ -229,30 +244,83 @@ class IconGenerator {
     const results = { light: [], dark: [] };
     const imagesJson = [];
 
+    // Get background colors from config
+    const lightBgColor =
+      brandConfig.branding?.iconBackgroundColorLight || "#ffffff";
+    const darkBgColor =
+      brandConfig.branding?.iconBackgroundColorDark ||
+      brandConfig.branding?.iconBackgroundColor ||
+      "#000000";
+
+    const lightBgRGB = this.parseHexColor(lightBgColor);
+    const darkBgRGB = this.parseHexColor(darkBgColor);
+
+    // Get padding from config (default to 0 for no padding)
+    // Clamp padding between 0 and 0.4 (0% to 40%) to prevent negative sizes
+    let padding = brandConfig.branding?.iconPadding || 0;
+    if (padding < 0) padding = 0;
+    if (padding > 0.4) {
+      console.warn(
+        `⚠️  Icon padding ${padding} is too large, clamping to 0.4 (40%)`
+      );
+      padding = 0.4;
+    }
+
+    console.log(`  Light mode background: ${lightBgColor}`);
+    console.log(`  Dark mode background: ${darkBgColor}`);
+    console.log(`  Icon padding: ${(padding * 100).toFixed(1)}%`);
+
     // Generate light mode icons
     for (const iconConfig of IOS_ICON_SIZES) {
       const outputPath = path.join(iosPath, iconConfig.filename);
 
-      // Use sharp directly for SVG to PNG conversion
-      let iconBuffer = await sharp(logoPath)
-        .resize(iconConfig.size, iconConfig.size, {
-          fit: "contain",
-          background: {
-            r: 255,
-            g: 255,
-            b: 255,
-            alpha: iconConfig.size === 1024 ? 1 : 0,
-          },
-        })
-        .png()
-        .toBuffer();
+      // Calculate size with padding
+      const paddedSize = Math.round(iconConfig.size * (1 - padding * 2));
+      const paddingAmount = Math.round((iconConfig.size - paddedSize) / 2);
 
-      // Remove transparency for App Store icon
-      if (iconConfig.size === 1024) {
-        iconBuffer = await sharp(iconBuffer)
-          .flatten({ background: { r: 255, g: 255, b: 255 } })
+      let iconBuffer;
+
+      if (padding > 0) {
+        // Apply padding by resizing smaller and extending with background
+        iconBuffer = await sharp(logoPath)
+          .resize(paddedSize, paddedSize, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .extend({
+            top: paddingAmount,
+            bottom: paddingAmount,
+            left: paddingAmount,
+            right: paddingAmount,
+            background: {
+              r: lightBgRGB.r,
+              g: lightBgRGB.g,
+              b: lightBgRGB.b,
+              alpha: 1,
+            },
+          })
+          .png()
+          .toBuffer();
+      } else {
+        // No padding - use original size with background
+        iconBuffer = await sharp(logoPath)
+          .resize(iconConfig.size, iconConfig.size, {
+            fit: "contain",
+            background: {
+              r: lightBgRGB.r,
+              g: lightBgRGB.g,
+              b: lightBgRGB.b,
+              alpha: 1,
+            },
+          })
+          .png()
           .toBuffer();
       }
+
+      // Flatten to remove any remaining transparency
+      iconBuffer = await sharp(iconBuffer)
+        .flatten({ background: lightBgRGB })
+        .toBuffer();
 
       await fs.promises.writeFile(outputPath, iconBuffer);
 
@@ -290,13 +358,52 @@ class IconGenerator {
       );
       const outputPath = path.join(iosPath, darkFilename);
 
-      // Use sharp directly for SVG to PNG conversion with transparency preserved
-      const iconBuffer = await sharp(logoPath)
-        .resize(iconConfig.size, iconConfig.size, {
-          fit: "contain",
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        })
-        .png()
+      // Calculate size with padding
+      const paddedSize = Math.round(iconConfig.size * (1 - padding * 2));
+      const paddingAmount = Math.round((iconConfig.size - paddedSize) / 2);
+
+      let iconBuffer;
+
+      if (padding > 0) {
+        // Apply padding by resizing smaller and extending with background
+        iconBuffer = await sharp(logoPath)
+          .resize(paddedSize, paddedSize, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .extend({
+            top: paddingAmount,
+            bottom: paddingAmount,
+            left: paddingAmount,
+            right: paddingAmount,
+            background: {
+              r: darkBgRGB.r,
+              g: darkBgRGB.g,
+              b: darkBgRGB.b,
+              alpha: 1,
+            },
+          })
+          .png()
+          .toBuffer();
+      } else {
+        // No padding - use original size with background
+        iconBuffer = await sharp(logoPath)
+          .resize(iconConfig.size, iconConfig.size, {
+            fit: "contain",
+            background: {
+              r: darkBgRGB.r,
+              g: darkBgRGB.g,
+              b: darkBgRGB.b,
+              alpha: 1,
+            },
+          })
+          .png()
+          .toBuffer();
+      }
+
+      // Flatten to remove any remaining transparency
+      iconBuffer = await sharp(iconBuffer)
+        .flatten({ background: darkBgRGB })
         .toBuffer();
 
       await fs.promises.writeFile(outputPath, iconBuffer);
@@ -366,14 +473,36 @@ class IconGenerator {
     for (const splashConfig of splashSizes) {
       const outputPath = path.join(splashPath, splashConfig.filename);
 
-      // Use sharp directly for SVG to PNG conversion
-      const splashBuffer = await sharp(logoPath)
-        .resize(splashConfig.size, splashConfig.size, {
-          fit: "contain",
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        })
-        .png()
-        .toBuffer();
+      // Apply padding to splash screen logos too
+      const paddedSize = Math.round(splashConfig.size * (1 - padding * 2));
+      const paddingAmount = Math.round((splashConfig.size - paddedSize) / 2);
+
+      let splashBuffer;
+
+      if (padding > 0) {
+        splashBuffer = await sharp(logoPath)
+          .resize(paddedSize, paddedSize, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .extend({
+            top: paddingAmount,
+            bottom: paddingAmount,
+            left: paddingAmount,
+            right: paddingAmount,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .png()
+          .toBuffer();
+      } else {
+        splashBuffer = await sharp(logoPath)
+          .resize(splashConfig.size, splashConfig.size, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .png()
+          .toBuffer();
+      }
 
       await fs.promises.writeFile(outputPath, splashBuffer);
       console.log(
@@ -391,8 +520,26 @@ class IconGenerator {
     console.log(`🤖 Generating Android adaptive icons...`);
 
     const results = { foreground: [], background: [], playStore: null };
+
+    // Use light mode background color for Android (Android doesn't support separate light/dark adaptive icons)
     const backgroundColor =
-      brandConfig.branding?.iconBackgroundColor || "#ffffff";
+      brandConfig.branding?.iconBackgroundColorLight ||
+      brandConfig.branding?.iconBackgroundColor ||
+      "#ffffff";
+
+    // Get padding from config (default to 0 for no padding)
+    // Clamp padding between 0 and 0.4 (0% to 40%) to prevent negative sizes
+    let padding = brandConfig.branding?.iconPadding || 0;
+    if (padding < 0) padding = 0;
+    if (padding > 0.4) {
+      console.warn(
+        `⚠️  Icon padding ${padding} is too large, clamping to 0.4 (40%)`
+      );
+      padding = 0.4;
+    }
+
+    console.log(`  Android background color: ${backgroundColor}`);
+    console.log(`  Icon padding: ${(padding * 100).toFixed(1)}%`);
 
     // Generate Play Store icon
     console.log(`📦 Generating Play Store icon...`);
@@ -407,9 +554,19 @@ class IconGenerator {
     // Parse background color
     const bgColor = this.parseColor(backgroundColor);
 
+    // Calculate size with padding for Play Store icon
+    const playStorePaddedSize = Math.round(512 * (1 - padding * 2));
+
     const playStoreBuffer = await sharp(logoPath)
-      .resize(512, 512, {
+      .resize(playStorePaddedSize, playStorePaddedSize, {
         fit: "contain",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .extend({
+        top: Math.round((512 - playStorePaddedSize) / 2),
+        bottom: Math.round((512 - playStorePaddedSize) / 2),
+        left: Math.round((512 - playStorePaddedSize) / 2),
+        right: Math.round((512 - playStorePaddedSize) / 2),
         background: bgColor,
       })
       .flatten({ background: bgColor })
@@ -424,6 +581,19 @@ class IconGenerator {
     console.log(`🎨 Generating adaptive icon foreground layers...`);
     for (const [densityKey, density] of Object.entries(ANDROID_DENSITIES)) {
       const size = Math.round(ADAPTIVE_ICON_SIZE * density.scale);
+
+      // Android adaptive icons: 108dp total, but only 72dp (66.67%) is safe zone
+      // We need to fit the logo within the safe zone, then add user padding on top
+      const safeZoneRatio = 72 / 108; // 0.6667
+      const safeZoneSize = Math.round(size * safeZoneRatio);
+
+      // Apply user padding within the safe zone
+      const paddedSize = Math.round(safeZoneSize * (1 - padding * 2));
+      const paddingAmount = Math.round((safeZoneSize - paddedSize) / 2);
+
+      // Calculate total padding to center within full 108dp canvas
+      const totalPadding = Math.round((size - safeZoneSize) / 2);
+
       const outputPath = path.join(
         this.projectRoot,
         "android",
@@ -435,17 +605,54 @@ class IconGenerator {
         "ic_launcher_foreground.webp"
       );
 
-      const foregroundBuffer = await sharp(logoPath)
-        .resize(size, size, {
-          fit: "contain",
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        })
-        .webp({ quality: 90 })
-        .toBuffer();
+      let foregroundBuffer;
+
+      if (padding > 0) {
+        // Resize to padded size, extend to safe zone, then extend to full size
+        foregroundBuffer = await sharp(logoPath)
+          .resize(paddedSize, paddedSize, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .extend({
+            top: paddingAmount,
+            bottom: paddingAmount,
+            left: paddingAmount,
+            right: paddingAmount,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .extend({
+            top: totalPadding,
+            bottom: totalPadding,
+            left: totalPadding,
+            right: totalPadding,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .webp({ quality: 90 })
+          .toBuffer();
+      } else {
+        // No user padding - just fit within safe zone
+        foregroundBuffer = await sharp(logoPath)
+          .resize(safeZoneSize, safeZoneSize, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .extend({
+            top: totalPadding,
+            bottom: totalPadding,
+            left: totalPadding,
+            right: totalPadding,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .webp({ quality: 90 })
+          .toBuffer();
+      }
 
       await fs.promises.writeFile(outputPath, foregroundBuffer);
       results.foreground.push({ density: densityKey, size, path: outputPath });
-      console.log(`  ✅ Foreground ${densityKey}: ${size}×${size}`);
+      console.log(
+        `  ✅ Foreground ${densityKey}: ${size}×${size} (safe zone: ${safeZoneSize}×${safeZoneSize})`
+      );
     }
 
     // Generate background layers for all densities
@@ -487,6 +694,16 @@ class IconGenerator {
 
     // Generate splash screen drawables
     console.log(`🎭 Generating Android splash screen drawables...`);
+
+    // Get splash background color (use light mode for Android)
+    const splashBgColor =
+      brandConfig.branding?.iconBackgroundColorLight ||
+      brandConfig.branding?.iconBackgroundColor ||
+      "#ffffff";
+    const splashBgRGB = this.parseColor(splashBgColor);
+
+    console.log(`  Splash background color: ${splashBgColor}`);
+
     const splashSizes = {
       mdpi: 200,
       hdpi: 300,
@@ -508,16 +725,36 @@ class IconGenerator {
         "splashscreen_logo.png"
       );
 
+      // For splash screens, use a more conservative approach
+      // Add standard padding (20%) plus user padding for better visual balance
+      const standardPadding = 0.2; // 20% standard padding for splash screens
+      const totalPadding = Math.min(standardPadding + padding, 0.45); // Cap at 45%
+      const paddedSize = Math.round(size * (1 - totalPadding * 2));
+      const paddingAmount = Math.round((size - paddedSize) / 2);
+
+      // Splash screen logos should have transparent background
+      // The splash screen itself provides the background color
       const splashBuffer = await sharp(logoPath)
-        .resize(size, size, {
+        .resize(paddedSize, paddedSize, {
           fit: "contain",
+          background: { r: 0, g: 0, b: 0, alpha: 0 },
+        })
+        .extend({
+          top: paddingAmount,
+          bottom: paddingAmount,
+          left: paddingAmount,
+          right: paddingAmount,
           background: { r: 0, g: 0, b: 0, alpha: 0 },
         })
         .png()
         .toBuffer();
 
       await fs.promises.writeFile(outputPath, splashBuffer);
-      console.log(`  ✅ Splash ${densityKey}: ${size}×${size}`);
+      console.log(
+        `  ✅ Splash ${densityKey}: ${size}×${size} (padding: ${(
+          totalPadding * 100
+        ).toFixed(1)}%)`
+      );
     }
 
     return results;
@@ -588,6 +825,8 @@ class IconGenerator {
     console.log(`🌐 Generating Expo/Web assets...`);
 
     const results = {};
+    const padding = brandConfig.branding?.iconPadding || 0;
+
     const assets = [
       { name: "icon", size: 512, filename: "icon.png" },
       { name: "adaptiveIcon", size: 512, filename: "adaptive-icon.png" },
@@ -610,13 +849,40 @@ class IconGenerator {
           ? { r: 255, g: 255, b: 255, alpha: 1 }
           : { r: 0, g: 0, b: 0, alpha: 0 };
 
-      let assetBuffer = await sharp(logoPath)
-        .resize(asset.size, asset.size, {
-          fit: asset.name === "splashIcon" ? "contain" : "cover",
-          background: bgColor,
-        })
-        .png()
-        .toBuffer();
+      // Calculate padded size for icons (not splash)
+      const shouldPad = asset.name === "icon" || asset.name === "adaptiveIcon";
+      const paddedSize = shouldPad
+        ? Math.round(asset.size * (1 - padding * 2))
+        : asset.size;
+
+      let assetBuffer;
+
+      if (shouldPad && padding > 0) {
+        // Resize to padded size, then extend with background
+        assetBuffer = await sharp(logoPath)
+          .resize(paddedSize, paddedSize, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .extend({
+            top: Math.round((asset.size - paddedSize) / 2),
+            bottom: Math.round((asset.size - paddedSize) / 2),
+            left: Math.round((asset.size - paddedSize) / 2),
+            right: Math.round((asset.size - paddedSize) / 2),
+            background: bgColor,
+          })
+          .png()
+          .toBuffer();
+      } else {
+        // No padding - use original logic
+        assetBuffer = await sharp(logoPath)
+          .resize(asset.size, asset.size, {
+            fit: asset.name === "splashIcon" ? "contain" : "cover",
+            background: bgColor,
+          })
+          .png()
+          .toBuffer();
+      }
 
       // Flatten favicon to remove transparency
       if (asset.name === "favicon") {

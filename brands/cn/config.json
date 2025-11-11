@@ -97,7 +97,8 @@
     "splash": "./assets/splash.png",
     "iconBackgroundColor": "#ffffff",
     "iconBackgroundColorLight": "#ffffff",
-    "iconBackgroundColorDark": "#1a1a1a"
+    "iconBackgroundColorDark": "#1a1a1a",
+    "iconPadding": 0.15
   },
   "onboarding": {
     "editorQuote": ""
