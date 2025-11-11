@@ -2,7 +2,8 @@
 
 const fs = require("fs");
 const path = require("path");
-const AssetGenerator = require("./assetGenerator");
+const IconGenerator = require("./iconGenerator");
+const AssetGeneratorLegacy = require("./assetGenerator.legacy");
 
 // Get project root directory
 const projectRoot = process.cwd();
@@ -420,41 +421,57 @@ const addGoogleServiceInfoToXcode = () => {
 
 copyFirebaseConfig();
 
-// Generate brand assets from SVG
+// Generate brand assets from SVG using new icon generator
 const generateBrandAssets = async () => {
-  console.log(`🎨 Generating brand assets from SVG...`);
+  console.log(`🎨 Generating brand assets using Expo's icon utilities...`);
 
   try {
-    const assetGenerator = new AssetGenerator(projectRoot);
+    const iconGenerator = new IconGenerator(projectRoot);
 
     // Clean old assets first
-    await assetGenerator.cleanOldAssets(brand);
+    await iconGenerator.cleanOldAssets(brand);
 
-    // Generate all assets from brand logo SVG
-    const results = await assetGenerator.generateBrandAssets(
-      brand,
-      brandConfig
-    );
+    // Generate all icons using Expo's utilities
+    const results = await iconGenerator.generateAllIcons(brand, brandConfig);
 
     console.log(
-      `✅ Generated ${assetGenerator.getTotalAssetCount(results)} assets from ${
-        brandConfig.displayName
-      } logo`
+      `✅ Successfully generated all icons for ${brandConfig.displayName}`
     );
     console.log(
-      `📱 iOS: ${results.ios.appIcons.length} app icons + ${results.ios.splashLogos.length} splash logos`
+      `📱 iOS: ${results.ios.light.length} light icons + ${results.ios.dark.length} dark icons`
     );
     console.log(
-      `🤖 Android: 1 Play Store icon + ${results.android.mipmaps.length} mipmaps + ${results.android.drawables.length} drawables`
+      `🤖 Android: ${results.android.foreground.length} foreground + ${results.android.background.length} background layers`
     );
     console.log(`🌐 Web/Expo: ${Object.keys(results.expo).length} assets`);
 
     return results;
   } catch (error) {
-    console.error(`❌ Asset generation failed: ${error.message}`);
-    console.error(`⚠️  Falling back to existing PNG assets`);
-    // Don't exit - continue with existing assets
-    return null;
+    console.error(`❌ New icon generation failed: ${error.message}`);
+    console.error(`⚠️  Attempting fallback to legacy asset generator...`);
+
+    try {
+      // Fallback to legacy generator
+      const assetGenerator = new AssetGeneratorLegacy(projectRoot);
+      await assetGenerator.cleanOldAssets(brand);
+      const results = await assetGenerator.generateBrandAssets(
+        brand,
+        brandConfig
+      );
+
+      console.log(`✅ Legacy asset generator succeeded`);
+      console.log(
+        `⚠️  Note: Legacy generator does not support adaptive icon backgrounds or dark mode icons`
+      );
+
+      return results;
+    } catch (legacyError) {
+      console.error(
+        `❌ Legacy asset generation also failed: ${legacyError.message}`
+      );
+      console.error(`⚠️  Continuing with existing PNG assets`);
+      return null;
+    }
   }
 };
 
