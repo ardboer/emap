@@ -95,7 +95,9 @@
     "logo": "./logo.svg",
     "icon": "./assets/icon.png",
     "splash": "./assets/splash.png",
-    "iconBackgroundColor": "#ffffff"
+    "iconBackgroundColor": "#ffffff",
+    "iconBackgroundColorLight": "#ffffff",
+    "iconBackgroundColorDark": "#1a1a1a"
   },
   "onboarding": {
     "editorQuote": ""
