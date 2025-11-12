@@ -31,6 +31,9 @@ export function useArticleAccess(articleId: string) {
   const isCheckingRef = useRef(false);
   const lastCheckKeyRef = useRef<string | null>(null);
   const [currentToken, setCurrentToken] = useState<string | null>(null);
+  const authStateChangeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   const [state, setState] = useState<{
     isChecking: boolean;
@@ -145,8 +148,26 @@ export function useArticleAccess(articleId: string) {
     // Force recheck when auth state changes
     // This handles both login (isAuthenticated becomes true) and logout (becomes false)
     console.log("🔐 Auth state changed, forcing access recheck");
-    checkAccess(true);
-  }, [isAuthenticated]);
+
+    // Clear any existing timer to prevent duplicate checks
+    if (authStateChangeTimerRef.current) {
+      clearTimeout(authStateChangeTimerRef.current);
+    }
+
+    // Add a small delay to ensure auth state has fully propagated
+    // This is especially important on Android after browser-based login
+    authStateChangeTimerRef.current = setTimeout(() => {
+      checkAccess(true);
+      authStateChangeTimerRef.current = null;
+    }, 200);
+
+    return () => {
+      if (authStateChangeTimerRef.current) {
+        clearTimeout(authStateChangeTimerRef.current);
+        authStateChangeTimerRef.current = null;
+      }
+    };
+  }, [isAuthenticated, checkAccess]);
 
   // Reset check key tracking when article changes
   useEffect(() => {

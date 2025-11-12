@@ -450,40 +450,52 @@ export async function refreshAccessToken(
 
     const url = `${apiBaseUrl}/wp-json/mbm-apps/v1/jwt-refresh-token/?hash=${apiHash}`;
 
-    console.log("🔄 Refreshing access token...");
+    console.log("🔄 [AUTH-SERVICE] Refreshing access token...");
+    console.log("📤 [AUTH-SERVICE] Request details:", {
+      url,
+      refreshTokenPrefix: refreshToken.substring(0, 20) + "...",
+      userId,
+      hash: apiHash,
+    });
 
-    // const response = await fetch(url, {
-    //   method: "GET",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    // });
+    const requestBody = {
+      hash: apiHash,
+      refresh_token: refreshToken,
+      user_id: userId,
+    };
+
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        hash: apiHash,
-        refresh_token: refreshToken,
-        user_id: userId,
-      }),
+      body: JSON.stringify(requestBody),
     });
+
+    console.log("📥 [AUTH-SERVICE] Response status:", response.status);
+
     const data = await response.json();
+    console.log("📥 [AUTH-SERVICE] Response data:", {
+      success: data.success,
+      hasAccessToken: !!data.access_token,
+      hasRefreshToken: !!data.refresh_token,
+      accessTokenPrefix: data.access_token?.substring(0, 20) + "...",
+      refreshTokenPrefix: data.refresh_token?.substring(0, 20) + "...",
+      message: data.message,
+      fullResponse: data,
+    });
 
     if (!response.ok) {
-      console.warn(
-        "⚠️ Token refresh failed:",
-        data.message || "Unknown error",
-        data
-      );
+      // Extract error message from various possible response formats
+      const errorMessage = data.error || data.message || "Token refresh failed";
+      console.warn("⚠️ [AUTH-SERVICE] Token refresh failed:", errorMessage);
       return {
         success: false,
-        message: data.message || "Token refresh failed",
+        message: errorMessage,
       };
     }
 
-    console.log("✅ Token refreshed successfully");
+    console.log("✅ [AUTH-SERVICE] Token refreshed successfully");
     return {
       success: true,
       access_token: data.access_token,

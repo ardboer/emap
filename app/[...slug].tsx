@@ -100,28 +100,36 @@ export default function DeepLinkHandler() {
               // Complete authentication with the tokens
               const success = await completeAuthentication(tokens);
 
-              if (success) {
-                console.log("✅ Authentication completed from deep link");
-                setError(null);
-              } else {
-                console.error("❌ Failed to complete authentication");
-                setError("Authentication failed");
-              }
+              console.log(
+                success
+                  ? "✅ Authentication completed from deep link"
+                  : "⚠️ Authentication validation failed, but tokens are stored"
+              );
+
+              setError(null);
+
+              // On Android, the browser opens this deep link screen
+              // We need to go back to the article where the paywall is
+              // On iOS, this doesn't happen as the browser session closes differently
+              console.log(
+                "🔗 Auth tokens processed - navigating back to article"
+              );
+              router.back();
+              return;
             } else {
               console.warn("⚠️ No tokens found in auth callback URL");
-              setError("Invalid authentication callback");
+              // No tokens - go back to article with paywall still showing
+              console.log("🔗 No tokens found - navigating back to article");
+              router.back();
+              return;
             }
           } catch (authError) {
             console.error("❌ Error processing auth callback:", authError);
-            setError("Authentication error");
+            // On error, go back to article
+            console.log("🔗 Auth error - navigating back to article");
+            router.back();
+            return;
           }
-
-          // Always redirect to home after handling auth
-          console.log("🔗 Redirecting to home after auth handling");
-          setTimeout(() => {
-            router.replace("/");
-          }, 1000);
-          return;
         }
 
         // Check if this is other auth-related paths that should open in browser

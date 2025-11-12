@@ -259,6 +259,9 @@ export const ExploreModuleWebView: React.FC<ExploreModuleWebViewProps> = ({
         sharedCookiesEnabled={Platform.OS === "android" ? true : undefined}
         nestedScrollEnabled={Platform.OS === "android" ? true : undefined}
         scalesPageToFit={Platform.OS === "android" ? false : undefined}
+        setSupportMultipleWindows={
+          Platform.OS === "android" ? false : undefined
+        }
       />
     </View>
   );

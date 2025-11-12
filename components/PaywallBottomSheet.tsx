@@ -48,17 +48,16 @@ export function PaywallBottomSheet({
   const translateY = React.useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
 
-  // Trigger access recheck when user successfully logs in
+  // Watch for authentication changes but DON'T call onClose()
+  // The paywall will hide automatically via the visible prop when shouldShowPaywall becomes false
+  // The useArticleAccess hook already watches isAuthenticated and triggers access recheck
   React.useEffect(() => {
-    // Only trigger if user authenticates while paywall is visible
     if (isAuthenticated && visible) {
       console.log(
-        "[PaywallBottomSheet] User authenticated, triggering access recheck"
+        "[PaywallBottomSheet] User authenticated - paywall will hide automatically via access recheck"
       );
-      // Notify parent component to recheck access
-      onAuthSuccess?.();
     }
-  }, [isAuthenticated, visible, onAuthSuccess]);
+  }, [isAuthenticated, visible]);
 
   // Log safe area insets for debugging
   React.useEffect(() => {

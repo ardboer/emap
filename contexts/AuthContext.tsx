@@ -19,6 +19,7 @@ import React, {
   useContext,
   useEffect,
   useReducer,
+  useRef,
 } from "react";
 import { Alert, Platform } from "react-native";
 
@@ -106,6 +107,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const refreshInProgressRef = useRef<Promise<boolean> | null>(null);
 
   /**
    * Convert UserInfo from auth service to User type
@@ -184,31 +186,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const refreshAccessToken = useCallback(async (): Promise<boolean> => {
     try {
-      console.log("🔄 Refreshing access token...");
+      console.log("🔄 [REFRESH] Starting token refresh...");
 
-      if (!state.refreshToken || !state.user?.userId) {
-        console.warn("⚠️ Missing refresh token or user ID");
+      // Get tokens directly from storage instead of state to avoid stale closure issues
+      const storedTokens = await getStoredTokens();
+      const storedUserInfo = await getUserInfo();
+
+      if (!storedTokens?.refresh_token || !storedUserInfo?.user_id) {
+        console.warn(
+          "⚠️ [REFRESH] Missing refresh token or user ID in storage"
+        );
         return false;
       }
 
+      console.log("🔑 [REFRESH] Using refresh token from storage:", {
+        refreshTokenPrefix: storedTokens.refresh_token.substring(0, 20) + "...",
+        userId: storedUserInfo.user_id,
+      });
+
       const result = await authRefreshToken(
-        state.refreshToken,
-        state.user.userId
+        storedTokens.refresh_token,
+        storedUserInfo.user_id
       );
 
       if (!result.success || !result.access_token || !result.refresh_token) {
-        console.error("❌ Token refresh failed:", result.message);
-        dispatch({
-          type: "SET_ERROR",
-          payload: result.message || "Failed to refresh token",
-        });
+        console.error("❌ [REFRESH] Token refresh failed:", result.message);
+
+        // If refresh token is invalid, clear all auth data and log out
+        if (result.message?.includes("invalid_refresh_token")) {
+          console.log("🚪 [REFRESH] Invalid refresh token, logging out user");
+          await authLogout();
+          dispatch({ type: "LOGOUT" });
+        } else {
+          dispatch({
+            type: "SET_ERROR",
+            payload: result.message || "Failed to refresh token",
+          });
+        }
         return false;
       }
+
+      console.log("✅ [REFRESH] Received new tokens from server:", {
+        accessTokenPrefix: result.access_token.substring(0, 20) + "...",
+        refreshTokenPrefix: result.refresh_token.substring(0, 20) + "...",
+        tokensChanged: result.refresh_token !== storedTokens.refresh_token,
+      });
 
       // Store the new tokens in AsyncStorage
       await storeTokens({
         access_token: result.access_token,
         refresh_token: result.refresh_token,
+      });
+
+      console.log("💾 [REFRESH] New tokens stored in AsyncStorage");
+
+      // Verify tokens were stored correctly
+      const verifyTokens = await getStoredTokens();
+      console.log("🔍 [REFRESH] Verification - tokens in storage:", {
+        accessTokenPrefix: verifyTokens?.access_token.substring(0, 20) + "...",
+        refreshTokenPrefix:
+          verifyTokens?.refresh_token.substring(0, 20) + "...",
+        matchesNewTokens: verifyTokens?.refresh_token === result.refresh_token,
       });
 
       // Update tokens in state
@@ -220,7 +258,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      console.log("✅ Access token refreshed and stored successfully");
+      console.log(
+        "✅ [REFRESH] Access token refreshed and stored successfully"
+      );
       return true;
     } catch (error) {
       console.error("❌ Error refreshing token:", error);
@@ -231,7 +271,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       return false;
     }
-  }, [state.refreshToken, state.user?.userId]);
+  }, []); // Remove dependencies on state values to prevent stale closure issues
 
   /**
    * Get a valid access token, refreshing if expired or expiring soon
@@ -252,17 +292,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "🔄 [GET-VALID-TOKEN] Token expired/expiring, attempting refresh..."
       );
 
-      // Attempt to refresh the token
-      const success = await refreshAccessToken();
-
-      if (!success) {
-        console.error("❌ [GET-VALID-TOKEN] Token refresh failed");
-        return null;
+      // If a refresh is already in progress, wait for it to complete
+      if (refreshInProgressRef.current) {
+        console.log(
+          "⏳ [GET-VALID-TOKEN] Refresh already in progress, waiting..."
+        );
+        await refreshInProgressRef.current;
+        console.log(
+          "✅ [GET-VALID-TOKEN] Refresh completed, fetching new token from storage"
+        );
+        // Get the fresh token from storage to avoid stale closure value
+        const tokens = await getStoredTokens();
+        return tokens?.access_token || null;
       }
 
-      console.log("✅ [GET-VALID-TOKEN] Token refreshed successfully");
-      // Return the newly refreshed token from state
-      return state.accessToken;
+      // Start a new refresh and store the promise
+      refreshInProgressRef.current = refreshAccessToken();
+
+      try {
+        // Attempt to refresh the token
+        const success = await refreshInProgressRef.current;
+
+        if (!success) {
+          console.error("❌ [GET-VALID-TOKEN] Token refresh failed");
+          return null;
+        }
+
+        console.log(
+          "✅ [GET-VALID-TOKEN] Token refreshed successfully, fetching from storage"
+        );
+        // Get the fresh token from storage to avoid stale closure value
+        const tokens = await getStoredTokens();
+        return tokens?.access_token || null;
+      } finally {
+        // Clear the refresh promise
+        refreshInProgressRef.current = null;
+      }
     }
 
     console.log("✅ [GET-VALID-TOKEN] Token is valid, returning current token");
