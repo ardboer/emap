@@ -19,7 +19,7 @@ import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { displayAdManager } from "@/services/displayAdManager";
 import { trackArticleView } from "@/services/miso";
 import { Article, StructuredContentNode } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -71,6 +71,7 @@ export default function ArticleScreen() {
     response: accessResponse,
   } = useArticleAccess(id || "");
   const [paywallVisible, setPaywallVisible] = useState(false);
+  const [showAuthorBio, setShowAuthorBio] = useState(false);
 
   // Initialize display ad manager
   useEffect(() => {
@@ -136,6 +137,9 @@ export default function ArticleScreen() {
         const fullArticle = await fetchSingleArticle(id);
 
         setArticle(fullArticle);
+
+        // Debug: Check if author_data is present
+        console.log("Article loaded - author_data:", fullArticle.author_data);
 
         // Track screen_view with source parameter
         analyticsService.logScreenView("Article Detail", "ArticleScreen", {
@@ -570,7 +574,39 @@ export default function ArticleScreen() {
               },
             ]}
           >
+            {/* Author and Date Row */}
             <View style={styles.metaContainer}>
+              {/* Author Info - Left Side */}
+              {article.author_data && article.author_data.last_name ? (
+                <TouchableOpacity
+                  style={styles.authorInfoCompact}
+                  onPress={() => setShowAuthorBio(!showAuthorBio)}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons
+                    name="account-edit"
+                    size={18}
+                    color={Colors[colorScheme].contentMetaText}
+                    style={styles.authorIconCompact}
+                  />
+                  <Text
+                    style={[
+                      styles.authorNameCompact,
+                      {
+                        color: Colors[colorScheme].contentMetaText,
+                        fontFamily: brandConfig?.theme.fonts.primarySemiBold,
+                      },
+                    ]}
+                  >
+                    {article.author_data.first_name}{" "}
+                    {article.author_data.last_name}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <View />
+              )}
+
+              {/* Date - Right Side */}
               <Text
                 style={[
                   styles.timestamp,
@@ -585,6 +621,26 @@ export default function ArticleScreen() {
                   : article.timestamp?.toUpperCase() || "RECENTLY"}
               </Text>
             </View>
+
+            {/* Author Bio - Expandable */}
+            {article.author_data &&
+              article.author_data.last_name &&
+              showAuthorBio &&
+              article.author_data.bio && (
+                <View style={styles.authorBioContainer}>
+                  <Text
+                    style={[
+                      styles.authorBio,
+                      {
+                        color: Colors[colorScheme].contentMetaText,
+                        fontFamily: brandConfig?.theme.fonts.primary,
+                      },
+                    ]}
+                  >
+                    {article.author_data.bio}
+                  </Text>
+                </View>
+              )}
 
             <Text
               style={[
@@ -753,13 +809,41 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   metaContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 18,
+  },
+  authorInfoCompact: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  authorIconCompact: {
+    marginRight: 6,
+  },
+  authorNameCompact: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "600" as "600",
   },
   timestamp: {
     fontSize: 12,
     lineHeight: 12,
     fontWeight: "500" as "500",
     textTransform: "uppercase" as "uppercase",
+  },
+  authorBioContainer: {
+    marginBottom: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+    borderRadius: 8,
+  },
+  authorBio: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.8,
   },
   title: {
     fontSize: 22,

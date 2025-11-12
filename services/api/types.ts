@@ -43,6 +43,12 @@ export interface PostApiResponse {
   };
   featured_media: number;
   link: string;
+  author_data?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    bio: string;
+  };
 }
 
 /**

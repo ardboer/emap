@@ -340,7 +340,7 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
     }
 
     const postData: PostApiResponse = await response.json();
-    // console.log("Single article response:", postData);
+    console.log("Single article response - author_data:", postData.author_data);
 
     // Extract image URL from featured_media if available
     let imageUrl = "https://picsum.photos/800/600?random=1";
@@ -376,6 +376,7 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
       publishDate: postData.date, // Raw ISO date for detail view
       category,
       link: postData.link, // Include the shareable link from API
+      author_data: postData.author_data, // Include author information if available
     };
 
     // Cache the result

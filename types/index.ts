@@ -1,3 +1,10 @@
+export interface AuthorData {
+  id: string;
+  first_name: string;
+  last_name: string;
+  bio: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -14,6 +21,7 @@ export interface Article {
   isRecommended?: boolean; // Flag for recommended articles
   isNativeAd?: boolean; // Flag for native ad items
   nativeAdData?: NativeAdData; // Ad-specific data
+  author_data?: AuthorData; // Author information
 }
 
 export interface NativeAdData {
