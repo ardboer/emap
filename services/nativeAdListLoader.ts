@@ -132,10 +132,23 @@ class NativeAdListLoader {
 
       return { ad };
     } catch (error: any) {
-      console.error(
-        `❌ Failed to load native ad for ${viewType} at position ${position}:`,
-        error
-      );
+      // Check if this is a "no-fill" error (no ad available)
+      const isNoFillError =
+        error?.message?.includes("no-fill") ||
+        error?.message?.includes("No ad to show") ||
+        error?.code === "no-fill";
+
+      // Only log non-no-fill errors as these are expected and not actual issues
+      if (!isNoFillError) {
+        console.error(
+          `❌ Failed to load native ad for ${viewType} at position ${position}:`,
+          error
+        );
+      } else {
+        console.log(
+          `ℹ️ No ad available for ${viewType} at position ${position} (no-fill)`
+        );
+      }
 
       // Log failure
       analyticsService.logEvent("native_ad_list_failed", {

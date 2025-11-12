@@ -157,10 +157,23 @@ export function NativeAdListItem({
         );
       }
     } catch (error: any) {
-      console.error(
-        `❌ Error loading ad for ${viewType} at position ${position}:`,
-        error
-      );
+      // Check if this is a "no-fill" error (no ad available)
+      const isNoFillError =
+        error?.message?.includes("no-fill") ||
+        error?.message?.includes("No ad to show") ||
+        error?.code === "no-fill";
+
+      // Only log non-no-fill errors as these are expected and not actual issues
+      if (!isNoFillError) {
+        console.error(
+          `❌ Error loading ad for ${viewType} at position ${position}:`,
+          error
+        );
+      } else {
+        console.log(
+          `ℹ️ No ad available for ${viewType} at position ${position} (no-fill)`
+        );
+      }
       const loadTime = Date.now() - loadStartTime;
       setLoadTimeMs(loadTime);
       setHasError(true);
