@@ -218,6 +218,11 @@
       "android": "ca-app-pub-3940256099942544/6300978111"
     }
   },
+  "exploreModule": {
+    "enabled": false,
+    "afterParagraph": 3,
+    "showWhenNotLoggedIn": true
+  },
   "layout": {
     "maxContentWidth": 800
   }

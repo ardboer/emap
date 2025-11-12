@@ -8,6 +8,7 @@ import {
   getUserInfo,
   isTokenExpired,
   parseTokensFromUrl,
+  storeTokens,
   UserInfo,
 } from "@/services/auth";
 import { crashlyticsService } from "@/services/crashlytics";
@@ -204,6 +205,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
 
+      // Store the new tokens in AsyncStorage
+      await storeTokens({
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
+      });
+
       // Update tokens in state
       dispatch({
         type: "SET_TOKENS",
@@ -213,7 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      console.log("✅ Access token refreshed successfully");
+      console.log("✅ Access token refreshed and stored successfully");
       return true;
     } catch (error) {
       console.error("❌ Error refreshing token:", error);

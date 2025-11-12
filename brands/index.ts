@@ -138,6 +138,11 @@ export interface BrandConfig {
   };
   nativeAds?: NativeAdsConfig;
   displayAds?: DisplayAdsConfig;
+  exploreModule?: {
+    enabled: boolean;
+    afterParagraph: number;
+    showWhenNotLoggedIn: boolean;
+  };
   layout?: {
     maxContentWidth?: number; // Maximum width for list content on tablets (default: 800)
     horizontalBlocks?: string; // Comma-separated list of block indices to render horizontally (e.g., "1,4,5")

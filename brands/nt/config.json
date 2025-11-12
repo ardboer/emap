@@ -265,6 +265,11 @@
       ]
     }
   },
+  "exploreModule": {
+    "enabled": true,
+    "afterParagraph": 3,
+    "showWhenNotLoggedIn": true
+  },
   "layout": {
     "maxContentWidth": 800,
     "horizontalBlocks": ""

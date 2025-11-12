@@ -1,6 +1,8 @@
 import { DisplayAd } from "@/components/DisplayAd";
+import { ExploreModuleWebView } from "@/components/ExploreModuleWebView";
 import { FadeInImage } from "@/components/FadeInImage";
 import { getMaxContentWidth, isTablet } from "@/constants/Layout";
+import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useImageViewer } from "@/hooks/useImageViewer";
@@ -1072,6 +1074,9 @@ const RichContentRendererInternal: React.FC<
   // Get brand configuration for display ads
   const brandConfig = brandManager.getCurrentBrand();
 
+  // Get authentication state for explore module
+  const { user, isAuthenticated } = useAuth();
+
   // Initialize display ad manager with brand config
   useEffect(() => {
     if (brandConfig.displayAds) {
@@ -1088,7 +1093,13 @@ const RichContentRendererInternal: React.FC<
   const adPlacements =
     displayAdManager.calculateArticleAdPlacements(totalParagraphs);
 
-  // Count paragraphs to determine where to inject ads
+  // Determine if explore module should be shown
+  const exploreModuleConfig = brandConfig.exploreModule;
+  const shouldShowExploreModule =
+    exploreModuleConfig?.enabled &&
+    (exploreModuleConfig.showWhenNotLoggedIn || isAuthenticated);
+
+  // Count paragraphs to determine where to inject ads and explore module
   let paragraphCount = 0;
 
   return (
@@ -1098,12 +1109,19 @@ const RichContentRendererInternal: React.FC<
         if (node.typename === "HTMLElement" && node.type === "p") {
           paragraphCount++;
 
+          // Check if we should inject explore module after this paragraph
+          const shouldInjectExploreModule =
+            shouldShowExploreModule &&
+            exploreModuleConfig &&
+            paragraphCount === exploreModuleConfig.afterParagraph;
+
           // Check if we should inject an ad after this paragraph
           const adPlacement = adPlacements.find(
             (placement) => placement.position === paragraphCount
           );
 
-          if (adPlacement) {
+          // If we need to inject explore module or ad, return with fragment
+          if (shouldInjectExploreModule || adPlacement) {
             return (
               <React.Fragment key={index}>
                 <RichContentNode
@@ -1114,15 +1132,25 @@ const RichContentRendererInternal: React.FC<
                   isBlockquote={isBlockquote}
                   isLink={isLink}
                 />
-                <DisplayAd
-                  context="article_detail"
-                  size={adPlacement.size}
-                  onAdLoaded={() =>
-                    console.log(
-                      `Article ad loaded at paragraph ${paragraphCount}`
-                    )
-                  }
-                />
+                {shouldInjectExploreModule && (
+                  <ExploreModuleWebView
+                    baseUrl={brandConfig.apiConfig.baseUrl}
+                    hash={brandConfig.apiConfig.hash}
+                    articleId={articleId || ""}
+                    userId={user?.userId}
+                  />
+                )}
+                {adPlacement && (
+                  <DisplayAd
+                    context="article_detail"
+                    size={adPlacement.size}
+                    onAdLoaded={() =>
+                      console.log(
+                        `Article ad loaded at paragraph ${paragraphCount}`
+                      )
+                    }
+                  />
+                )}
               </React.Fragment>
             );
           }
