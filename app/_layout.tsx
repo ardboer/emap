@@ -298,6 +298,13 @@ function RootLayoutContent() {
                     headerShown: false,
                   }}
                 />
+                <Stack.Screen
+                  name="webview"
+                  options={{
+                    headerShown: false,
+                    title: "Web Content",
+                  }}
+                />
                 <Stack.Screen name="+not-found" />
               </Stack>
               <StatusBar style="auto" />

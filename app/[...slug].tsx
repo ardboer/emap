@@ -20,23 +20,19 @@ export default function DeepLinkHandler() {
 
   useEffect(() => {
     const handleDeepLink = async () => {
+      // Get the slug from params - declare outside try block so it's accessible in catch
+      const slugArray = params.slug;
+
+      if (!slugArray || (Array.isArray(slugArray) && slugArray.length === 0)) {
+        console.log("🔗 No slug found, redirecting to home");
+        router.replace("/");
+        return;
+      }
+
+      // Join the slug segments
+      const slug = Array.isArray(slugArray) ? slugArray.join("/") : slugArray;
+
       try {
-        // Get the slug from params
-        // params.slug will be an array of path segments
-        const slugArray = params.slug;
-
-        if (
-          !slugArray ||
-          (Array.isArray(slugArray) && slugArray.length === 0)
-        ) {
-          console.log("🔗 No slug found, redirecting to home");
-          router.replace("/");
-          return;
-        }
-
-        // Join the slug segments
-        const slug = Array.isArray(slugArray) ? slugArray.join("/") : slugArray;
-
         console.log("🔗 ========================================");
         console.log("🔗 Deep link catch-all route activated");
         console.log("🔗 Current slug from URL:", slug);
@@ -176,12 +172,19 @@ export default function DeepLinkHandler() {
         router.replace(`/article/${id}`);
       } catch (error) {
         console.error("❌ Error resolving deep link:", error);
-        setError("Unable to load article");
+        console.log("🔗 Article not found, falling back to WebView");
 
-        // Redirect to home after showing error briefly
-        setTimeout(() => {
-          router.replace("/");
-        }, 2000);
+        // Instead of redirecting to home, open the original URL in a WebView
+        // Reconstruct the full HTTPS URL
+        const brandConfig = brandManager.getCurrentBrand();
+        const fullUrl = `https://${brandConfig.domain}/${slug}`;
+
+        console.log("🔗 Opening in WebView:", fullUrl);
+
+        // Navigate to a WebView route with the URL as a parameter
+        // We'll encode the URL to safely pass it as a route parameter
+        const encodedUrl = encodeURIComponent(fullUrl);
+        router.replace(`/webview?url=${encodedUrl}`);
       }
     };
 
@@ -197,10 +200,11 @@ export default function DeepLinkHandler() {
     );
   }
 
+  // Don't render anything - just show a blank screen while resolving
+  // This prevents the "flashing" effect when navigating from WebView links
   return (
     <ThemedView style={styles.container}>
       <ActivityIndicator size="large" color="#00AECA" />
-      <ThemedText style={styles.loadingText}>Loading article...</ThemedText>
     </ThemedView>
   );
 }

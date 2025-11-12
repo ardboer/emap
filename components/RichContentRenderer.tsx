@@ -9,10 +9,13 @@ import { useImageViewer } from "@/hooks/useImageViewer";
 import { brandManager } from "@/services/api";
 import { displayAdManager } from "@/services/displayAdManager";
 import { StructuredContentNode } from "@/types";
-import React, { useEffect } from "react";
+import {
+  getLinkInterceptorConfig,
+  handleLinkPress,
+} from "@/utils/linkInterceptor";
+import React, { useEffect, useMemo } from "react";
 import {
   Dimensions,
-  Linking,
   Text as RNText,
   StyleSheet,
   TouchableOpacity,
@@ -294,14 +297,18 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
   isBlockquote = false,
   isLink = false,
 }) => {
-  const { colors, fonts } = useBrandConfig();
+  const { colors, fonts, brandConfig } = useBrandConfig();
   const colorScheme = useColorScheme();
   const themeColors = colors?.[colorScheme ?? "light"];
 
-  const handleLinkPress = (url: string) => {
-    Linking.openURL(url).catch((err) =>
-      console.error("Failed to open URL:", err)
-    );
+  // Get link interceptor configuration
+  const linkInterceptorConfig = useMemo(
+    () => getLinkInterceptorConfig(brandConfig),
+    [brandConfig]
+  );
+
+  const handleLinkPressInternal = (url: string) => {
+    handleLinkPress(url, linkInterceptorConfig);
   };
 
   // Handle text nodes
@@ -592,7 +599,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
               {renderInlineContent(
                 node.children,
                 themeColors?.linkColor || "#007AFF",
-                handleLinkPress
+                handleLinkPressInternal
               )}
             </ThemedText>
           );
@@ -877,7 +884,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                     ]}
                     onPress={() => {
                       if (imageData.linkUri) {
-                        handleLinkPress(imageData.linkUri);
+                        handleLinkPressInternal(imageData.linkUri);
                       } else {
                         onImagePress(imageData.imageUri!, imageData.caption);
                       }
@@ -931,7 +938,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
       <RNText
         key={index}
         style={[styles.link, { color: themeColors?.linkColor || "#007AFF" }]}
-        onPress={() => node.href && handleLinkPress(node.href)}
+        onPress={() => node.href && handleLinkPressInternal(node.href)}
       >
         {linkText}
       </RNText>

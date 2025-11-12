@@ -5,6 +5,11 @@ import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { analyticsService } from "@/services/analytics";
 import { getUserInfo } from "@/services/auth";
+import {
+  createWebViewLinkInterceptor,
+  getLinkInterceptorConfig,
+  handleLinkPress,
+} from "@/utils/linkInterceptor";
 import { router, useFocusEffect } from "expo-router";
 import React, {
   useCallback,
@@ -64,6 +69,18 @@ export default function AskScreen() {
     console.log("Ask webviewUrl", urlWithUserId);
     return urlWithUserId;
   }, [brandConfig, userId]);
+
+  // Get link interceptor configuration
+  const linkInterceptorConfig = useMemo(
+    () => getLinkInterceptorConfig(brandConfig),
+    [brandConfig]
+  );
+
+  // Generate link interceptor JavaScript
+  const linkInterceptorJS = useMemo(
+    () => createWebViewLinkInterceptor(linkInterceptorConfig.domains),
+    [linkInterceptorConfig.domains]
+  );
 
   // Track screen view when tab is focused
   useFocusEffect(
@@ -192,11 +209,54 @@ export default function AskScreen() {
                 }`
               );
             }}
+            onShouldStartLoadWithRequest={(request) => {
+              // Intercept navigation requests
+              const url = request.url;
+              console.log("🔗 Ask WebView navigation request:", url);
+
+              // Allow the initial load
+              if (url === webViewUrl) {
+                return true;
+              }
+
+              // Check if it's a domain link
+              if (
+                linkInterceptorConfig.domains.some((domain) => {
+                  const normalizedDomain = domain.replace(
+                    /^(https?:\/\/)?(www\.)?/,
+                    ""
+                  );
+                  return url.includes(normalizedDomain);
+                })
+              ) {
+                console.log(
+                  "🔗 Domain link detected in navigation, intercepting"
+                );
+                // Prevent WebView navigation and handle in React Native
+                handleLinkPress(url, linkInterceptorConfig);
+                return false;
+              }
+
+              // Allow other navigations (external links will open in browser via handleLinkPress)
+              handleLinkPress(url, linkInterceptorConfig);
+              return false;
+            }}
             onMessage={(event) => {
-              // Android only: Listen for content height changes
-              if (Platform.OS === "android") {
-                try {
-                  const data = JSON.parse(event.nativeEvent.data);
+              try {
+                const data = JSON.parse(event.nativeEvent.data);
+
+                // Handle link press from WebView
+                if (data.type === "linkPress" && data.url) {
+                  console.log(
+                    "🔗 Ask WebView: Link pressed in WebView:",
+                    data.url
+                  );
+                  handleLinkPress(data.url, linkInterceptorConfig);
+                  return;
+                }
+
+                // Android only: Listen for content height changes
+                if (Platform.OS === "android") {
                   if (data.type === "contentHeight" && data.height) {
                     const minHeight = 600;
                     const newHeight = Math.max(minHeight, data.height + 50);
@@ -210,9 +270,9 @@ export default function AskScreen() {
                       setWebViewHeight(newHeight);
                     }
                   }
-                } catch (error) {
-                  // Ignore parsing errors
                 }
+              } catch (error) {
+                // Ignore parsing errors
               }
             }}
             injectedJavaScript={
@@ -250,9 +310,16 @@ export default function AskScreen() {
             subtree: true
           });
           
+          // Inject link interceptor
+          ${linkInterceptorJS}
+          
           true;
         `
-                : undefined
+                : `
+          // iOS: Inject link interceptor only
+          ${linkInterceptorJS}
+          true;
+        `
             }
             startInLoadingState={false}
             javaScriptEnabled={true}
@@ -318,6 +385,72 @@ export default function AskScreen() {
               }`
             );
           }}
+          onShouldStartLoadWithRequest={(request) => {
+            // Intercept navigation requests
+            const url = request.url;
+            console.log("🔗 Ask WebView (iOS) navigation request:", url);
+
+            // Allow the initial load and any loads before the WebView has fully loaded
+            if (!hasInitiallyLoaded.current) {
+              console.log("🔗 Allowing initial load");
+              return true;
+            }
+
+            // Allow navigation within the Ask feature (same base path)
+            if (webViewUrl && url.startsWith(webViewUrl.split("?")[0])) {
+              console.log("🔗 Allowing navigation within Ask feature");
+              return true;
+            }
+
+            // Only intercept if it's one of our app domains
+            try {
+              const isAppDomain = linkInterceptorConfig.domains.some(
+                (domain) => {
+                  const normalizedDomain = domain.replace(
+                    /^(https?:\/\/)?(www\.)?/,
+                    ""
+                  );
+                  const urlHost = new URL(url).hostname.replace(/^www\./, "");
+                  return urlHost === normalizedDomain;
+                }
+              );
+
+              if (isAppDomain) {
+                console.log("🔗 App domain link detected, intercepting");
+                // Prevent WebView navigation and handle in React Native
+                handleLinkPress(url, linkInterceptorConfig);
+                return false;
+              }
+            } catch (error) {
+              // Invalid URL, allow it
+              console.log("🔗 Invalid URL, allowing:", url);
+            }
+
+            // Allow all other URLs (third-party, ads, analytics, etc.)
+            console.log("🔗 Allowing external URL:", url);
+            return true;
+          }}
+          onMessage={(event) => {
+            try {
+              const data = JSON.parse(event.nativeEvent.data);
+
+              // Handle link press from WebView
+              if (data.type === "linkPress" && data.url) {
+                console.log(
+                  "🔗 Ask WebView (iOS): Link pressed in WebView:",
+                  data.url
+                );
+                handleLinkPress(data.url, linkInterceptorConfig);
+              }
+            } catch (error) {
+              // Ignore parsing errors
+            }
+          }}
+          injectedJavaScript={`
+            // iOS: Inject link interceptor
+            ${linkInterceptorJS}
+            true;
+          `}
           startInLoadingState={false}
           javaScriptEnabled={true}
           domStorageEnabled={true}

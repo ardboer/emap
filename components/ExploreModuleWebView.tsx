@@ -1,4 +1,10 @@
-import React, { useRef, useState } from "react";
+import { useBrandConfig } from "@/hooks/useBrandConfig";
+import {
+  createWebViewLinkInterceptor,
+  getLinkInterceptorConfig,
+  handleLinkPress,
+} from "@/utils/linkInterceptor";
+import React, { useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { ThemedText } from "./ThemedText";
@@ -33,6 +39,20 @@ export const ExploreModuleWebView: React.FC<ExploreModuleWebViewProps> = ({
   // Dynamic height for both iOS and Android
   const [webViewHeight, setWebViewHeight] = useState(400);
   const previousHeight = useRef<number>(400);
+  const hasInitiallyLoaded = useRef(false);
+  const { brandConfig } = useBrandConfig();
+
+  // Get link interceptor configuration
+  const linkInterceptorConfig = useMemo(
+    () => getLinkInterceptorConfig(brandConfig),
+    [brandConfig]
+  );
+
+  // Generate link interceptor JavaScript
+  const linkInterceptorJS = useMemo(
+    () => createWebViewLinkInterceptor(linkInterceptorConfig.domains),
+    [linkInterceptorConfig.domains]
+  );
 
   // Construct URL with parameters
   // Format: {baseUrl}/explore-module/?hash={hash}&post_id={articleId}&user_id={userId}
@@ -74,6 +94,7 @@ export const ExploreModuleWebView: React.FC<ExploreModuleWebViewProps> = ({
         }}
         onLoadEnd={() => {
           console.log("✅ ExploreModuleWebView: Loading completed");
+          hasInitiallyLoaded.current = true;
           setLoading(false);
         }}
         onError={(syntheticEvent) => {
@@ -82,10 +103,71 @@ export const ExploreModuleWebView: React.FC<ExploreModuleWebViewProps> = ({
           setLoading(false);
           setError(true);
         }}
+        onShouldStartLoadWithRequest={(request) => {
+          // Intercept navigation requests
+          const requestUrl = request.url;
+          console.log(
+            "🔗 ExploreModuleWebView navigation request:",
+            requestUrl
+          );
+
+          // Allow the initial load and any loads before the WebView has fully loaded
+          if (!hasInitiallyLoaded.current) {
+            console.log("🔗 Allowing initial load");
+            return true;
+          }
+
+          // Allow navigation within the Explore module (same base path)
+          if (requestUrl.startsWith(url.split("?")[0])) {
+            console.log("🔗 Allowing navigation within Explore module");
+            return true;
+          }
+
+          // Only intercept if it's one of our app domains
+          try {
+            const isAppDomain = linkInterceptorConfig.domains.some((domain) => {
+              const normalizedDomain = domain.replace(
+                /^(https?:\/\/)?(www\.)?/,
+                ""
+              );
+              const urlHost = new URL(requestUrl).hostname.replace(
+                /^www\./,
+                ""
+              );
+              return urlHost === normalizedDomain;
+            });
+
+            if (isAppDomain) {
+              console.log("🔗 App domain link detected, intercepting");
+              // Prevent WebView navigation and handle in React Native
+              handleLinkPress(requestUrl, linkInterceptorConfig);
+              return false;
+            }
+          } catch (error) {
+            // Invalid URL, allow it
+            console.log("🔗 Invalid URL, allowing:", requestUrl);
+          }
+
+          // Allow all other URLs (third-party, ads, analytics, etc.)
+          console.log("🔗 Allowing external URL:", requestUrl);
+          return true;
+        }}
         onMessage={(event) => {
-          // Listen for content height changes on both platforms
+          // Listen for content height changes and link presses
           try {
             const data = JSON.parse(event.nativeEvent.data);
+
+            // Handle link press from WebView
+            if (data.type === "linkPress" && data.url) {
+              console.log(
+                "🔗 ExploreModuleWebView: Link pressed in WebView:",
+                data.url
+              );
+              handleLinkPress(data.url, linkInterceptorConfig);
+              return;
+            }
+
+            // Handle content height changes
             if (data.type === "contentHeight" && data.height) {
               const minHeight = 400;
               // Use exact content height without extra padding
@@ -144,6 +226,9 @@ export const ExploreModuleWebView: React.FC<ExploreModuleWebViewProps> = ({
             subtree: true
           });
           
+          // Inject link interceptor
+          ${linkInterceptorJS}
+          
           true;
         `}
         javaScriptEnabled={true}
@@ -187,7 +272,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     zIndex: 1,
-    minHeight: 400,
   },
   loadingText: {
     marginTop: 8,
