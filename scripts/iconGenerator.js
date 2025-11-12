@@ -727,7 +727,7 @@ class IconGenerator {
 
       // For splash screens, use a more conservative approach
       // Add standard padding (20%) plus user padding for better visual balance
-      const standardPadding = 0.2; // 20% standard padding for splash screens
+      const standardPadding = 0.1; // 20% standard padding for splash screens
       const totalPadding = Math.min(standardPadding + padding, 0.45); // Cap at 45%
       const paddedSize = Math.round(size * (1 - totalPadding * 2));
       const paddingAmount = Math.round((size - paddedSize) / 2);

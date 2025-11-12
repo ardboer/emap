@@ -298,7 +298,11 @@ export function PaywallBottomSheet({
                 activeOpacity={0.8}
               >
                 <ThemedText
-                  style={[styles.backButtonText, { color: textColor }]}
+                  style={[
+                    styles.backButtonText,
+                    { color: textColor },
+                    Platform.OS === "android" && styles.backButtonTextAndroid,
+                  ]}
                 >
                   Go Back
                 </ThemedText>
@@ -325,7 +329,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     width: "100%",
-    height: SHEET_HEIGHT + (Platform.OS === "android" ? 40 : 0),
+    height: SHEET_HEIGHT + (Platform.OS === "android" ? 60 : 0),
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: "#000",
@@ -429,11 +433,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 16,
   },
   backButtonText: {
     fontSize: 16,
     fontWeight: "400",
     opacity: 0.7,
+    ...Platform.select({
+      ios: {
+        textDecorationLine: "underline",
+      },
+      android: {
+        textDecorationLine: "underline",
+        textDecorationStyle: "solid",
+      },
+    }),
+  },
+  backButtonTextAndroid: {
     textDecorationLine: "underline",
+    textDecorationColor: undefined,
   },
 });
