@@ -216,6 +216,46 @@
       "android": "ca-app-pub-3940256099942544/6300978111"
     }
   },
+  "gam": {
+    "enabled": true,
+    "appIds": {
+      "ios": "ca-app-pub-3940256099942544~1458002511",
+      "android": "ca-app-pub-3940256099942544~3347511713"
+    },
+    "adUnits": {
+      "ios": {
+        "banner": "/23325431194/constructionnews_app_ios/banner",
+        "mpu": "/23325431194/constructionnews_app_ios/mpu",
+        "native": "/23325431194/constructionnews_app_ios/native",
+        "video": "/23325431194/constructionnews_app_ios/video"
+      },
+      "android": {
+        "banner": "/23324774079/constructionnews_app_android/banner",
+        "mpu": "/23324774079/constructionnews_app_android/mpu",
+        "native": "/23324774079/constructionnews_app_android/native",
+        "video": "/23324774079/constructionnews_app_android/video"
+      }
+    },
+    "adSizes": {
+      "banner": "320x100",
+      "mpu": "300x250",
+      "native": "Fluid, 1x1",
+      "video": "Out-of-page"
+    },
+    "targeting": {
+      "defaultPOS": "default",
+      "enableSlotTargeting": true,
+      "enablePageTargeting": true,
+      "defaultTargeting": {
+        "brand": "cn",
+        "platform": "app"
+      }
+    },
+    "consent": {
+      "privacyPolicyUrl": "https://www.constructionnews.co.uk/consents/privacy-policy/",
+      "debugGeography": "DISABLED"
+    }
+  },
   "layout": {
     "maxContentWidth": 800,
     "horizontalBlocks": "3"

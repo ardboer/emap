@@ -485,6 +485,121 @@ const updateAndroidSplashColors = () => {
 };
 
 updateAndroidSplashColors();
+// Update GAM App IDs in native configuration files
+const updateGAMAppIds = () => {
+  console.log(`📱 Updating GAM App IDs from brand configuration...`);
+
+  // Check if brand has GAM configuration with App IDs
+  if (!brandConfig.gam?.appIds) {
+    console.log(
+      `ℹ️  No GAM App IDs found in brand configuration, skipping update`
+    );
+    console.log(`   Add "appIds" to gam config in brands/${brand}/config.json`);
+    return;
+  }
+
+  const iosAppId = brandConfig.gam.appIds.ios;
+  const androidAppId = brandConfig.gam.appIds.android;
+
+  if (!iosAppId || !androidAppId) {
+    console.error(`❌ Missing GAM App IDs in brand configuration`);
+    console.error(`   iOS App ID: ${iosAppId || "NOT SET"}`);
+    console.error(`   Android App ID: ${androidAppId || "NOT SET"}`);
+    return;
+  }
+
+  console.log(`✅ Found iOS App ID: ${iosAppId}`);
+  console.log(`✅ Found Android App ID: ${androidAppId}`);
+
+  // Update iOS Info.plist
+  updateIOSGAMAppId(iosAppId);
+
+  // Update Android AndroidManifest.xml
+  updateAndroidGAMAppId(androidAppId);
+};
+
+// Update iOS Info.plist with GAM App ID
+const updateIOSGAMAppId = (appId) => {
+  const infoPlistPath = path.join(projectRoot, "ios", "emap", "Info.plist");
+
+  if (!fs.existsSync(infoPlistPath)) {
+    console.log(`ℹ️  Info.plist not found, will be created during prebuild`);
+    return;
+  }
+
+  try {
+    let plistContent = fs.readFileSync(infoPlistPath, "utf8");
+
+    // Update GADApplicationIdentifier
+    if (plistContent.includes("GADApplicationIdentifier")) {
+      plistContent = plistContent.replace(
+        /<key>GADApplicationIdentifier<\/key>\s*<string>.*?<\/string>/,
+        `<key>GADApplicationIdentifier</key>\n\t<string>${appId}</string>`
+      );
+      console.log(`✅ Updated iOS GADApplicationIdentifier: ${appId}`);
+    } else {
+      // Add GADApplicationIdentifier if it doesn't exist
+      plistContent = plistContent.replace(
+        /<key>CFBundleVersion<\/key>/,
+        `<key>GADApplicationIdentifier</key>\n\t<string>${appId}</string>\n\t<key>CFBundleVersion</key>`
+      );
+      console.log(`✅ Added iOS GADApplicationIdentifier: ${appId}`);
+    }
+
+    fs.writeFileSync(infoPlistPath, plistContent);
+    console.log(`✅ Updated iOS Info.plist with GAM App ID`);
+  } catch (error) {
+    console.error(`❌ Failed to update iOS Info.plist: ${error.message}`);
+  }
+};
+
+// Update Android AndroidManifest.xml with GAM App ID
+const updateAndroidGAMAppId = (appId) => {
+  const manifestPath = path.join(
+    projectRoot,
+    "android",
+    "app",
+    "src",
+    "main",
+    "AndroidManifest.xml"
+  );
+
+  if (!fs.existsSync(manifestPath)) {
+    console.log(
+      `ℹ️  AndroidManifest.xml not found, will be created during prebuild`
+    );
+    return;
+  }
+
+  try {
+    let manifestContent = fs.readFileSync(manifestPath, "utf8");
+
+    // Update com.google.android.gms.ads.APPLICATION_ID
+    if (manifestContent.includes("com.google.android.gms.ads.APPLICATION_ID")) {
+      manifestContent = manifestContent.replace(
+        /<meta-data\s+android:name="com\.google\.android\.gms\.ads\.APPLICATION_ID"\s+android:value=".*?"[^>]*\/>/,
+        `<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${appId}"/>`
+      );
+      console.log(`✅ Updated Android APPLICATION_ID: ${appId}`);
+    } else {
+      // Add APPLICATION_ID if it doesn't exist (after other meta-data tags)
+      manifestContent = manifestContent.replace(
+        /(<application[^>]*>)/,
+        `$1\n    <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${appId}"/>`
+      );
+      console.log(`✅ Added Android APPLICATION_ID: ${appId}`);
+    }
+
+    fs.writeFileSync(manifestPath, manifestContent);
+    console.log(`✅ Updated Android AndroidManifest.xml with GAM App ID`);
+  } catch (error) {
+    console.error(
+      `❌ Failed to update Android AndroidManifest.xml: ${error.message}`
+    );
+  }
+};
+
+updateGAMAppIds();
 
 // Generate brand assets from SVG using new icon generator
 const generateBrandAssets = async () => {
