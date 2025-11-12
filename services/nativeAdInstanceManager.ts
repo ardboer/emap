@@ -132,10 +132,21 @@ class NativeAdInstanceManager {
 
       return ad;
     } catch (error: any) {
-      console.error(
-        `❌ Failed to load native ad for position ${position}:`,
-        error
-      );
+      // Check if this is a "no-fill" error (no ad available)
+      const isNoFillError =
+        error?.message?.includes("no-fill") ||
+        error?.message?.includes("No ad to show") ||
+        error?.code === "no-fill";
+
+      // Only log non-no-fill errors as these are expected and not actual issues
+      if (!isNoFillError) {
+        console.error(
+          `❌ Failed to load native ad for position ${position}:`,
+          error
+        );
+      } else {
+        console.log(`ℹ️ No ad available for position ${position} (no-fill)`);
+      }
 
       // Update instance to failed with error info
       instance.status = "failed";
@@ -371,7 +382,18 @@ class NativeAdInstanceManager {
       if (!this.isAdLoaded(position) && !this.isAdLoading(position)) {
         // Don't await - load in background
         this.loadAdForPosition(position).catch((error) => {
-          console.error(`Error loading ad at position ${position}:`, error);
+          // Check if this is a "no-fill" error (no ad available)
+          const isNoFillError =
+            error?.message?.includes("no-fill") ||
+            error?.message?.includes("No ad to show") ||
+            error?.code === "no-fill";
+
+          // Only log non-no-fill errors as these are expected and not actual issues
+          if (!isNoFillError) {
+            console.error(`Error loading ad at position ${position}:`, error);
+          } else {
+            console.log(`No ad available at position ${position} (no-fill)`);
+          }
         });
       }
     }

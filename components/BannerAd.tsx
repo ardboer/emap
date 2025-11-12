@@ -148,6 +148,8 @@ export function BannerAdComponent({
     // Only log non-no-fill errors as these are actual issues
     if (!noFill) {
       console.error("Banner ad failed to load:", error);
+    } else {
+      console.log("Banner ad: No ad to show (no-fill)");
     }
 
     setIsLoading(false);
