@@ -1,6 +1,9 @@
 import { Colors } from "@/constants/Colors";
 import { getCenteredContentStyle } from "@/constants/Layout";
+import { useAuth } from "@/contexts/AuthContext";
+import { useArticleAccess } from "@/hooks/useArticleAccess";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { analyticsService } from "@/services/analytics";
 import { fetchPDFArticleDetail } from "@/services/api";
 import { PDFArticleDetail } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,6 +17,7 @@ import {
   useColorScheme,
   View,
 } from "react-native";
+import { PaywallBottomSheet } from "./PaywallBottomSheet";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -63,7 +67,7 @@ export default function ArticleDetailView({
 
   // Show paywall when access is denied
   useEffect(() => {
-    if (shouldShowPaywall) {
+    if (shouldShowPaywall && !paywallVisible) {
       console.log("🚫 Access denied, showing paywall for article:", articleId);
       setPaywallVisible(true);
 
@@ -74,7 +78,28 @@ export default function ArticleDetailView({
         source: "article_detail",
       });
     }
-  }, [shouldShowPaywall, articleId, editionId]);
+  }, [shouldShowPaywall, paywallVisible, articleId, editionId]);
+
+  // Hide paywall when access is granted
+  useEffect(() => {
+    console.log("📊 Access state for paywall visibility:", {
+      isAllowed,
+      paywallVisible,
+      shouldShowPaywall,
+      articleId,
+    });
+
+    if (isAllowed && paywallVisible) {
+      console.log("✅ Access granted, hiding paywall for article:", articleId);
+      setPaywallVisible(false);
+
+      // Track paywall dismissed due to access granted
+      analyticsService.logEvent("article_paywall_access_granted", {
+        article_id: articleId,
+        edition_id: editionId,
+      });
+    }
+  }, [isAllowed, paywallVisible, articleId, editionId]);
 
   /**
    * Handle paywall close
@@ -114,16 +139,28 @@ export default function ArticleDetailView({
       edition_id: editionId,
     });
 
-    // Close paywall before starting login flow
-    setPaywallVisible(false);
-
-    // Start login flow
+    // Start login flow (don't close paywall yet - let auth success handle it)
     await login();
-
-    // After successful login, recheck access
-    // The useArticleAccess hook will automatically recheck when auth state changes
-    console.log("✅ Login complete, access will be rechecked automatically");
   }, [login, articleId, editionId]);
+
+  /**
+   * Handle authentication success
+   * This is called by PaywallBottomSheet when user successfully authenticates
+   */
+  const handleAuthSuccess = useCallback(async () => {
+    console.log("🔐 Authentication successful, rechecking access");
+
+    analyticsService.logEvent("article_paywall_auth_success", {
+      article_id: articleId,
+      edition_id: editionId,
+    });
+
+    // Manually trigger access recheck with a small delay to ensure token is available
+    setTimeout(async () => {
+      console.log("🔄 Triggering manual access recheck after auth");
+      await recheckAccess();
+    }, 200);
+  }, [recheckAccess, articleId, editionId]);
 
   const renderLoading = () => (
     <ThemedView style={styles.centerContainer}>
@@ -324,6 +361,7 @@ export default function ArticleDetailView({
         onClose={handlePaywallClose}
         onSubscribe={handleSubscribe}
         onSignIn={handleSignIn}
+        onAuthSuccess={handleAuthSuccess}
       />
     </View>
   );

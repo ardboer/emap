@@ -62,6 +62,8 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   const [pushToken, setPushToken] = React.useState<string | null>(null);
   const [debugModeEnabled, setDebugModeEnabled] = React.useState(false);
   const [debugAdsEnabled, setDebugAdsEnabled] = React.useState(false);
+  const [debugAccessCheckEnabled, setDebugAccessCheckEnabled] =
+    React.useState(false);
   const [useTestAds, setUseTestAds] = React.useState(true);
   const [topicSubscriptions, setTopicSubscriptions] = React.useState<
     TopicSubscription[]
@@ -171,6 +173,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     AsyncStorage.getItem("debug_ads_enabled").then((value) => {
       if (value !== null) {
         setDebugAdsEnabled(value === "true");
+      }
+    });
+  }, []);
+
+  // Load debug access check flag
+  React.useEffect(() => {
+    AsyncStorage.getItem("debug_access_check_enabled").then((value) => {
+      if (value !== null) {
+        setDebugAccessCheckEnabled(value === "true");
       }
     });
   }, []);
@@ -967,6 +978,31 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
                   onValueChange={handleDebugAdsToggle}
                   trackColor={{ false: "#767577", true: primaryColor }}
                   thumbColor={debugAdsEnabled ? "#00334C" : "#fff"}
+                />
+              }
+            />
+
+            {/* Debug Access Check Toggle */}
+            <SettingsItem
+              title="Debug Access Check"
+              subtitle={
+                debugAccessCheckEnabled
+                  ? "Show access check results in article header"
+                  : "Hide access check debug info"
+              }
+              icon="lock.shield.fill"
+              rightElement={
+                <Switch
+                  value={debugAccessCheckEnabled}
+                  onValueChange={async (value) => {
+                    await AsyncStorage.setItem(
+                      "debug_access_check_enabled",
+                      value.toString()
+                    );
+                    setDebugAccessCheckEnabled(value);
+                  }}
+                  trackColor={{ false: "#767577", true: primaryColor }}
+                  thumbColor={debugAccessCheckEnabled ? "#00334C" : "#fff"}
                 />
               }
             />

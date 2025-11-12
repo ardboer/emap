@@ -31,6 +31,7 @@ interface PaywallBottomSheetProps {
   onClose: () => void;
   onSubscribe: () => void;
   onSignIn: () => void;
+  onAuthSuccess?: () => void;
 }
 
 export function PaywallBottomSheet({
@@ -38,6 +39,7 @@ export function PaywallBottomSheet({
   onClose,
   onSubscribe,
   onSignIn,
+  onAuthSuccess,
 }: PaywallBottomSheetProps) {
   const colorScheme = useColorScheme();
   const { colors, paywall } = useBrandConfig();
@@ -46,21 +48,17 @@ export function PaywallBottomSheet({
   const translateY = React.useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
 
-  // Automatically close paywall when user successfully logs in
-  // NOTE: This is disabled when using access control API, as authentication
-  // alone doesn't guarantee access - the API determines that
+  // Trigger access recheck when user successfully logs in
   React.useEffect(() => {
-    // Only auto-close if user authenticates while paywall is visible
-    // This helps with the sign-in flow, but we rely on the parent component
-    // to control visibility based on actual access permissions
+    // Only trigger if user authenticates while paywall is visible
     if (isAuthenticated && visible) {
       console.log(
-        "[PaywallBottomSheet] User authenticated, paywall will be controlled by access check"
+        "[PaywallBottomSheet] User authenticated, triggering access recheck"
       );
-      // Don't auto-close - let the access control API determine if paywall should close
-      // onClose();
+      // Notify parent component to recheck access
+      onAuthSuccess?.();
     }
-  }, [isAuthenticated, visible, onClose]);
+  }, [isAuthenticated, visible, onAuthSuccess]);
 
   // Log safe area insets for debugging
   React.useEffect(() => {

@@ -475,7 +475,7 @@ export async function checkArticleAccess(
     const config = brandManager.getApiConfig();
     const { baseUrl, hash } = config;
 
-    const url = `${baseUrl}/wp-json/mbm-apps/v1/access-control`;
+    const url = `${baseUrl}/wp-json/mbm-apps/v1/access-control?hash=${hash}&post_id=${postId}`;
 
     console.log("🔒 Checking article access...", {
       postId,

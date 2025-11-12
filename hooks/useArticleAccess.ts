@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { checkArticleAccess } from "@/services/auth";
 import { AccessControlResponse } from "@/types";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * Custom hook to manage article access control
@@ -28,6 +28,8 @@ import { useCallback, useEffect, useState } from "react";
  */
 export function useArticleAccess(articleId: string) {
   const { accessToken, isAuthenticated } = useAuth();
+  const isCheckingRef = useRef(false);
+  const lastCheckKeyRef = useRef<string | null>(null);
 
   const [state, setState] = useState<{
     isChecking: boolean;
@@ -44,71 +46,102 @@ export function useArticleAccess(articleId: string) {
   /**
    * Check article access
    */
-  const checkAccess = useCallback(async () => {
-    if (!articleId) {
-      console.warn("⚠️ No article ID provided for access check");
-      setState({
-        isChecking: false,
-        isAllowed: true,
-        error: "No article ID provided",
-        response: null,
-      });
-      return;
-    }
+  const checkAccess = useCallback(
+    async (force: boolean = false) => {
+      if (!articleId) {
+        console.warn("⚠️ No article ID provided for access check");
+        setState({
+          isChecking: false,
+          isAllowed: true,
+          error: "No article ID provided",
+          response: null,
+        });
+        return;
+      }
 
-    try {
-      console.log("🔍 Starting access check for article:", articleId);
-      setState((prev) => ({ ...prev, isChecking: true, error: null }));
+      // Prevent duplicate checks if already checking
+      if (isCheckingRef.current) {
+        console.log("⏭️ Skipping duplicate access check (already in progress)");
+        return;
+      }
 
-      const response = await checkArticleAccess(
-        articleId,
-        accessToken || undefined
-      );
+      // Create a unique key for this article + token combination
+      const currentToken = accessToken || "anonymous";
+      const checkKey = `${articleId}:${currentToken}`;
 
-      setState({
-        isChecking: false,
-        isAllowed: response.allowed,
-        error: null,
-        response,
-      });
+      // Prevent duplicate checks with same article + token (unless forced)
+      if (!force && lastCheckKeyRef.current === checkKey) {
+        console.log(
+          "⏭️ Skipping duplicate access check (same article + token)"
+        );
+        return;
+      }
 
-      console.log("✅ Access check complete:", {
-        articleId,
-        allowed: response.allowed,
-        userId: response.user_id,
-      });
-    } catch (error) {
-      console.error("❌ Error in access check:", error);
-      // Fail open: allow access on error
-      setState({
-        isChecking: false,
-        isAllowed: true,
-        error: error instanceof Error ? error.message : "Unknown error",
-        response: null,
-      });
-    }
-  }, [articleId, accessToken]);
+      try {
+        isCheckingRef.current = true;
+        lastCheckKeyRef.current = checkKey;
+
+        console.log("🔍 Starting access check for article:", articleId);
+        setState((prev) => ({ ...prev, isChecking: true, error: null }));
+
+        const response = await checkArticleAccess(
+          articleId,
+          accessToken || undefined
+        );
+
+        setState({
+          isChecking: false,
+          isAllowed: response.allowed,
+          error: null,
+          response,
+        });
+
+        console.log("✅ Access check complete:", {
+          articleId,
+          allowed: response.allowed,
+          userId: response.user_id,
+        });
+      } catch (error) {
+        console.error("❌ Error in access check:", error);
+        // Fail open: allow access on error
+        setState({
+          isChecking: false,
+          isAllowed: true,
+          error: error instanceof Error ? error.message : "Unknown error",
+          response: null,
+        });
+      } finally {
+        isCheckingRef.current = false;
+      }
+    },
+    [articleId, accessToken]
+  );
 
   /**
    * Recheck access (useful after authentication changes)
    */
   const recheckAccess = useCallback(async () => {
     console.log("🔄 Rechecking access for article:", articleId);
-    await checkAccess();
+    await checkAccess(true); // Force recheck
   }, [checkAccess, articleId]);
 
-  // Check access on mount and when auth state changes
+  // Check access on mount and when accessToken changes
   useEffect(() => {
     checkAccess();
   }, [checkAccess]);
 
-  // Recheck access when authentication state changes
+  // Watch for authentication state changes (login/logout)
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log("🔐 User authenticated, rechecking access");
-      recheckAccess();
-    }
-  }, [isAuthenticated, recheckAccess]);
+    // Force recheck when auth state changes
+    // This handles both login (isAuthenticated becomes true) and logout (becomes false)
+    console.log("🔐 Auth state changed, forcing access recheck");
+    checkAccess(true);
+  }, [isAuthenticated]);
+
+  // Reset check key tracking when article changes
+  useEffect(() => {
+    lastCheckKeyRef.current = null;
+  }, [articleId]);
 
   return {
     /**

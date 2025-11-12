@@ -1,3 +1,4 @@
+import { AccessCheckDebugInfo } from "@/components/AccessCheckDebugInfo";
 import { DisplayAd } from "@/components/DisplayAd";
 import { FadeInImage } from "@/components/FadeInImage";
 import { PaywallBottomSheet } from "@/components/PaywallBottomSheet";
@@ -61,7 +62,14 @@ export default function ArticleScreen() {
   const contentBackground = useThemeColor({}, "contentBackground");
 
   // Access control for paywall
-  const { shouldShowPaywall, recheckAccess } = useArticleAccess(id || "");
+  const {
+    isAllowed,
+    shouldShowPaywall,
+    recheckAccess,
+    isChecking: isCheckingAccess,
+    error: accessError,
+    response: accessResponse,
+  } = useArticleAccess(id || "");
   const [paywallVisible, setPaywallVisible] = useState(false);
 
   // Initialize display ad manager
@@ -197,14 +205,7 @@ export default function ArticleScreen() {
 
   // Show paywall when access is denied
   useEffect(() => {
-    console.log("🔍 Paywall check:", {
-      shouldShowPaywall,
-      hasArticle: !!article,
-      articleId: id,
-      paywallVisible,
-    });
-
-    if (shouldShowPaywall && article) {
+    if (shouldShowPaywall && article && !paywallVisible) {
       console.log("🚫 Access denied, showing paywall for article:", id);
       setPaywallVisible(true);
 
@@ -216,6 +217,27 @@ export default function ArticleScreen() {
       });
     }
   }, [shouldShowPaywall, article, id, source, paywallVisible]);
+
+  // Hide paywall when access is granted
+  useEffect(() => {
+    console.log("📊 Access state for paywall visibility:", {
+      isAllowed,
+      paywallVisible,
+      shouldShowPaywall,
+      articleId: id,
+    });
+
+    if (isAllowed && paywallVisible) {
+      console.log("✅ Access granted, hiding paywall for article:", id);
+      setPaywallVisible(false);
+
+      // Track paywall dismissed due to access granted
+      analyticsService.logEvent("article_paywall_access_granted", {
+        article_id: id,
+        article_title: article?.title,
+      });
+    }
+  }, [isAllowed, paywallVisible, id, article]);
 
   /**
    * Handle paywall close - navigate back to previous screen
@@ -257,15 +279,27 @@ export default function ArticleScreen() {
       article_title: article?.title,
     });
 
-    // Close paywall before starting login flow
-    setPaywallVisible(false);
-
-    // Start login flow
+    // Start login flow (don't close paywall yet - let auth success handle it)
     await login();
+  };
 
-    // After successful login, recheck access
-    // The useArticleAccess hook will automatically recheck when auth state changes
-    console.log("✅ Login complete, access will be rechecked automatically");
+  /**
+   * Handle authentication success
+   * This is called by PaywallBottomSheet when user successfully authenticates
+   */
+  const handleAuthSuccess = async () => {
+    console.log("🔐 Authentication successful, rechecking access");
+
+    analyticsService.logEvent("article_paywall_auth_success", {
+      article_id: id,
+      article_title: article?.title,
+    });
+
+    // Manually trigger access recheck with a small delay to ensure token is available
+    setTimeout(async () => {
+      console.log("🔄 Triggering manual access recheck after auth");
+      await recheckAccess();
+    }, 200);
   };
 
   // Helper function to render content based on type
@@ -480,6 +514,23 @@ export default function ArticleScreen() {
           </View>
         </Animated.View>
 
+        {/* Access Check Debug Info - Fixed position below header */}
+        <View
+          style={[
+            styles.debugInfoContainer,
+            {
+              top: 120,
+            },
+          ]}
+        >
+          <AccessCheckDebugInfo
+            response={accessResponse}
+            isChecking={isCheckingAccess}
+            isAllowed={isAllowed}
+            error={accessError}
+          />
+        </View>
+
         {/* Swipe Indicator */}
         {/* {relatedArticles.length > 0 &&
           currentRelatedIndex < relatedArticles.length - 1 && (
@@ -595,6 +646,7 @@ export default function ArticleScreen() {
           onClose={handleClosePaywall}
           onSubscribe={handleSubscribe}
           onSignIn={handleSignIn}
+          onAuthSuccess={handleAuthSuccess}
         />
       </View>
     </GestureDetector>
@@ -638,6 +690,12 @@ const styles = StyleSheet.create({
     top: 8,
     right: 16,
     zIndex: 10,
+  },
+  debugInfoContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    zIndex: 5,
   },
   shareButtonContainer: {
     flexDirection: "row",
