@@ -15,9 +15,11 @@ import Animated, {
   clamp,
   runOnJS,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "./ThemedText";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
@@ -39,6 +41,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const savedScale = useSharedValue(1);
+  const insets = useSafeAreaInsets();
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
 
@@ -52,40 +55,53 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     savedTranslateY.value = 0;
   };
 
+  // Derive max translation bounds to avoid recalculating on every frame
+  // Ensure bounds are always positive, even when scale < 1
+  const maxTranslateX = useDerivedValue(() => {
+    return Math.max(0, (screenWidth * (savedScale.value - 1)) / 2);
+  });
+
+  const maxTranslateY = useDerivedValue(() => {
+    return Math.max(0, (screenHeight * (savedScale.value - 1)) / 2);
+  });
+
   const pinchGesture = Gesture.Pinch()
     .onUpdate((event) => {
+      "worklet";
       const newScale = savedScale.value * event.scale;
       scale.value = clamp(newScale, 0.5, 4);
     })
     .onEnd(() => {
+      "worklet";
       savedScale.value = scale.value;
 
       // Auto-reset if zoomed out too much
       if (scale.value < 1) {
-        runOnJS(resetTransform)();
+        resetTransform();
       }
     });
 
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
+      "worklet";
       // Only allow panning when zoomed in
       if (savedScale.value > 1) {
-        const maxTranslateX = (screenWidth * (savedScale.value - 1)) / 2;
-        const maxTranslateY = (screenHeight * (savedScale.value - 1)) / 2;
-
+        // Apply damping factor to reduce sensitivity (0.6 = 60% of original movement)
+        const dampingFactor = 0.6;
         translateX.value = clamp(
-          savedTranslateX.value + event.translationX,
-          -maxTranslateX,
-          maxTranslateX
+          savedTranslateX.value + event.translationX * dampingFactor,
+          -maxTranslateX.value,
+          maxTranslateX.value
         );
         translateY.value = clamp(
-          savedTranslateY.value + event.translationY,
-          -maxTranslateY,
-          maxTranslateY
+          savedTranslateY.value + event.translationY * dampingFactor,
+          -maxTranslateY.value,
+          maxTranslateY.value
         );
       }
     })
     .onEnd(() => {
+      "worklet";
       savedTranslateX.value = translateX.value;
       savedTranslateY.value = translateY.value;
     });
@@ -101,9 +117,9 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
       }
     });
 
-  const composedGesture = Gesture.Simultaneous(
-    Gesture.Race(doubleTapGesture, pinchGesture),
-    panGesture
+  const composedGesture = Gesture.Race(
+    doubleTapGesture,
+    Gesture.Simultaneous(pinchGesture, panGesture)
   );
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -131,11 +147,16 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     >
       <StatusBar hidden />
       <View style={styles.container}>
-        <SafeAreaView style={styles.safeArea}>
+        <View
+          style={[
+            styles.safeArea,
+            { marginTop: insets.top, marginRight: insets.right },
+          ]}
+        >
           <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <Ionicons name="close" size={30} color="white" />
           </TouchableOpacity>
-        </SafeAreaView>
+        </View>
 
         <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.imageContainer, animatedStyle]}>
