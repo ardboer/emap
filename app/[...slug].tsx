@@ -40,6 +40,44 @@ export default function DeepLinkHandler() {
 
         const firstSegment = slug.split("/")[0].toLowerCase();
 
+        // Handle AI search URLs (e.g., ai-search/?q=...&qs=...)
+        if (firstSegment === "ai-search") {
+          console.log("🔍 AI search URL detected in deep link");
+
+          try {
+            // Extract query parameters from the full URL
+            const brandConfig = brandManager.getCurrentBrand();
+            const fullUrl = `https://${brandConfig.domain}/${slug}`;
+            const urlObj = new URL(fullUrl);
+
+            const q = urlObj.searchParams.get("q");
+            const qs = urlObj.searchParams.get("qs");
+
+            if (q || qs) {
+              console.log("🔍 AI search params found:", { q, qs });
+              console.log("🔍 Navigating to Ask tab with search params");
+              router.replace({
+                pathname: "/(tabs)/ask",
+                params: {
+                  q: q || undefined,
+                  qs: qs || undefined,
+                },
+              });
+              return;
+            }
+
+            // No params, just go to Ask tab
+            console.log("🔍 No search params, navigating to Ask tab");
+            router.replace("/(tabs)/ask");
+            return;
+          } catch (error) {
+            console.error("❌ Error processing AI search URL:", error);
+            // Fallback to Ask tab without params
+            router.replace("/(tabs)/ask");
+            return;
+          }
+        }
+
         // Handle authentication callback with tokens (e.g., auth/callback?access_token=...)
         // These should NEVER open in browser - they contain tokens to process in-app
         if (firstSegment === "auth") {

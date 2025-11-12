@@ -10,7 +10,7 @@ import {
   getLinkInterceptorConfig,
   handleLinkPress,
 } from "@/utils/linkInterceptor";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, {
   useCallback,
   useEffect,
@@ -32,6 +32,8 @@ export default function AskScreen() {
     loading: brandLoading,
     error: brandError,
   } = useBrandConfig();
+  // Get search params from route (for AI search links)
+  const routeParams = useLocalSearchParams<{ q?: string; qs?: string }>();
   const [webViewLoading, setWebViewLoading] = useState(true);
   const [webViewError, setWebViewError] = useState<string | null>(null);
   const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
@@ -59,16 +61,33 @@ export default function AskScreen() {
     fetchUserInfo();
   }, []);
 
-  // Construct the dynamic URL based on brand configuration and user ID
+  // Construct the dynamic URL based on brand configuration, user ID, and search params
   const webViewUrl = useMemo(() => {
     if (!brandConfig) return null;
 
-    const baseUrl = `${brandConfig.apiConfig.baseUrl}/mobile-app-ai-search/?hash=${brandConfig.apiConfig.hash}`;
-    const urlWithUserId = userId ? `${baseUrl}&user_id=${userId}` : baseUrl;
+    let url = `${brandConfig.apiConfig.baseUrl}/mobile-app-ai-search/?hash=${brandConfig.apiConfig.hash}`;
 
-    console.log("Ask webviewUrl", urlWithUserId);
-    return urlWithUserId;
-  }, [brandConfig, userId]);
+    // Add user_id if available
+    if (userId) {
+      url += `&user_id=${userId}`;
+    }
+
+    // Add search params if provided via route (from AI search links)
+    if (routeParams.q) {
+      url += `&q=${encodeURIComponent(routeParams.q)}`;
+      console.log("🔍 Adding search query to Ask URL:", routeParams.q);
+    }
+    if (routeParams.qs) {
+      url += `&qs=${encodeURIComponent(routeParams.qs)}`;
+      console.log("🔍 Adding search source to Ask URL:", routeParams.qs);
+    }
+
+    console.log("Ask webviewUrl", url);
+    return url;
+  }, [brandConfig, userId, routeParams.q, routeParams.qs]);
+
+  // Create a unique key for WebView to force reload when URL changes
+  const webViewKey = useMemo(() => webViewUrl, [webViewUrl]);
 
   // Get link interceptor configuration
   const linkInterceptorConfig = useMemo(
@@ -173,6 +192,7 @@ export default function AskScreen() {
           showsVerticalScrollIndicator={false}
         >
           <WebView
+            key={webViewKey}
             source={{ uri: webViewUrl }}
             style={[styles.webView, { height: webViewHeight }]}
             onLoadStart={() => {
@@ -351,6 +371,7 @@ export default function AskScreen() {
         </ScrollView>
       ) : (
         <WebView
+          key={webViewKey}
           source={{ uri: webViewUrl }}
           style={styles.webView}
           onLoadStart={() => {

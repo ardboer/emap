@@ -17,6 +17,35 @@ interface LinkInterceptorConfig {
 }
 
 /**
+ * Check if a URL is an AI search URL
+ */
+export function isAiSearchUrl(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    return pathname === "/ai-search/" || pathname === "/ai-search";
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Extract AI search parameters from URL
+ */
+export function extractAiSearchParams(
+  url: string
+): { q?: string; qs?: string } | null {
+  try {
+    const urlObj = new URL(url);
+    const q = urlObj.searchParams.get("q");
+    const qs = urlObj.searchParams.get("qs");
+    return q || qs ? { q: q || undefined, qs: qs || undefined } : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
  * Check if a URL belongs to one of the configured domains
  */
 export function isDomainLink(url: string, domains: string[]): boolean {
@@ -68,8 +97,30 @@ export async function handleLinkPress(
 
     // Check if it's one of our domains
     if (isDomainLink(url, config.domains)) {
-      console.log("✅ Domain link detected, attempting to resolve");
+      console.log("✅ Domain link detected");
 
+      // Check if it's an AI search URL first
+      if (isAiSearchUrl(url)) {
+        console.log("🔍 AI search URL detected, navigating to Ask tab");
+        const params = extractAiSearchParams(url);
+
+        if (params && (params.q || params.qs)) {
+          console.log("🔍 AI search params:", params);
+          // Navigate to Ask tab with search parameters
+          router.push({
+            pathname: "/(tabs)/ask",
+            params: params,
+          });
+        } else {
+          // No params, just navigate to Ask tab
+          console.log("🔍 No search params, navigating to Ask tab");
+          router.push("/(tabs)/ask");
+        }
+        return;
+      }
+
+      // Not an AI search URL, try to resolve as article
+      console.log("📰 Attempting to resolve as article");
       try {
         // Extract the path from the URL
         const urlObj = new URL(url);
@@ -143,6 +194,16 @@ export function createWebViewLinkInterceptor(domains: string[]): string {
         }
       }
       
+      function isAiSearchUrl(url) {
+        try {
+          const urlObj = new URL(url, window.location.href);
+          const pathname = urlObj.pathname;
+          return pathname === '/ai-search/' || pathname === '/ai-search';
+        } catch (e) {
+          return false;
+        }
+      }
+      
       // Intercept all link clicks
       document.addEventListener('click', function(e) {
         let target = e.target;
@@ -160,10 +221,13 @@ export function createWebViewLinkInterceptor(domains: string[]): string {
             e.preventDefault();
             e.stopPropagation();
             
+            // Check if it's an AI search URL
+            const messageType = isAiSearchUrl(href) ? 'aiSearchLink' : 'linkPress';
+            
             // Send message to React Native
             if (window.ReactNativeWebView) {
               window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: 'linkPress',
+                type: messageType,
                 url: href
               }));
             }
