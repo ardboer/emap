@@ -186,7 +186,7 @@ export function BannerAdComponent({
   ) {
     if (debugEnabled) {
       return (
-        <ThemedView style={[styles.container, style]}>
+        <ThemedView style={[styles.debugOnlyContainer, style]}>
           <AdDebugInfo data={debugData} variant="compact" />
         </ThemedView>
       );
@@ -246,6 +246,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginVertical: 16,
     minHeight: 60, // Minimum height to prevent layout shift
+  },
+  debugOnlyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    // No minHeight or marginVertical - only show debug info without reserving space
   },
   loadingContainer: {
     flexDirection: "row",

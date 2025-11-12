@@ -11,9 +11,9 @@
 
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useInView } from "@/hooks/useInView";
-import { AdSizes, AdTargeting } from "@/services/gam";
 import { displayAdLazyLoadManager } from "@/services/displayAdLazyLoadManager";
 import { displayAdManager } from "@/services/displayAdManager";
+import { AdSizes, AdTargeting } from "@/services/gam";
 import { AdSizeType } from "@/types/ads";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -99,6 +99,7 @@ export function DisplayAd({
   const { brandConfig } = useBrandConfig();
   const [shouldRender, setShouldRender] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(!enableLazyLoad);
+  const [adFailed, setAdFailed] = useState(false);
   const adId = useRef(
     `display-ad-${context}-${size}-${Date.now()}-${Math.random()}`
   ).current;
@@ -175,8 +176,15 @@ export function DisplayAd({
   // Determine ad format based on size
   const adFormat = size === "MEDIUM_RECTANGLE" ? "mpu" : "banner";
 
+  // Determine if we have content to show
+  // Don't show content if ad failed to load
+  const hasContent = !adFailed && (shouldLoad || showPlaceholder);
+
   return (
-    <View ref={ref} style={[styles.container, style]}>
+    <View
+      ref={ref}
+      style={[hasContent ? styles.container : styles.emptyContainer, style]}
+    >
       {shouldLoad ? (
         <BannerAd
           size={bannerSize}
@@ -203,6 +211,9 @@ export function DisplayAd({
               console.log(`[DisplayAd] Ad failed: ${context} - ${size}`, error);
             }
 
+            // Mark ad as failed to remove spacing
+            setAdFailed(true);
+
             onAdFailedToLoad?.(error);
           }}
           onAdClicked={() => {
@@ -222,6 +233,11 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     alignItems: "center",
     justifyContent: "center",
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    // No margin when empty - prevents spacing when ad can't load
   },
 });
 

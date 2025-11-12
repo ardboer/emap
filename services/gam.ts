@@ -256,8 +256,11 @@ class GAMService {
   /**
    * Build targeting parameters for ad request
    * Combines default targeting with request-specific targeting
+   * Filters out undefined and boolean values to match GAM requirements
    */
-  buildTargeting(options?: AdRequestOptions): AdTargeting {
+  buildTargeting(
+    options?: AdRequestOptions
+  ): Record<string, string | number | (string | number)[]> {
     if (!this.config.enableTargeting) {
       return {};
     }
@@ -270,7 +273,15 @@ class GAMService {
     // Add brand targeting
     targeting.brand = this.config.brand;
 
-    return targeting;
+    // Filter out undefined and boolean values, keep only string, number, and string[]
+    const filtered: Record<string, string | number | (string | number)[]> = {};
+    for (const [key, value] of Object.entries(targeting)) {
+      if (value !== undefined && typeof value !== "boolean") {
+        filtered[key] = value as string | number | (string | number)[];
+      }
+    }
+
+    return filtered;
   }
 
   /**
