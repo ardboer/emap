@@ -194,6 +194,12 @@ export const ExploreModuleWebView: React.FC<ExploreModuleWebViewProps> = ({
           document.documentElement.style.margin = '0';
           document.documentElement.style.padding = '0';
           
+          // Remove margin-bottom from .miso-explore-section
+          const exploreSection = document.querySelector('.miso-explore-section');
+          if (exploreSection) {
+            exploreSection.style.marginBottom = '0';
+          }
+          
           function sendContentHeight() {
             setTimeout(() => {
               const height = Math.max(
@@ -218,7 +224,14 @@ export const ExploreModuleWebView: React.FC<ExploreModuleWebViewProps> = ({
           let debounceTimer;
           const observer = new MutationObserver(() => {
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(sendContentHeight, 300);
+            debounceTimer = setTimeout(() => {
+              // Ensure margin-bottom is 0 for dynamically loaded content
+              const exploreSection = document.querySelector('.miso-explore-section');
+              if (exploreSection) {
+                exploreSection.style.marginBottom = '0';
+              }
+              sendContentHeight();
+            }, 300);
           });
           
           observer.observe(document.body, {

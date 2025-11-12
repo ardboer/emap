@@ -148,6 +148,7 @@ interface RichContentNodeProps {
   forceHighlightBoxText?: boolean;
   isBlockquote?: boolean;
   isLink?: boolean;
+  isInSpecialContainer?: boolean;
 }
 
 interface RichContentTableCellProps {
@@ -296,6 +297,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
   forceHighlightBoxText = false,
   isBlockquote = false,
   isLink = false,
+  isInSpecialContainer = false,
 }) => {
   const { colors, fonts, brandConfig } = useBrandConfig();
   const colorScheme = useColorScheme();
@@ -351,6 +353,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         forceHighlightBoxText={forceHighlightBoxText}
         isBlockquote={isBlockquote}
         isLink={isLink}
+        isInSpecialContainer={isInSpecialContainer}
       />
     ) : null;
 
@@ -505,6 +508,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                 node={embedNode}
                 index={index}
                 onImagePress={onImagePress}
+                isInSpecialContainer={isInSpecialContainer}
               />
             );
           }
@@ -701,6 +705,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                   onImagePress={onImagePress}
                   forceHighlightBoxText={true}
                   isBlockquote={true}
+                  isInSpecialContainer={true}
                 />
               )}
             </View>
@@ -716,6 +721,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                 onImagePress={onImagePress}
                 forceHighlightBoxText={true}
                 isBlockquote={true}
+                isInSpecialContainer={true}
               />
             )}
           </View>
@@ -742,6 +748,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                     index={childIndex}
                     onImagePress={onImagePress}
                     forceHighlightBoxText={forceHighlightBoxText}
+                    isInSpecialContainer={isInSpecialContainer}
                   />
                 </View>
               </View>
@@ -772,6 +779,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                     index={childIndex}
                     onImagePress={onImagePress}
                     forceHighlightBoxText={forceHighlightBoxText}
+                    isInSpecialContainer={isInSpecialContainer}
                   />
                 </View>
               </View>
@@ -840,6 +848,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                   content={node.children}
                   onImagePress={onImagePress}
                   forceHighlightBoxText={true}
+                  isInSpecialContainer={true}
                 />
               )}
             </View>
@@ -1065,6 +1074,7 @@ interface RichContentRendererInternalProps extends RichContentRendererProps {
   forceHighlightBoxText?: boolean;
   isBlockquote?: boolean;
   isLink?: boolean;
+  isInSpecialContainer?: boolean; // Track if we're inside infobox, blockquote, or other special containers
 }
 
 const RichContentRendererInternal: React.FC<
@@ -1077,6 +1087,7 @@ const RichContentRendererInternal: React.FC<
   forceHighlightBoxText = false,
   isBlockquote = false,
   isLink = false,
+  isInSpecialContainer = false,
 }) => {
   // Get brand configuration for display ads
   const brandConfig = brandManager.getCurrentBrand();
@@ -1117,7 +1128,9 @@ const RichContentRendererInternal: React.FC<
           paragraphCount++;
 
           // Check if we should inject explore module after this paragraph
+          // Only inject in main body content, not inside special containers (infoboxes, blockquotes, etc.)
           const shouldInjectExploreModule =
+            !isInSpecialContainer &&
             shouldShowExploreModule &&
             exploreModuleConfig &&
             paragraphCount === exploreModuleConfig.afterParagraph;
@@ -1138,6 +1151,7 @@ const RichContentRendererInternal: React.FC<
                   forceHighlightBoxText={forceHighlightBoxText}
                   isBlockquote={isBlockquote}
                   isLink={isLink}
+                  isInSpecialContainer={isInSpecialContainer}
                 />
                 {shouldInjectExploreModule && (
                   <ExploreModuleWebView
@@ -1172,6 +1186,7 @@ const RichContentRendererInternal: React.FC<
             forceHighlightBoxText={forceHighlightBoxText}
             isBlockquote={isBlockquote}
             isLink={isLink}
+            isInSpecialContainer={isInSpecialContainer}
           />
         );
       })}
