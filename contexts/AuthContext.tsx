@@ -6,6 +6,7 @@ import {
   generateLoginUrl,
   getStoredTokens,
   getUserInfo,
+  isTokenExpired,
   parseTokensFromUrl,
   UserInfo,
 } from "@/services/auth";
@@ -96,6 +97,7 @@ interface AuthContextType {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
+  getValidAccessToken: () => Promise<string | null>;
   checkAuthStatus: () => Promise<void>;
 }
 
@@ -223,6 +225,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
   }, [state.refreshToken, state.user?.userId]);
+
+  /**
+   * Get a valid access token, refreshing if expired or expiring soon
+   * This should be used instead of directly accessing state.accessToken
+   * to ensure the token is always valid before use
+   */
+  const getValidAccessToken = useCallback(async (): Promise<string | null> => {
+    const currentToken = state.accessToken;
+
+    if (!currentToken) {
+      console.log("🔍 [GET-VALID-TOKEN] No access token available");
+      return null;
+    }
+
+    // Check if token is expired or expiring soon (within 5 minutes)
+    if (isTokenExpired(currentToken, 300)) {
+      console.log(
+        "🔄 [GET-VALID-TOKEN] Token expired/expiring, attempting refresh..."
+      );
+
+      // Attempt to refresh the token
+      const success = await refreshAccessToken();
+
+      if (!success) {
+        console.error("❌ [GET-VALID-TOKEN] Token refresh failed");
+        return null;
+      }
+
+      console.log("✅ [GET-VALID-TOKEN] Token refreshed successfully");
+      // Return the newly refreshed token from state
+      return state.accessToken;
+    }
+
+    console.log("✅ [GET-VALID-TOKEN] Token is valid, returning current token");
+    return currentToken;
+  }, [state.accessToken, refreshAccessToken]);
 
   /**
    * Initiate login flow using expo-web-browser
@@ -513,6 +551,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         refreshAccessToken,
+        getValidAccessToken,
         checkAuthStatus,
       }}
     >

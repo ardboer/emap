@@ -49,6 +49,66 @@ export interface TokenRefreshResponse {
 }
 
 /**
+ * Check if a JWT token is expired or expiring soon
+ *
+ * @param token - The JWT token to check
+ * @param bufferSeconds - Number of seconds before expiration to consider token as "expiring" (default: 300 = 5 minutes)
+ * @returns true if token is expired or expiring within buffer time, false otherwise
+ */
+export function isTokenExpired(
+  token: string,
+  bufferSeconds: number = 300
+): boolean {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      console.log("🔍 [TOKEN-CHECK] Invalid JWT format (not 3 parts)");
+      return true;
+    }
+
+    // Decode the payload (middle part)
+    const payload = JSON.parse(atob(parts[1]));
+    const exp = payload.exp;
+
+    if (!exp) {
+      console.log("🔍 [TOKEN-CHECK] No expiration claim in token");
+      return true;
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const expiresIn = exp - now;
+    const isExpired = exp < now;
+    const isExpiring = exp < now + bufferSeconds;
+
+    console.log("🔍 [TOKEN-CHECK] Token expiration check:", {
+      currentTime: new Date(now * 1000).toISOString(),
+      expirationTime: new Date(exp * 1000).toISOString(),
+      expiresInSeconds: expiresIn,
+      expiresInMinutes: Math.floor(expiresIn / 60),
+      bufferSeconds,
+      isExpired,
+      isExpiring,
+      willRefresh: isExpiring,
+    });
+
+    if (isExpired) {
+      console.log("⚠️ [TOKEN-CHECK] Token is EXPIRED");
+    } else if (isExpiring) {
+      console.log(
+        "⚠️ [TOKEN-CHECK] Token is expiring soon (within buffer time)"
+      );
+    } else {
+      console.log("✅ [TOKEN-CHECK] Token is still valid");
+    }
+
+    return isExpiring;
+  } catch (error) {
+    console.error("❌ [TOKEN-CHECK] Error checking token expiration:", error);
+    return true;
+  }
+}
+
+/**
  * Base64 URL encode a string (JWT compatible)
  */
 function base64UrlEncode(str: string): string {

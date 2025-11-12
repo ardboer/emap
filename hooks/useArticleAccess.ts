@@ -27,9 +27,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * ```
  */
 export function useArticleAccess(articleId: string) {
-  const { accessToken, isAuthenticated } = useAuth();
+  const { getValidAccessToken, isAuthenticated } = useAuth();
   const isCheckingRef = useRef(false);
   const lastCheckKeyRef = useRef<string | null>(null);
+  const [currentToken, setCurrentToken] = useState<string | null>(null);
 
   const [state, setState] = useState<{
     isChecking: boolean;
@@ -65,28 +66,35 @@ export function useArticleAccess(articleId: string) {
         return;
       }
 
-      // Create a unique key for this article + token combination
-      const currentToken = accessToken || "anonymous";
-      const checkKey = `${articleId}:${currentToken}`;
-
-      // Prevent duplicate checks with same article + token (unless forced)
-      if (!force && lastCheckKeyRef.current === checkKey) {
-        console.log(
-          "⏭️ Skipping duplicate access check (same article + token)"
-        );
-        return;
-      }
-
       try {
         isCheckingRef.current = true;
-        lastCheckKeyRef.current = checkKey;
 
         console.log("🔍 Starting access check for article:", articleId);
         setState((prev) => ({ ...prev, isChecking: true, error: null }));
 
+        // Get a valid token (will refresh if expired)
+        const validToken = await getValidAccessToken();
+        setCurrentToken(validToken);
+
+        // Create a unique key for this article + token combination
+        const tokenKey = validToken || "anonymous";
+        const checkKey = `${articleId}:${tokenKey}`;
+
+        // Prevent duplicate checks with same article + token (unless forced)
+        if (!force && lastCheckKeyRef.current === checkKey) {
+          console.log(
+            "⏭️ Skipping duplicate access check (same article + token)"
+          );
+          isCheckingRef.current = false;
+          setState((prev) => ({ ...prev, isChecking: false }));
+          return;
+        }
+
+        lastCheckKeyRef.current = checkKey;
+
         const response = await checkArticleAccess(
           articleId,
-          accessToken || undefined
+          validToken || undefined
         );
 
         setState({
@@ -114,7 +122,7 @@ export function useArticleAccess(articleId: string) {
         isCheckingRef.current = false;
       }
     },
-    [articleId, accessToken]
+    [articleId, getValidAccessToken]
   );
 
   /**
