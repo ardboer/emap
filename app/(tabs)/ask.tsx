@@ -4,8 +4,15 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { analyticsService } from "@/services/analytics";
+import { getUserInfo } from "@/services/auth";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -22,19 +29,41 @@ export default function AskScreen() {
   } = useBrandConfig();
   const [webViewLoading, setWebViewLoading] = useState(true);
   const [webViewError, setWebViewError] = useState<string | null>(null);
-  const [webViewHeight, setWebViewHeight] = useState(600);
   const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const hasInitiallyLoaded = useRef(false);
+  // Android needs dynamic height, iOS works with flex
+  const [webViewHeight, setWebViewHeight] = useState(600);
+  const previousHeight = useRef<number>(600);
 
-  // Construct the dynamic URL based on brand configuration
+  // Fetch user info on mount
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const userInfo = await getUserInfo();
+        if (userInfo?.user_id) {
+          setUserId(userInfo.user_id);
+          console.log("✅ User ID loaded for Ask webview:", userInfo.user_id);
+        } else {
+          console.log("ℹ️ No user ID available (user not logged in)");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching user info:", error);
+      }
+    };
+    fetchUserInfo();
+  }, []);
+
+  // Construct the dynamic URL based on brand configuration and user ID
   const webViewUrl = useMemo(() => {
     if (!brandConfig) return null;
-    console.log(
-      "Ask webviewUrl",
-      `${brandConfig.apiConfig.baseUrl}/mobile-app-ai-search/?hash=${brandConfig.apiConfig.hash}`
-    );
-    return `${brandConfig.apiConfig.baseUrl}/mobile-app-ai-search/?hash=${brandConfig.apiConfig.hash}`;
-  }, [brandConfig]);
+
+    const baseUrl = `${brandConfig.apiConfig.baseUrl}/mobile-app-ai-search/?hash=${brandConfig.apiConfig.hash}`;
+    const urlWithUserId = userId ? `${baseUrl}&user_id=${userId}` : baseUrl;
+
+    console.log("Ask webviewUrl", urlWithUserId);
+    return urlWithUserId;
+  }, [brandConfig, userId]);
 
   // Track screen view when tab is focused
   useFocusEffect(
@@ -119,17 +148,145 @@ export default function AskScreen() {
         </ThemedView>
       )}
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollViewContent}
-        bounces={false}
-        showsVerticalScrollIndicator={false}
-      >
+      {Platform.OS === "android" ? (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+          bounces={false}
+          showsVerticalScrollIndicator={false}
+        >
+          <WebView
+            source={{ uri: webViewUrl }}
+            style={[styles.webView, { height: webViewHeight }]}
+            onLoadStart={() => {
+              // Only show loading overlay on initial load
+              if (!hasInitiallyLoaded.current) {
+                console.log("WebView: Initial load started");
+                setWebViewLoading(true);
+                setWebViewError(null);
+              }
+            }}
+            onLoadEnd={() => {
+              // Mark as initially loaded and hide overlay
+              if (!hasInitiallyLoaded.current) {
+                console.log("WebView: Initial load completed");
+                hasInitiallyLoaded.current = true;
+              }
+              setWebViewLoading(false);
+            }}
+            onError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.error("WebView error:", nativeEvent);
+              setWebViewLoading(false);
+              setWebViewError(
+                `Failed to load: ${nativeEvent.description || "Unknown error"}`
+              );
+            }}
+            onHttpError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.error("WebView HTTP error:", nativeEvent);
+              setWebViewLoading(false);
+              setWebViewError(
+                `HTTP Error ${nativeEvent.statusCode}: ${
+                  nativeEvent.description || "Server error"
+                }`
+              );
+            }}
+            onMessage={(event) => {
+              // Android only: Listen for content height changes
+              if (Platform.OS === "android") {
+                try {
+                  const data = JSON.parse(event.nativeEvent.data);
+                  if (data.type === "contentHeight" && data.height) {
+                    const minHeight = 600;
+                    const newHeight = Math.max(minHeight, data.height + 50);
+
+                    if (Math.abs(newHeight - previousHeight.current) > 5) {
+                      console.log(
+                        "Android WebView height adjusted:",
+                        newHeight
+                      );
+                      previousHeight.current = newHeight;
+                      setWebViewHeight(newHeight);
+                    }
+                  }
+                } catch (error) {
+                  // Ignore parsing errors
+                }
+              }
+            }}
+            injectedJavaScript={
+              Platform.OS === "android"
+                ? `
+          function sendContentHeight() {
+            setTimeout(() => {
+              const height = Math.max(
+                document.documentElement.scrollHeight,
+                document.documentElement.offsetHeight,
+                document.body.scrollHeight,
+                document.body.offsetHeight
+              );
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'contentHeight',
+                height: height
+              }));
+            }, 100);
+          }
+          
+          if (document.readyState === 'complete') {
+            sendContentHeight();
+          } else {
+            window.addEventListener('load', sendContentHeight);
+          }
+          
+          let debounceTimer;
+          const observer = new MutationObserver(() => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(sendContentHeight, 300);
+          });
+          
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true
+          });
+          
+          true;
+        `
+                : undefined
+            }
+            startInLoadingState={false}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            allowsInlineMediaPlayback={true}
+            mediaPlaybackRequiresUserAction={false}
+            // Fixed: Use numeric value for Android compatibility
+            decelerationRate={Platform.OS === "android" ? 0.998 : "normal"}
+            // Android-specific props
+            mixedContentMode={
+              Platform.OS === "android" ? "compatibility" : undefined
+            }
+            thirdPartyCookiesEnabled={
+              Platform.OS === "android" ? true : undefined
+            }
+            sharedCookiesEnabled={Platform.OS === "android" ? true : undefined}
+            nestedScrollEnabled={true}
+            // Android-specific: Enable proper content sizing
+            scalesPageToFit={Platform.OS === "android" ? false : undefined}
+            setSupportMultipleWindows={
+              Platform.OS === "android" ? false : undefined
+            }
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={false}
+            accessibilityLabel={`Ask feature for ${brandConfig.displayName}`}
+            accessibilityHint="Interactive web content for asking questions"
+          />
+        </ScrollView>
+      ) : (
         <WebView
           source={{ uri: webViewUrl }}
-          style={[styles.webView, { height: webViewHeight }]}
+          style={styles.webView}
           onLoadStart={() => {
-            // Only show loading overlay on initial load
             if (!hasInitiallyLoaded.current) {
               console.log("WebView: Initial load started");
               setWebViewLoading(true);
@@ -137,7 +294,6 @@ export default function AskScreen() {
             }
           }}
           onLoadEnd={() => {
-            // Mark as initially loaded and hide overlay
             if (!hasInitiallyLoaded.current) {
               console.log("WebView: Initial load completed");
               hasInitiallyLoaded.current = true;
@@ -162,83 +318,21 @@ export default function AskScreen() {
               }`
             );
           }}
-          onMessage={(event) => {
-            // Listen for content height changes from the WebView
-            try {
-              const data = JSON.parse(event.nativeEvent.data);
-              if (data.type === "contentHeight" && data.height) {
-                console.log("WebView content height:", data.height);
-                setWebViewHeight(Math.max(600, data.height + 50)); // Add padding
-              }
-            } catch (error) {
-              // Ignore parsing errors
-            }
-          }}
-          injectedJavaScript={`
-            // Function to send content height to React Native
-            function sendContentHeight() {
-              const height = Math.max(
-                document.documentElement.scrollHeight,
-                document.documentElement.offsetHeight,
-                document.body.scrollHeight,
-                document.body.offsetHeight
-              );
-              window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: 'contentHeight',
-                height: height
-              }));
-            }
-            
-            // Send height on load
-            sendContentHeight();
-            
-            // Monitor for DOM changes and resize
-            const observer = new MutationObserver(() => {
-              sendContentHeight();
-            });
-            
-            observer.observe(document.body, {
-              childList: true,
-              subtree: true,
-              attributes: true
-            });
-            
-            // Also check on window resize
-            window.addEventListener('resize', sendContentHeight);
-            
-            // Check periodically for dynamic content
-            setInterval(sendContentHeight, 1000);
-            
-            true; // Required for injectedJavaScript
-          `}
           startInLoadingState={false}
           javaScriptEnabled={true}
           domStorageEnabled={true}
           allowsInlineMediaPlayback={true}
           mediaPlaybackRequiresUserAction={false}
-          // Fixed: Use numeric value for Android compatibility
-          decelerationRate={Platform.OS === "android" ? 0.998 : "normal"}
-          // Android-specific props
-          mixedContentMode={
-            Platform.OS === "android" ? "compatibility" : undefined
-          }
-          thirdPartyCookiesEnabled={
-            Platform.OS === "android" ? true : undefined
-          }
-          sharedCookiesEnabled={Platform.OS === "android" ? true : undefined}
-          nestedScrollEnabled={Platform.OS === "android" ? true : undefined}
-          // iOS-specific props
-          allowsBackForwardNavigationGestures={
-            Platform.OS === "ios" ? true : undefined
-          }
-          bounces={Platform.OS === "ios" ? true : undefined}
+          decelerationRate="normal"
+          allowsBackForwardNavigationGestures={true}
+          bounces={true}
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={true}
           scrollEnabled={true}
           accessibilityLabel={`Ask feature for ${brandConfig.displayName}`}
           accessibilityHint="Interactive web content for asking questions"
         />
-      </ScrollView>
+      )}
       <SettingsDrawer
         visible={settingsDrawerVisible}
         onClose={() => setSettingsDrawerVisible(false)}
@@ -257,9 +351,14 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     flexGrow: 1,
   },
-  webView: {
-    width: "100%",
-  },
+  webView:
+    Platform.OS === "android"
+      ? {
+          width: "100%",
+        }
+      : {
+          flex: 1,
+        },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
