@@ -12,13 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Dimensions,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 
@@ -26,7 +20,6 @@ const { width: screenWidth } = Dimensions.get("window");
 const isTablet = screenWidth >= 768;
 
 export default function HybridSearchWebView() {
-  const [webViewLoading, setWebViewLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const { brandConfig } = useBrandConfig();
   const contentBackground = useThemeColor({}, "contentBackground");
@@ -150,33 +143,13 @@ export default function HybridSearchWebView() {
           </ThemedText>
         </View>
 
-        {/* Loading Indicator - Full Screen */}
-        {webViewLoading && (
-          <View
-            style={[
-              styles.loadingContainer,
-              { backgroundColor: contentBackground },
-            ]}
-          >
-            <ActivityIndicator size="large" color={primaryColor} />
-            <ThemedText
-              style={[styles.loadingText, { fontFamily: primaryFont }]}
-            >
-              Loading search...
-            </ThemedText>
-          </View>
-        )}
-
         {/* WebView */}
         <WebView
           source={{ uri: webViewUrl }}
           style={styles.webView}
-          onLoadStart={() => setWebViewLoading(true)}
-          onLoadEnd={() => setWebViewLoading(false)}
           onError={(syntheticEvent) => {
             const { nativeEvent } = syntheticEvent;
             console.error("Hybrid Search WebView error:", nativeEvent);
-            setWebViewLoading(false);
           }}
           onShouldStartLoadWithRequest={(request) => {
             // Intercept navigation requests
@@ -220,7 +193,7 @@ export default function HybridSearchWebView() {
             // Allow other navigations
             return true;
           }}
-          onMessage={(event) => {
+          onMessage={async (event) => {
             try {
               const data = JSON.parse(event.nativeEvent.data);
 
@@ -230,9 +203,37 @@ export default function HybridSearchWebView() {
                   "🔗 Hybrid Search WebView: Link pressed in WebView:",
                   data.url
                 );
-                // Close the search modal before handling the link
-                router.back();
-                handleLinkPress(data.url, linkInterceptorConfig);
+
+                // Handle the link first (this will navigate if it's a domain link)
+                await handleLinkPress(data.url, linkInterceptorConfig);
+
+                // Then close the modal if it was a domain link
+                try {
+                  const urlObj = new URL(data.url);
+                  const urlHostname = urlObj.hostname.replace(/^www\./, "");
+
+                  const isDomainLink = linkInterceptorConfig.domains.some(
+                    (domain) => {
+                      const normalizedDomain = domain
+                        .replace(/^(https?:\/\/)?(www\.)?/, "")
+                        .split("/")[0];
+                      return (
+                        urlHostname === normalizedDomain ||
+                        urlHostname.endsWith("." + normalizedDomain)
+                      );
+                    }
+                  );
+
+                  if (isDomainLink) {
+                    console.log(
+                      "🔗 Domain link detected, closing search modal"
+                    );
+                    router.back();
+                  }
+                } catch (e) {
+                  console.log("🔗 Could not parse URL:", data.url);
+                }
+
                 return;
               }
             } catch (error) {
@@ -245,6 +246,7 @@ export default function HybridSearchWebView() {
           startInLoadingState={true}
           scalesPageToFit={true}
           showsVerticalScrollIndicator={true}
+          setSupportMultipleWindows={false}
         />
       </ThemedView>
     </SafeAreaView>
