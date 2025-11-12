@@ -7,6 +7,10 @@ export interface MisoConfig {
   publishableKey: string;
   brandFilter: string;
   baseUrl: string;
+  hybridSearch?: {
+    enabled: boolean;
+    webViewUrl: string;
+  };
 }
 
 export interface BrandConfig {

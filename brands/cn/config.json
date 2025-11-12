@@ -128,7 +128,11 @@
     "apiKey": "FcakM2bTHy0Sf0uaM6mYpwI9vnXWKdu4E9jO6Bx2",
     "publishableKey": "4yxesK8tUzRGIz17RXDPgplM0c5ZAWnWjtD9cdcD",
     "brandFilter": "Construction News",
-    "baseUrl": "https://api.askmiso.com/v1"
+    "baseUrl": "https://api.askmiso.com/v1",
+    "hybridSearch": {
+      "enabled": false,
+      "webViewUrl": "https://www.constructionnews.co.uk/mobile-app-ai-search/"
+    }
   },
   "highlightsRecommendations": {
     "enabled": true,

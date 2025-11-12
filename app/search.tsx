@@ -1,3 +1,4 @@
+import HybridSearchWebView from "@/components/HybridSearchWebView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
@@ -33,6 +34,23 @@ interface SearchResult {
 }
 
 export default function SearchScreen() {
+  // Brand configuration
+  const { brandConfig } = useBrandConfig();
+
+  // Check if hybrid search is enabled
+  const isHybridSearchEnabled =
+    brandConfig?.misoConfig?.hybridSearch?.enabled ?? false;
+
+  // If hybrid search is enabled, render the webview component
+  if (isHybridSearchEnabled) {
+    return <HybridSearchWebView />;
+  }
+
+  // Otherwise, render the native search component
+  return <NativeSearchScreen />;
+}
+
+function NativeSearchScreen() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);

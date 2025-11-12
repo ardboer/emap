@@ -131,7 +131,11 @@
     "apiKey": "fAd2K3q1t6pw5SwzQcm0gPkHYvBpqFWkxBWwLvyL",
     "publishableKey": "VNMnQW8LlARMf8TPdZvtidWCi8EljMSbPFppPgJo",
     "brandFilter": "Nursing Times",
-    "baseUrl": "https://api.askmiso.com/v1"
+    "baseUrl": "https://api.askmiso.com/v1",
+    "hybridSearch": {
+      "enabled": true,
+      "webViewUrl": "https://www.nursingtimes.net/mobile-app-ai-search/"
+    }
   },
   "highlightsRecommendations": {
     "enabled": true,
