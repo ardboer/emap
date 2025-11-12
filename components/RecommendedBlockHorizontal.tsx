@@ -84,6 +84,7 @@ export default function RecommendedBlockHorizontal({
         snapToInterval={screenWidth * 0.7 + 12} // Card width + spacing
         decelerationRate="fast"
         snapToAlignment="start"
+        nestedScrollEnabled={true}
       />
     </ThemedView>
   );

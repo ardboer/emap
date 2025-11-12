@@ -298,6 +298,7 @@ export default function NewsScreen() {
         snapToInterval={screenWidth * 0.7 + 12} // Card width + spacing
         decelerationRate="fast"
         snapToAlignment="start"
+        nestedScrollEnabled={true}
       />
     );
   };

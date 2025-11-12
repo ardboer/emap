@@ -70,6 +70,8 @@ export function useArticleAccess(articleId: string) {
         isCheckingRef.current = true;
 
         console.log("🔍 Starting access check for article:", articleId);
+        // Preserve isAllowed state during recheck to prevent paywall flash
+        // Only update isAllowed when the check completes with a definitive result
         setState((prev) => ({ ...prev, isChecking: true, error: null }));
 
         // Get a valid token (will refresh if expired)
