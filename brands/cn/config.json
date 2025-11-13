@@ -8,7 +8,8 @@
     "baseUrl": "https://www.constructionnews.co.uk",
     "hash": "5c159d9d79114126d3e27224180295",
     "menuId": 103571,
-    "maxNbOfItems": 10
+    "maxNbOfItems": 10,
+    "leadtext": "excerpt"
   },
   "theme": {
     "colors": {

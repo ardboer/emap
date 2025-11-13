@@ -9,7 +9,8 @@
     "jwtSecret": "4d428b80a95267746a0cb7a55e16955fbr5a09d3985e378aabdfc5179bf04vg5",
     "hash": "5506c4c9af9349c87a364b3b0b1988",
     "menuId": 162196,
-    "maxNbOfItems": 10
+    "maxNbOfItems": 10,
+    "leadtext": "post_first_paragraph"
   },
   "theme": {
     "colors": {

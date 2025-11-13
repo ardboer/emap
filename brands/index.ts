@@ -27,6 +27,7 @@ export interface BrandConfig {
     authHash?: string;
     menuId?: number;
     maxNbOfItems?: number;
+    leadtext?: string;
   };
   theme: {
     colors: {
