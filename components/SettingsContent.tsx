@@ -959,6 +959,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           subtitle="1.0.0"
           icon="info.circle.fill"
           onPress={handleVersionTap}
+          noBackground
         />
       </ThemedView>
 
