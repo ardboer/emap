@@ -191,7 +191,7 @@
       "skipIfNotReady": false
     },
     "listView": {
-      "enabled": true,
+      "enabled": false,
       "views": {
         "news": {
           "enabled": true,
@@ -235,11 +235,11 @@
       "paragraphInterval": 3,
       "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
       "positions": [
-        // {
-        //   "type": "after_lead",
-        //   "size": "MEDIUM_RECTANGLE",
-        //   "enabled": true
-        // },
+        {
+          "type": "after_lead",
+          "size": "MEDIUM_RECTANGLE",
+          "enabled": true
+        },
         {
           "type": "in_content",
           "size": "MEDIUM_RECTANGLE",
