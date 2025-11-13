@@ -9,7 +9,7 @@ export interface Article {
   id: string;
   title: string;
   subtitle?: string;
-  leadText: string;
+  leadText: string | StructuredContentNode[];
   content: string | StructuredContentNode[];
   imageUrl: string;
   timestamp: string; // Pre-formatted date for list views (e.g., "5 hours ago")

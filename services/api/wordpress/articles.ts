@@ -365,11 +365,23 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
       content = postData.content.rendered;
     }
 
+    // Handle structured leadText (excerpt)
+    let leadText: string | StructuredContentNode[] = "";
+    if (
+      postData.excerpt &&
+      postData.excerpt.rendered &&
+      Array.isArray(postData.excerpt.rendered)
+    ) {
+      leadText = postData.excerpt.rendered;
+    } else if (typeof postData.excerpt.rendered === "string") {
+      leadText = stripHtml(postData.excerpt.rendered);
+    }
+
     // Transform to Article interface
     const article: Article = {
       id: postData.id.toString(),
       title: decodeHtmlEntities(stripHtml(postData.title.rendered)),
-      leadText: stripHtml(postData.excerpt.rendered),
+      leadText,
       content,
       imageUrl,
       timestamp: formatDate(postData.date), // Pre-formatted for list views

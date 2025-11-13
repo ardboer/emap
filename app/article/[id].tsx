@@ -306,6 +306,28 @@ export default function ArticleScreen() {
     }, 200);
   };
 
+  // Helper function to extract plain text from structured content
+  const extractTextFromStructured = (
+    content: string | StructuredContentNode[]
+  ): string => {
+    if (typeof content === "string") return content;
+    if (!Array.isArray(content)) return "";
+
+    let text = "";
+    const extractText = (nodes: StructuredContentNode[]): void => {
+      for (const node of nodes) {
+        if (node.text) {
+          text += node.text;
+        }
+        if (node.children) {
+          extractText(node.children);
+        }
+      }
+    };
+    extractText(content);
+    return text.trim();
+  };
+
   // Helper function to render content based on type
   const renderContent = () => {
     if (!article?.content) return null;
@@ -494,7 +516,11 @@ export default function ArticleScreen() {
           >
             <ShareButton
               title={article.title}
-              message={article.leadText || article.subtitle || ""}
+              message={
+                extractTextFromStructured(article.leadText) ||
+                article.subtitle ||
+                ""
+              }
               url={(() => {
                 // Use article.link from API, or construct fallback URL
                 const fallbackUrl = brandConfig?.domain
@@ -668,17 +694,29 @@ export default function ArticleScreen() {
               </Text>
             )}
 
-            <Text
-              style={[
-                styles.leadText,
-                {
-                  color: Colors[colorScheme].contentTitleText,
-                  fontFamily: brandConfig?.theme.fonts.primaryBold,
-                },
-              ]}
-            >
-              {article.leadText}
-            </Text>
+            {/* Render leadText - support both string and structured content */}
+            {Array.isArray(article.leadText) ? (
+              <>
+                <RichContentRenderer
+                  content={article.leadText as StructuredContentNode[]}
+                  style={styles.leadText}
+                  articleId={id}
+                />
+              </>
+            ) : (
+              <Text
+                style={[
+                  styles.leadText,
+                  {
+                    color: Colors[colorScheme].contentTitleText,
+                    fontFamily: brandConfig?.theme.fonts.primaryBold,
+                  },
+                ]}
+                allowFontScaling={false}
+              >
+                {article.leadText}
+              </Text>
+            )}
 
             {/* Display ad after lead text if configured */}
             {afterLeadAdPosition && (
@@ -858,8 +896,8 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   leadText: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 180,
+    lineHeight: 200,
     fontWeight: "400" as "400",
     marginBottom: 20,
   },

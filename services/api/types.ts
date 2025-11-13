@@ -36,7 +36,7 @@ export interface PostApiResponse {
     rendered: string;
   };
   excerpt: {
-    rendered: string;
+    rendered: string | StructuredContentNode[];
   };
   content: {
     rendered: StructuredContentNode[];
