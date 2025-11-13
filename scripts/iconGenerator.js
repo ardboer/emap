@@ -317,9 +317,13 @@ class IconGenerator {
           .toBuffer();
       }
 
-      // Flatten to remove any remaining transparency
+      // Flatten to remove any remaining transparency and ensure exact dimensions
       iconBuffer = await sharp(iconBuffer)
         .flatten({ background: lightBgRGB })
+        .resize(iconConfig.size, iconConfig.size, {
+          fit: "cover",
+          position: "center",
+        })
         .toBuffer();
 
       await fs.promises.writeFile(outputPath, iconBuffer);
@@ -401,9 +405,13 @@ class IconGenerator {
           .toBuffer();
       }
 
-      // Flatten to remove any remaining transparency
+      // Flatten to remove any remaining transparency and ensure exact dimensions
       iconBuffer = await sharp(iconBuffer)
         .flatten({ background: darkBgRGB })
+        .resize(iconConfig.size, iconConfig.size, {
+          fit: "cover",
+          position: "center",
+        })
         .toBuffer();
 
       await fs.promises.writeFile(outputPath, iconBuffer);

@@ -56,6 +56,8 @@
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSUserTrackingUsageDescription</key>
     <string>We use tracking to provide personalized content and measure ad effectiveness while respecting your privacy.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>This app does not access your photo library. This permission is required by a third-party library but is not used.</string>
     <key>UIBackgroundModes</key>
     <array>
     	<string>remote-notification</string>

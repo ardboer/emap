@@ -65,6 +65,8 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   const [debugAccessCheckEnabled, setDebugAccessCheckEnabled] =
     React.useState(false);
   const [useTestAds, setUseTestAds] = React.useState(true);
+  const [versionTapCount, setVersionTapCount] = React.useState(0);
+  const [lastTapTime, setLastTapTime] = React.useState<number>(0);
   const [topicSubscriptions, setTopicSubscriptions] = React.useState<
     TopicSubscription[]
   >([]);
@@ -657,6 +659,44 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     }
   };
 
+  const handleVersionTap = async () => {
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapTime;
+
+    // Reset counter if more than 3 seconds since last tap
+    if (timeSinceLastTap > 3000) {
+      setVersionTapCount(1);
+      setLastTapTime(now);
+      return;
+    }
+
+    const newCount = versionTapCount + 1;
+    setVersionTapCount(newCount);
+    setLastTapTime(now);
+
+    // Activate debug mode on 7th tap
+    if (newCount >= 7) {
+      try {
+        await AsyncStorage.setItem("debug_mode_enabled", "true");
+        setDebugModeEnabled(true);
+        setVersionTapCount(0); // Reset counter
+
+        Alert.alert(
+          "Debug Mode Activated",
+          "Debug options are now available below.",
+          [{ text: "OK" }]
+        );
+      } catch (error) {
+        console.error("Error activating debug mode:", error);
+        Alert.alert(
+          "Error",
+          "Failed to activate debug mode. Please try again.",
+          [{ text: "OK" }]
+        );
+      }
+    }
+  };
+
   const SettingsItem = ({
     title,
     subtitle,
@@ -918,7 +958,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
           title="Version"
           subtitle="1.0.0"
           icon="info.circle.fill"
-          noBackground
+          onPress={handleVersionTap}
         />
       </ThemedView>
 

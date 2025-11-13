@@ -235,11 +235,11 @@
       "paragraphInterval": 3,
       "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
       "positions": [
-        {
-          "type": "after_lead",
-          "size": "MEDIUM_RECTANGLE",
-          "enabled": true
-        },
+        // {
+        //   "type": "after_lead",
+        //   "size": "MEDIUM_RECTANGLE",
+        //   "enabled": true
+        // },
         {
           "type": "in_content",
           "size": "MEDIUM_RECTANGLE",
@@ -250,7 +250,7 @@
     },
     "listView": {
       "enabled": true,
-      "maxAdsPerPage": 4,
+      "maxAdsPerPage": 1,
       "blockInterval": 3,
       "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
       "positions": [
@@ -259,12 +259,6 @@
           "size": "MEDIUM_RECTANGLE",
           "enabled": true,
           "afterBlock": 1
-        },
-        {
-          "type": "between_blocks",
-          "size": "MEDIUM_RECTANGLE",
-          "enabled": true,
-          "afterBlock": 3
         }
       ]
     }
