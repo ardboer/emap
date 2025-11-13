@@ -215,6 +215,8 @@ class AnalyticsService {
         duration_ms: sessionDuration,
         duration_seconds: Math.round(sessionDuration / 1000),
         duration_minutes: Math.round(sessionDuration / 60000),
+        timestamp_end_ms: Date.now(),
+        timestamp_start_ms: this.sessionStartTime,
       });
       this.sessionStartTime = null;
     } catch (error) {
