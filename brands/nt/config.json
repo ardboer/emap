@@ -276,8 +276,8 @@
   "gam": {
     "enabled": true,
     "appIds": {
-      "ios": "ca-app-pub-3940256099942544~1458002511",
-      "android": "ca-app-pub-3940256099942544~3347511713"
+      "ios": "ca-app-pub-1602418953588220~2442705824",
+      "android": "ca-app-pub-1602418953588220~8755056636"
     },
     "adUnits": {
       "ios": {

@@ -721,7 +721,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             : (themeColors as any)?.highlightBoxBg || "#00334C",
         },
       ]}
-      disabled={noBackground}
+      // disabled={noBackground}
       onPress={onPress}
     >
       <ThemedView transparant style={styles.settingsItemLeft}>
