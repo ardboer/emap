@@ -2154,7 +2154,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNGoogleMobileAds (15.8.0):
+  - RNGoogleMobileAds (16.0.0):
     - Google-Mobile-Ads-SDK (= 12.11.0)
     - GoogleUserMessagingPlatform (= 3.0.0)
     - hermes-engine
@@ -2959,7 +2959,7 @@ SPEC CHECKSUMS:
   RNFBCrashlytics: cf29393ef5564bd3867faada89c1ea7b2d8401be
   RNFBMessaging: 81842deb236bfd87d8e49f22ce7acf05d1eea04b
   RNGestureHandler: 2914750df066d89bf9d8f48a10ad5f0051108ac3
-  RNGoogleMobileAds: 8f01bf4ac031d987a7390cbe05f5cd005350d3d0
+  RNGoogleMobileAds: 6fe26fe82d677c9593ffb1a296aff45c5240782f
   RNReanimated: d87360cba850e1df46f5b74d6ee74653a520b631
   RNScreens: d8d6f1792f6e7ac12b0190d33d8d390efc0c1845
   RNShare: 0e600372fb35783fe30d413efd28d11de2bf6cf0

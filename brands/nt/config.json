@@ -231,7 +231,7 @@
     },
     "articleDetail": {
       "enabled": true,
-      "maxAdsPerPage": 3,
+      "maxAdsPerPage": 2,
       "paragraphInterval": 3,
       "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],
       "positions": [
