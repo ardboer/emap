@@ -268,7 +268,7 @@
   },
   "exploreModule": {
     "enabled": true,
-    "afterParagraph": 3,
+    "afterParagraph": 6,
     "showWhenNotLoggedIn": true
   },
   "layout": {
