@@ -1,5 +1,5 @@
-import { Image, ImageProps } from "expo-image";
-import React, { useRef, useState } from "react";
+import { ImageProps } from "expo-image";
+import React, { memo, useCallback, useMemo, useRef, useState } from "react";
 import { Animated, StyleSheet, useColorScheme, View } from "react-native";
 
 export interface FadeInImageProps extends ImageProps {
@@ -31,7 +31,7 @@ export interface FadeInImageProps extends ImageProps {
  * />
  * ```
  */
-export function FadeInImage({
+function FadeInImageComponent({
   fadeDuration = 300,
   placeholderColor,
   showPlaceholder = true,
@@ -43,26 +43,30 @@ export function FadeInImage({
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Theme-aware placeholder colors
-  const defaultPlaceholderColor =
-    colorScheme === "dark" ? "#2a2a2a" : "#f0f0f0";
-  const finalPlaceholderColor = placeholderColor || defaultPlaceholderColor;
+  // Theme-aware placeholder colors - memoized
+  const finalPlaceholderColor = useMemo(() => {
+    if (placeholderColor) return placeholderColor;
+    return colorScheme === "dark" ? "#2a2a2a" : "#f0f0f0";
+  }, [placeholderColor, colorScheme]);
 
-  const handleLoad = (event: any) => {
-    setIsLoaded(true);
+  const handleLoad = useCallback(
+    (event: any) => {
+      setIsLoaded(true);
 
-    // Trigger fade-in animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: fadeDuration,
-      useNativeDriver: true,
-    }).start();
+      // Trigger fade-in animation
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: fadeDuration,
+        useNativeDriver: true,
+      }).start();
 
-    // Call original onLoad if provided
-    if (onLoad) {
-      onLoad(event);
-    }
-  };
+      // Call original onLoad if provided
+      if (onLoad) {
+        onLoad(event);
+      }
+    },
+    [fadeAnim, fadeDuration, onLoad]
+  );
 
   return (
     <View style={[styles.container, style]}>
@@ -77,7 +81,7 @@ export function FadeInImage({
       )}
 
       {/* Animated image */}
-      <Animated.View
+      {/* <Animated.View
         style={[
           StyleSheet.absoluteFill,
           {
@@ -89,8 +93,18 @@ export function FadeInImage({
           {...imageProps}
           style={[StyleSheet.absoluteFill]}
           onLoad={handleLoad}
+          // Performance optimizations for expo-image
+          cachePolicy="memory-disk"
+          priority="normal"
+          recyclingKey={
+            imageProps.source &&
+            typeof imageProps.source === "object" &&
+            "uri" in imageProps.source
+              ? imageProps.source.uri
+              : undefined
+          }
         />
-      </Animated.View>
+      </Animated.View> */}
     </View>
   );
 }
@@ -100,3 +114,31 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 });
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-render if source URI changes
+export const FadeInImage = memo(
+  FadeInImageComponent,
+  (prevProps, nextProps) => {
+    // Compare source URIs
+    const prevUri =
+      prevProps.source &&
+      typeof prevProps.source === "object" &&
+      "uri" in prevProps.source
+        ? prevProps.source.uri
+        : null;
+    const nextUri =
+      nextProps.source &&
+      typeof nextProps.source === "object" &&
+      "uri" in nextProps.source
+        ? nextProps.source.uri
+        : null;
+
+    return (
+      prevUri === nextUri &&
+      prevProps.fadeDuration === nextProps.fadeDuration &&
+      prevProps.showPlaceholder === nextProps.showPlaceholder &&
+      prevProps.placeholderColor === nextProps.placeholderColor
+    );
+  }
+);

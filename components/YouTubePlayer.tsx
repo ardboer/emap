@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { ActivityIndicator, Dimensions, StyleSheet, View } from "react-native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { ThemedText } from "./ThemedText";
@@ -11,22 +11,22 @@ export type YouTubePlayerProps = {
   height?: number;
 };
 
-export function YouTubePlayerComponent({
+function YouTubePlayerComponentInternal({
   videoId,
   height = 220,
 }: YouTubePlayerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const handleReady = () => {
+  const handleReady = useCallback(() => {
     setLoading(false);
-  };
+  }, []);
 
-  const handleError = (error: string) => {
+  const handleError = useCallback((error: string) => {
     console.error("YouTube Player Error:", error);
     setError(true);
     setLoading(false);
-  };
+  }, []);
 
   if (error) {
     return (
@@ -91,3 +91,15 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 });
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-render if videoId or height changes
+export const YouTubePlayerComponent = memo(
+  YouTubePlayerComponentInternal,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.videoId === nextProps.videoId &&
+      prevProps.height === nextProps.height
+    );
+  }
+);

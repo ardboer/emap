@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { fetchTrendingArticles } from "@/services/api";
 import { Article } from "@/types";
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -19,7 +19,7 @@ interface TrendingBlockHorizontalProps {
   onArticlePress?: (article: Article) => void;
 }
 
-export default function TrendingBlockHorizontal({
+function TrendingBlockHorizontal({
   onArticlePress,
 }: TrendingBlockHorizontalProps) {
   const { user, isAuthenticated } = useAuth();
@@ -111,3 +111,14 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 });
+
+// Memoize component - only re-render if onArticlePress changes
+export default memo(
+  TrendingBlockHorizontal,
+  (
+    prevProps: TrendingBlockHorizontalProps,
+    nextProps: TrendingBlockHorizontalProps
+  ) => {
+    return prevProps.onArticlePress === nextProps.onArticlePress;
+  }
+);

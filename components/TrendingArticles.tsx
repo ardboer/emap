@@ -6,8 +6,8 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { fetchTrendingArticles } from "@/services/api";
 import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { Article } from "@/types";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
 import ArticleTeaser from "./ArticleTeaser";
 import NativeAdListItem from "./NativeAdListItem";
 
@@ -55,6 +55,24 @@ export default function TrendingArticles() {
     loadTrendingArticles();
   }, [isEnabled, itemCount, user?.userId, isAuthenticated]);
 
+  // Memoize render function before early returns to comply with hooks rules
+  const renderArticle = useCallback(
+    ({ item, index }: { item: Article; index: number }) => {
+      // Check if we should show a native ad at this position
+      if (nativeAdVariantManager.shouldShowAdAtPosition("trending", index)) {
+        return (
+          <React.Fragment key={`ad-${index}`}>
+            <NativeAdListItem position={index} viewType="trending" />
+            <ArticleTeaser key={item.id} article={item} />
+          </React.Fragment>
+        );
+      }
+
+      return <ArticleTeaser key={item.id} article={item} />;
+    },
+    []
+  );
+
   // Don't render if disabled
   if (!isEnabled) {
     return null;
@@ -90,28 +108,21 @@ export default function TrendingArticles() {
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Trending Articles
       </ThemedText>
-      <ThemedView
+      <FlatList
+        data={trendingArticles}
+        renderItem={renderArticle}
+        keyExtractor={(item) => item.id}
+        scrollEnabled={false}
         style={[
           styles.articlesContainer,
           { backgroundColor: contentBackground },
         ]}
-      >
-        {trendingArticles.map((article, index) => {
-          // Check if we should show a native ad at this position
-          if (
-            nativeAdVariantManager.shouldShowAdAtPosition("trending", index)
-          ) {
-            return (
-              <React.Fragment key={`ad-${index}`}>
-                <NativeAdListItem position={index} viewType="trending" />
-                <ArticleTeaser key={article.id} article={article} />
-              </React.Fragment>
-            );
-          }
-
-          return <ArticleTeaser key={article.id} article={article} />;
-        })}
-      </ThemedView>
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={5}
+        initialNumToRender={5}
+        windowSize={10}
+      />
     </ThemedView>
   );
 }

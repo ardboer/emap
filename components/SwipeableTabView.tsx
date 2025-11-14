@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { memo, useCallback, useRef, useState } from "react";
 import {
   Dimensions,
   NativeScrollEvent,
@@ -27,7 +27,7 @@ interface SwipeableTabViewProps {
   onTabChange: (index: number) => void;
 }
 
-export default function SwipeableTabView({
+function SwipeableTabView({
   tabs,
   activeTabIndex,
   onTabChange,
@@ -38,16 +38,23 @@ export default function SwipeableTabView({
   // Animated value for smooth transitions
   const translateX = useSharedValue(-activeTabIndex * screenWidth);
 
-  // Handle scroll events
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const newIndex = Math.round(offsetX / screenWidth);
+  // Handle scroll events - memoized to prevent recreation
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const newIndex = Math.round(offsetX / screenWidth);
 
-    if (newIndex !== currentIndex && newIndex >= 0 && newIndex < tabs.length) {
-      setCurrentIndex(newIndex);
-      onTabChange(newIndex);
-    }
-  };
+      if (
+        newIndex !== currentIndex &&
+        newIndex >= 0 &&
+        newIndex < tabs.length
+      ) {
+        setCurrentIndex(newIndex);
+        onTabChange(newIndex);
+      }
+    },
+    [currentIndex, tabs.length, onTabChange]
+  );
 
   // Programmatically scroll to tab (when tab bar is tapped)
   React.useEffect(() => {
@@ -111,4 +118,14 @@ const styles = StyleSheet.create({
     width: screenWidth,
     flex: 1,
   },
+});
+
+// Memoize component to prevent unnecessary re-renders
+// Re-render only when tabs or activeTabIndex changes
+export default memo(SwipeableTabView, (prevProps, nextProps) => {
+  return (
+    prevProps.tabs === nextProps.tabs &&
+    prevProps.activeTabIndex === nextProps.activeTabIndex &&
+    prevProps.onTabChange === nextProps.onTabChange
+  );
 });

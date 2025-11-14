@@ -6,7 +6,7 @@ import { Colors } from "@/constants/Colors";
 import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { Article } from "@/types";
 import { router } from "expo-router";
-import React from "react";
+import React, { memo, useCallback } from "react";
 import {
   Dimensions,
   StyleSheet,
@@ -25,13 +25,13 @@ interface ArticleTeaserHorizontalProps {
   onPress?: (article: Article) => void;
 }
 
-export default function ArticleTeaserHorizontal({
+function ArticleTeaserHorizontal({
   article,
   onPress,
 }: ArticleTeaserHorizontalProps) {
   const colorScheme = useColorScheme() ?? "light";
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     if (onPress) {
       onPress(article);
     } else {
@@ -51,7 +51,14 @@ export default function ArticleTeaserHorizontal({
         },
       });
     }
-  };
+  }, [
+    article.id,
+    article.title,
+    article.category,
+    article.publishDate,
+    article.timestamp,
+    onPress,
+  ]);
 
   return (
     <TouchableOpacity
@@ -130,4 +137,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: "600",
   },
+});
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-render if article ID changes
+export default memo(ArticleTeaserHorizontal, (prevProps, nextProps) => {
+  return (
+    prevProps.article.id === nextProps.article.id &&
+    prevProps.onPress === nextProps.onPress
+  );
 });

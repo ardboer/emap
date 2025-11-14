@@ -1,17 +1,17 @@
-import { FadeInImage } from "@/components/FadeInImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { Article } from "@/types";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React from "react";
+import React, { memo, useCallback } from "react";
 import {
   Dimensions,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
 } from "react-native";
+import { FadeInImage } from "./FadeInImage";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -20,13 +20,10 @@ interface ArticleTeaserHeroProps {
   onPress?: (article: Article) => void;
 }
 
-export default function ArticleTeaserHero({
-  article,
-  onPress,
-}: ArticleTeaserHeroProps) {
+function ArticleTeaserHero({ article, onPress }: ArticleTeaserHeroProps) {
   const colorScheme = useColorScheme() ?? "light";
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     if (onPress) {
       onPress(article);
     } else {
@@ -46,7 +43,14 @@ export default function ArticleTeaserHero({
         },
       });
     }
-  };
+  }, [
+    article.id,
+    article.title,
+    article.category,
+    article.publishDate,
+    article.timestamp,
+    onPress,
+  ]);
 
   return (
     <TouchableOpacity style={styles.heroContainer} onPress={handlePress}>
@@ -65,12 +69,6 @@ export default function ArticleTeaserHero({
               <ThemedText type="defaultSemiBold" style={styles.title}>
                 {article.title}
               </ThemedText>
-              {/* <BookmarkButton
-                article={article}
-                iconColor="#FFFFFF"
-                iconSize={20}
-                style={styles.bookmarkButton}
-              /> */}
             </ThemedView>
           </ThemedView>
         </LinearGradient>
@@ -123,4 +121,13 @@ const styles = StyleSheet.create({
   bookmarkButton: {
     marginTop: -4,
   },
+});
+
+// Memoize component - critical for list performance
+// Only re-render if article ID changes
+export default memo(ArticleTeaserHero, (prevProps, nextProps) => {
+  return (
+    prevProps.article.id === nextProps.article.id &&
+    prevProps.onPress === nextProps.onPress
+  );
 });

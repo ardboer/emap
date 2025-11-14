@@ -15,7 +15,7 @@ import { displayAdLazyLoadManager } from "@/services/displayAdLazyLoadManager";
 import { displayAdManager } from "@/services/displayAdManager";
 import { AdSizes, AdTargeting } from "@/services/gam";
 import { AdSizeType } from "@/types/ads";
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { BannerAdSize } from "react-native-google-mobile-ads";
 import { BannerAd } from "./BannerAd";
@@ -83,7 +83,7 @@ const mapAdSize = (size: AdSizeType): BannerAdSize => {
   }
 };
 
-export function DisplayAd({
+function DisplayAdComponent({
   context,
   size,
   style,
@@ -105,23 +105,28 @@ export function DisplayAd({
   ).current;
   const hasEnteredView = useRef(false);
 
+  // Memoize callbacks to prevent unnecessary re-renders
+  const handleEnterView = useCallback(() => {
+    if (enableLazyLoad && !shouldLoad && !hasEnteredView.current) {
+      hasEnteredView.current = true;
+      displayAdLazyLoadManager.startLoading(adId);
+      setShouldLoad(true);
+    }
+  }, [enableLazyLoad, shouldLoad, adId]);
+
+  const handleExitView = useCallback(() => {
+    // Track viewability when ad exits viewport
+    if (displayAdLazyLoadManager.isLoaded(adId)) {
+      displayAdLazyLoadManager.trackViewability(adId);
+    }
+  }, [adId]);
+
   // Lazy loading with viewport detection
   const { ref, inView } = useInView({
     threshold: lazyLoadThreshold,
     enabled: enableLazyLoad,
-    onEnterView: () => {
-      if (enableLazyLoad && !shouldLoad && !hasEnteredView.current) {
-        hasEnteredView.current = true;
-        displayAdLazyLoadManager.startLoading(adId);
-        setShouldLoad(true);
-      }
-    },
-    onExitView: () => {
-      // Track viewability when ad exits viewport
-      if (displayAdLazyLoadManager.isLoaded(adId)) {
-        displayAdLazyLoadManager.trackViewability(adId);
-      }
-    },
+    onEnterView: handleEnterView,
+    onExitView: handleExitView,
   });
 
   useEffect(() => {
@@ -166,6 +171,42 @@ export function DisplayAd({
     }
   }, [inView, shouldLoad, adId]);
 
+  // Memoize ad callbacks before early return to comply with hooks rules
+  const handleAdLoaded = useCallback(() => {
+    displayAdLazyLoadManager.markAsLoaded(adId);
+    setAdLoaded(true);
+    // console.log(`[DisplayAd] Ad loaded: ${context} - ${size}`);
+    onAdLoaded?.();
+  }, [adId, onAdLoaded]);
+
+  const handleAdFailedToLoad = useCallback(
+    (error: any) => {
+      displayAdLazyLoadManager.markAsFailed(adId, error);
+
+      // Check if this is a "no-fill" error (no ad available)
+      const isNoFillError =
+        error?.message?.includes("no-fill") ||
+        error?.message?.includes("No ad to show") ||
+        error?.code === "no-fill";
+
+      // Only log non-no-fill errors as these are expected and not actual issues
+      if (!isNoFillError) {
+        console.log(`[DisplayAd] Ad failed: ${context} - ${size}`, error);
+      }
+
+      // Mark ad as failed to remove spacing
+      setAdFailed(true);
+
+      onAdFailedToLoad?.(error);
+    },
+    [adId, context, size, onAdFailedToLoad]
+  );
+
+  const handleAdClicked = useCallback(() => {
+    console.log(`[DisplayAd] Ad clicked: ${context} - ${size}`);
+    onAdClicked?.();
+  }, [context, size, onAdClicked]);
+
   // Don't render if ads are disabled or size not allowed
   if (!shouldRender) {
     return null;
@@ -192,35 +233,9 @@ export function DisplayAd({
           targeting={targeting}
           showLoadingIndicator={true}
           showErrorMessage={false}
-          onAdLoaded={() => {
-            displayAdLazyLoadManager.markAsLoaded(adId);
-            setAdLoaded(true);
-            // console.log(`[DisplayAd] Ad loaded: ${context} - ${size}`);
-            onAdLoaded?.();
-          }}
-          onAdFailedToLoad={(error) => {
-            displayAdLazyLoadManager.markAsFailed(adId, error);
-
-            // Check if this is a "no-fill" error (no ad available)
-            const isNoFillError =
-              error?.message?.includes("no-fill") ||
-              error?.message?.includes("No ad to show") ||
-              error?.code === "no-fill";
-
-            // Only log non-no-fill errors as these are expected and not actual issues
-            if (!isNoFillError) {
-              console.log(`[DisplayAd] Ad failed: ${context} - ${size}`, error);
-            }
-
-            // Mark ad as failed to remove spacing
-            setAdFailed(true);
-
-            onAdFailedToLoad?.(error);
-          }}
-          onAdClicked={() => {
-            console.log(`[DisplayAd] Ad clicked: ${context} - ${size}`);
-            onAdClicked?.();
-          }}
+          onAdLoaded={handleAdLoaded}
+          onAdFailedToLoad={handleAdFailedToLoad}
+          onAdClicked={handleAdClicked}
         />
       ) : null}
     </View>
@@ -238,6 +253,18 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     // Completely hidden - no space reserved until ad loads
   },
+});
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-render if key props change
+export const DisplayAd = memo(DisplayAdComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.context === nextProps.context &&
+    prevProps.size === nextProps.size &&
+    prevProps.enableLazyLoad === nextProps.enableLazyLoad &&
+    prevProps.lazyLoadThreshold === nextProps.lazyLoadThreshold &&
+    prevProps.showPlaceholder === nextProps.showPlaceholder
+  );
 });
 
 export default DisplayAd;

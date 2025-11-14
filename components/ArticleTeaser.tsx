@@ -1,17 +1,17 @@
-import { FadeInImage } from "@/components/FadeInImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { Article } from "@/types";
 import { router } from "expo-router";
-import React from "react";
+import React, { memo, useCallback } from "react";
 import {
   Dimensions,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
 } from "react-native";
+import { FadeInImage } from "./FadeInImage";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -42,13 +42,10 @@ interface ArticleTeaserProps {
   onPress?: (article: Article) => void;
 }
 
-export default function ArticleTeaser({
-  article,
-  onPress,
-}: ArticleTeaserProps) {
+function ArticleTeaser({ article, onPress }: ArticleTeaserProps) {
   const colorScheme = useColorScheme() ?? "light";
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     if (onPress) {
       onPress(article);
     } else {
@@ -68,7 +65,14 @@ export default function ArticleTeaser({
         },
       });
     }
-  };
+  }, [
+    article.id,
+    article.title,
+    article.category,
+    article.publishDate,
+    article.timestamp,
+    onPress,
+  ]);
 
   return (
     <TouchableOpacity style={styles.articleContainer} onPress={handlePress}>
@@ -165,4 +169,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     opacity: 0.6,
   },
+});
+
+// Memoize component - critical for list performance
+// Only re-render if article ID changes
+export default memo(ArticleTeaser, (prevProps, nextProps) => {
+  return (
+    prevProps.article.id === nextProps.article.id &&
+    prevProps.onPress === nextProps.onPress
+  );
 });

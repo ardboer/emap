@@ -1,38 +1,41 @@
 import { getAvailableBrands } from "@/brands";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
-import React from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 /**
  * Development component for switching between brands
  * This should only be used in development/testing environments
  */
-export function BrandSwitcher() {
+function BrandSwitcher() {
   const { brandConfig, loading, switchBrand } = useBrandConfig();
-  const availableBrands = getAvailableBrands();
+  const availableBrands = useMemo(() => getAvailableBrands(), []);
 
-  const handleBrandSwitch = async (shortcode: string) => {
-    if (shortcode === brandConfig?.shortcode) return;
+  const handleBrandSwitch = useCallback(
+    async (shortcode: string) => {
+      if (shortcode === brandConfig?.shortcode) return;
 
-    Alert.alert(
-      "Switch Brand",
-      `Switch to brand "${shortcode}"? This will reload the app configuration.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Switch",
-          onPress: async () => {
-            try {
-              await switchBrand(shortcode);
-              Alert.alert("Success", `Switched to brand: ${shortcode}`);
-            } catch (error) {
-              Alert.alert("Error", `Failed to switch brand: ${error}`);
-            }
+      Alert.alert(
+        "Switch Brand",
+        `Switch to brand "${shortcode}"? This will reload the app configuration.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Switch",
+            onPress: async () => {
+              try {
+                await switchBrand(shortcode);
+                Alert.alert("Success", `Switched to brand: ${shortcode}`);
+              } catch (error) {
+                Alert.alert("Error", `Failed to switch brand: ${error}`);
+              }
+            },
           },
-        },
-      ]
-    );
-  };
+        ]
+      );
+    },
+    [brandConfig?.shortcode, switchBrand]
+  );
 
   if (loading) {
     return (
@@ -118,3 +121,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 });
+
+// Memoize component - it's a dev-only component so optimization is less critical
+// but still beneficial for consistency
+export default memo(BrandSwitcher);

@@ -152,7 +152,7 @@ export default function NewsScreen() {
     }, [])
   );
 
-  const handleArticlePress = (article: Article) => {
+  const handleArticlePress = useCallback((article: Article) => {
     // Pre-format the date to avoid flickering
     const formattedDate = article.publishDate
       ? formatArticleDetailDate(article.publishDate).toUpperCase()
@@ -166,7 +166,7 @@ export default function NewsScreen() {
         previewDate: formattedDate,
       },
     });
-  };
+  }, []);
 
   const handleSearchPress = () => {
     router.push("/search");
@@ -241,7 +241,6 @@ export default function NewsScreen() {
         />
       );
     }
-
     // Use hero variant for the first article in each block (index 0)
     if (index === 0) {
       return <ArticleTeaserHero article={item} onPress={handleArticlePress} />;
@@ -312,6 +311,11 @@ export default function NewsScreen() {
         decelerationRate="fast"
         snapToAlignment="start"
         nestedScrollEnabled={true}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={3}
+        initialNumToRender={2}
+        windowSize={5}
       />
     );
   };
@@ -522,6 +526,11 @@ export default function NewsScreen() {
         renderSectionHeader={renderSectionHeader}
         renderSectionFooter={renderSectionFooter}
         keyExtractor={(item, index) => item.id + index.toString()}
+        // getItemLayout={(data, index) => ({
+        //   length: 130,
+        //   offset: 130 * index,
+        //   index,
+        // })}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -543,6 +552,15 @@ export default function NewsScreen() {
           ) : null
         }
         stickySectionHeadersEnabled={false}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={3}
+        updateCellsBatchingPeriod={100}
+        initialNumToRender={5}
+        windowSize={5}
+        // Additional optimizations for smooth scrolling
+        onEndReachedThreshold={0.5}
+        disableVirtualization={false}
       />
     );
   };

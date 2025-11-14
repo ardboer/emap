@@ -98,7 +98,7 @@ export default function ClinicalScreen() {
     }, [])
   );
 
-  const handleArticlePress = (article: Article) => {
+  const handleArticlePress = useCallback((article: Article) => {
     // Pre-format the date to avoid flickering
     const formattedDate = article.publishDate
       ? formatArticleDetailDate(article.publishDate).toUpperCase()
@@ -112,7 +112,7 @@ export default function ClinicalScreen() {
         previewDate: formattedDate,
       },
     });
-  };
+  }, []);
 
   const handleSearchPress = () => {
     router.push("/search");
@@ -194,6 +194,11 @@ export default function ClinicalScreen() {
         snapToInterval={screenWidth * 0.7 + 12} // Card width + spacing
         decelerationRate="fast"
         snapToAlignment="start"
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={3}
+        initialNumToRender={2}
+        windowSize={5}
       />
     );
   };
@@ -322,6 +327,11 @@ export default function ClinicalScreen() {
         renderSectionHeader={renderSectionHeader}
         renderSectionFooter={renderSectionFooter}
         keyExtractor={(item, index) => item.id + index.toString()}
+        getItemLayout={(data, index) => ({
+          length: 130,
+          offset: 130 * index,
+          index,
+        })}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -340,6 +350,15 @@ export default function ClinicalScreen() {
           ) : null
         }
         stickySectionHeadersEnabled={false}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={3}
+        updateCellsBatchingPeriod={100}
+        initialNumToRender={5}
+        windowSize={5}
+        // Additional optimizations for smooth scrolling
+        onEndReachedThreshold={0.5}
+        disableVirtualization={false}
       />
       <SettingsDrawer
         visible={settingsDrawerVisible}

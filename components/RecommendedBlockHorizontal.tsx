@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { fetchRecommendedArticles } from "@/services/api";
 import { Article } from "@/types";
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -19,7 +19,7 @@ interface RecommendedBlockHorizontalProps {
   onArticlePress?: (article: Article) => void;
 }
 
-export default function RecommendedBlockHorizontal({
+function RecommendedBlockHorizontal({
   onArticlePress,
 }: RecommendedBlockHorizontalProps) {
   const { user, isAuthenticated } = useAuth();
@@ -111,3 +111,14 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 });
+
+// Memoize component - only re-render if onArticlePress changes
+export default memo(
+  RecommendedBlockHorizontal,
+  (
+    prevProps: RecommendedBlockHorizontalProps,
+    nextProps: RecommendedBlockHorizontalProps
+  ) => {
+    return prevProps.onArticlePress === nextProps.onArticlePress;
+  }
+);

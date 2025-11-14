@@ -120,6 +120,12 @@ export default function MagazineListView({
         showsVerticalScrollIndicator={false}
         numColumns={2}
         columnWrapperStyle={magazines.length > 1 ? styles.row : undefined}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={6}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={6}
+        windowSize={11}
       />
     </ThemedView>
   );
