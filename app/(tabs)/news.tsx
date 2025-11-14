@@ -526,11 +526,11 @@ export default function NewsScreen() {
         renderSectionHeader={renderSectionHeader}
         renderSectionFooter={renderSectionFooter}
         keyExtractor={(item, index) => item.id + index.toString()}
-        // getItemLayout={(data, index) => ({
-        //   length: 130,
-        //   offset: 130 * index,
-        //   index,
-        // })}
+        getItemLayout={(data, index) => ({
+          length: 130,
+          offset: 130 * index,
+          index,
+        })}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -554,9 +554,9 @@ export default function NewsScreen() {
         stickySectionHeadersEnabled={false}
         // Performance optimizations
         removeClippedSubviews={true}
-        maxToRenderPerBatch={3}
+        maxToRenderPerBatch={10}
         updateCellsBatchingPeriod={100}
-        initialNumToRender={5}
+        initialNumToRender={10}
         windowSize={5}
         // Additional optimizations for smooth scrolling
         onEndReachedThreshold={0.5}

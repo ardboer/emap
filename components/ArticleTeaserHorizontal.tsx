@@ -66,11 +66,7 @@ function ArticleTeaserHorizontal({
       onPress={handlePress}
     >
       <ThemedView style={styles.imageWrapper}>
-        <FadeInImage
-          source={{ uri: article.imageUrl }}
-          style={styles.image}
-          contentFit="cover"
-        />
+        <FadeInImage source={{ uri: article.imageUrl }} style={styles.image} />
       </ThemedView>
       <ThemedView style={styles.contentContainer}>
         <ThemedView style={styles.headerRow}>

@@ -153,6 +153,9 @@ export async function transformHighlightsItemToArticle(
     post_highlights_image_dims: `${item.post_highlights_image_width}x${item.post_highlights_image_height}`,
   });
 
+  // Track if we're using a fallback to landscape image
+  let usingLandscapeFallback = false;
+
   if (shouldUseLandscapeImage) {
     imageUrl =
       item.post_image ||
@@ -167,26 +170,36 @@ export async function transformHighlightsItemToArticle(
       imageUrl.substring(0, 50)
     );
   } else {
-    imageUrl =
-      item.post_highlights_image ||
-      item.post_image ||
-      "https://picsum.photos/800/600?random=1";
-    imageWidth =
-      item.post_highlights_image_width || item.post_image_width || 800;
-    imageHeight =
-      item.post_highlights_image_height || item.post_image_height || 600;
-    console.log(
-      "✅ Using portrait image (post_highlights_image):",
-      imageUrl.substring(0, 50)
-    );
+    // Check if portrait image is available
+    if (item.post_highlights_image) {
+      // Portrait image is available, use it
+      imageUrl = item.post_highlights_image;
+      imageWidth = item.post_highlights_image_width || 800;
+      imageHeight = item.post_highlights_image_height || 1200;
+      console.log(
+        "✅ Using portrait image (post_highlights_image):",
+        imageUrl.substring(0, 50)
+      );
+    } else {
+      // No portrait image available, fall back to landscape
+      imageUrl = item.post_image || "https://picsum.photos/800/600?random=1";
+      imageWidth = item.post_image_width || 800;
+      imageHeight = item.post_image_height || 600;
+      usingLandscapeFallback = true;
+      console.log(
+        "⚠️ No portrait image available, using landscape fallback:",
+        imageUrl.substring(0, 50)
+      );
+    }
   }
 
-  // Determine if image is landscape (width > height)
-  const isLandscape = imageWidth > imageHeight;
+  // Determine if image is landscape (width > height) OR if we're using landscape as fallback
+  const isLandscape = imageWidth > imageHeight || usingLandscapeFallback;
   console.log("📐 Final image dimensions:", {
     imageWidth,
     imageHeight,
     isLandscape,
+    usingLandscapeFallback,
   });
 
   const category = extractCategoryFromUrl(item.post_url);

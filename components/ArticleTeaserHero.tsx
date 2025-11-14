@@ -58,7 +58,6 @@ function ArticleTeaserHero({ article, onPress }: ArticleTeaserHeroProps) {
         <FadeInImage
           source={{ uri: article.imageUrl }}
           style={styles.heroImage}
-          contentFit="cover"
         />
         <LinearGradient
           colors={["transparent", "rgba(0, 0, 0, 0.8)"]}

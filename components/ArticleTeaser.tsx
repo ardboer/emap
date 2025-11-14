@@ -80,7 +80,6 @@ function ArticleTeaser({ article, onPress }: ArticleTeaserProps) {
         <FadeInImage
           source={{ uri: article.imageUrl }}
           style={styles.thumbnail}
-          contentFit="cover"
         />
       </ThemedView>
       <ThemedView style={styles.contentContainer}>

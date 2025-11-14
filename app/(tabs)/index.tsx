@@ -138,7 +138,8 @@ export default function HighlightedScreen() {
           Boolean
         );
       } else if (result.platform === "ios") {
-        return [result.secondary, result.secondary, result.secondary].filter(
+        // Use different color properties for variety in the gradient
+        return [result.primary, result.secondary, result.detail].filter(
           Boolean
         );
       }
@@ -247,14 +248,30 @@ export default function HighlightedScreen() {
 
       // Extract colors from landscape images BEFORE setting articles
       const colors: { [key: string]: string[] } = {};
+      console.log("🎨 Starting color extraction for landscape images...");
       for (const article of fetchedArticles) {
         if (article.isLandscape) {
-          colors[article.id] = await extractImageColors(
+          console.log(
+            `🎨 Extracting colors for article ${
+              article.id
+            }: ${article.title.substring(0, 30)}...`
+          );
+          const extractedColors = await extractImageColors(
             article.imageUrl,
             article.id
           );
+          colors[article.id] = extractedColors;
+          console.log(
+            `✅ Extracted colors for ${article.id}:`,
+            extractedColors
+          );
         }
       }
+      console.log(
+        `🎨 Color extraction complete. Total colors extracted: ${
+          Object.keys(colors).length
+        }`
+      );
       setImageColors(colors);
 
       // Set articles AFTER colors are extracted

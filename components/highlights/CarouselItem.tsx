@@ -42,9 +42,25 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
     },
   };
 
+  // Debug logging to track landscape detection
+  console.log(`🖼️ CarouselItem for "${item.title.substring(0, 30)}...":`, {
+    id: item.id,
+    isLandscape: item.isLandscape,
+    hasImageUrl: !!item.imageUrl,
+    source: item.source,
+    isRecommended: item.isRecommended,
+    willUseLandscapeLayout: item.isLandscape || !item.imageUrl,
+  });
+
   // For landscape images OR when no portrait image is available, use landscape layout
   // This provides a fallback when portrait images are missing
   if (item.isLandscape || !item.imageUrl) {
+    console.log(
+      `🎨 Using landscape layout for "${item.title.substring(
+        0,
+        30
+      )}..." with useColorGradient=${useColorGradient}`
+    );
     if (useColorGradient) {
       // Get extracted colors for this image, or use default gradient
       const extractedColors = imageColors[item.id] || [
@@ -52,6 +68,11 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
         "#16213e",
         "#0f3460",
       ];
+      console.log(`🎨 Colors for article ${item.id}:`, {
+        hasColors: !!imageColors[item.id],
+        colors: extractedColors,
+        totalColorsInCache: Object.keys(imageColors).length,
+      });
       // Ensure we have at least 2 colors for the gradient
       const colors =
         extractedColors.length >= 2
@@ -78,8 +99,8 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
           <FadeInImage
             source={{ uri: item.imageUrl }}
             style={styles.centeredImage}
-            contentFit="contain"
-            contentPosition="center"
+            resizeMode="contain"
+            showPlaceholder={false}
           />
           {/* Top gradient for header visibility */}
           <LinearGradient
@@ -138,8 +159,7 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
           <FadeInImage
             source={{ uri: item.imageUrl }}
             style={styles.backgroundImageBlurred}
-            contentFit="cover"
-            blurRadius={50}
+            resizeMode="cover"
           />
           {/* Dark overlay for blurred background */}
           <View style={styles.darkOverlay} />
@@ -147,8 +167,8 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
           <FadeInImage
             source={{ uri: item.imageUrl }}
             style={styles.centeredImage}
-            contentFit="contain"
-            contentPosition="center"
+            resizeMode="contain"
+            showPlaceholder={false}
           />
           {/* Top gradient for header visibility */}
           <LinearGradient
@@ -218,8 +238,7 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
       <FadeInImage
         source={{ uri: item.imageUrl }}
         style={styles.backgroundImage}
-        contentFit="cover"
-        contentPosition="center"
+        resizeMode="cover"
       />
       {/* Top gradient for header visibility */}
       <LinearGradient

@@ -508,7 +508,6 @@ function ArticleScreenContent() {
             <FadeInImage
               source={{ uri: article.imageUrl }}
               style={styles.headerImage}
-              fadeDuration={300}
             />
           ) : (
             <View

@@ -120,7 +120,7 @@ export async function fetchRecommendedArticlesWithExclude(
       return [];
     }
 
-    // Use the shared client with custom transformation for landscape images
+    // Use the shared client to get MISO recommendations
     const articles = await fetchMisoRecommendations(
       "recommendation/user_to_products",
       {
@@ -134,7 +134,8 @@ export async function fetchRecommendedArticlesWithExclude(
     );
 
     // Transform articles to use landscape rendering
-    // This matches the original behavior where images are marked as landscape
+    // MISO images don't have portrait versions, so we need to use landscape layout
+    // which centers the image with contain mode instead of cropping with cover mode
     return articles.map((article) => ({
       ...article,
       isLandscape: true,
