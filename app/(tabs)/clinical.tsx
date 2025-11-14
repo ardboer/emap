@@ -5,10 +5,12 @@ import { BlockHeader } from "@/components/BlockHeader";
 import { DisplayAd } from "@/components/DisplayAd";
 import GradientHeader from "@/components/GradientHeader";
 import { NativeAdListItem } from "@/components/NativeAdListItem";
+import RecommendedBlockHorizontal from "@/components/RecommendedBlockHorizontal";
 import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import TrendingBlockHorizontal from "@/components/TrendingBlockHorizontal";
 import { Colors } from "@/constants/Colors";
 import { getCenteredContentStyle } from "@/constants/Layout";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -141,6 +143,11 @@ export default function ClinicalScreen() {
     index: number;
     section: any;
   }) => {
+    // Don't render items for trending or recommended blocks (they have custom rendering)
+    if (section.isTrendingBlock || section.isRecommendedBlock) {
+      return null;
+    }
+
     // Check if this is the horizontal block - render horizontal scroll
     if (section.index === HORIZONTAL_BLOCK_INDEX) {
       return null; // Horizontal items are rendered in renderSectionFooter
@@ -185,8 +192,21 @@ export default function ClinicalScreen() {
       description: string;
       data: Article[];
       index: number;
+      originalIndex?: number;
+      isTrendingBlock?: boolean;
+      isRecommendedBlock?: boolean;
     };
   }) => {
+    // Check if this is the trending block
+    if (section.isTrendingBlock) {
+      return <TrendingBlockHorizontal onArticlePress={handleArticlePress} />;
+    }
+
+    // Check if this is the recommended block
+    if (section.isRecommendedBlock) {
+      return <RecommendedBlockHorizontal onArticlePress={handleArticlePress} />;
+    }
+
     // Only render horizontal scroll for the configured block index
     if (section.index !== HORIZONTAL_BLOCK_INDEX || section.data.length === 0) {
       return null;
@@ -225,6 +245,9 @@ export default function ClinicalScreen() {
       layout: string;
       description: string;
       index: number;
+      isTrendingBlock?: boolean;
+      isRecommendedBlock?: boolean;
+      data: Article[];
       totalSections?: number;
     };
   }) => {
@@ -233,7 +256,8 @@ export default function ClinicalScreen() {
       return null;
     }
 
-    // Use the totalSections passed from the section data
+    // Use the totalSections passed from prepareSections
+    // This includes injected trending/recommended blocks
     const totalSections = section.totalSections || 0;
 
     // Check if we should show an ad before this block
@@ -296,13 +320,16 @@ export default function ClinicalScreen() {
     );
   }
 
-  // Prepare sections for SectionList
+  // Prepare sections for SectionList with trending and recommended blocks
   let sections: {
     title: string;
     layout: string;
     description: string;
     data: Article[];
     index: number;
+    originalIndex?: number;
+    isTrendingBlock?: boolean;
+    isRecommendedBlock?: boolean;
     totalSections?: number;
   }[] = [];
 
@@ -313,7 +340,77 @@ export default function ClinicalScreen() {
       description: block.blockDescription,
       data: block.articles,
       index,
+      originalIndex: index, // Store original index before trending/recommended injection
     }));
+
+    // Check if recommended block should be injected (inject first to appear before trending)
+    const brandConfig = brandManager.getCurrentBrand();
+    const recommendedConfig = brandConfig.recommendedBlockListView;
+
+    if (
+      recommendedConfig &&
+      recommendedConfig.enabled &&
+      recommendedConfig.position !== null &&
+      recommendedConfig.position !== undefined
+    ) {
+      const position = recommendedConfig.position;
+
+      // Only inject if position is valid (within bounds or at the end)
+      if (position >= 0 && position <= sections.length) {
+        // Create recommended block section
+        const recommendedSection = {
+          title: "Recommended for you",
+          layout: "horizontal",
+          description: "",
+          data: [], // Empty data array since we render custom content
+          index: position,
+          isRecommendedBlock: true,
+        };
+
+        // Insert at the specified position and update indices of following blocks
+        sections.splice(position, 0, recommendedSection);
+
+        // Update indices for blocks after the recommended block (but keep originalIndex)
+        sections = sections.map((section, idx) => ({
+          ...section,
+          index: idx,
+        }));
+      }
+    }
+
+    // Check if trending block should be injected (inject second to appear after recommended)
+    const trendingConfig = brandConfig.trendingBlockListView;
+
+    if (
+      trendingConfig &&
+      trendingConfig.enabled &&
+      trendingConfig.position !== null &&
+      trendingConfig.position !== undefined
+    ) {
+      const position = trendingConfig.position;
+
+      // Only inject if position is valid (within bounds or at the end)
+      if (position >= 0 && position <= sections.length) {
+        // Create trending block section
+        const trendingSection = {
+          title: "Trending",
+          layout: "horizontal",
+          description: "",
+          data: [], // Empty data array since we render custom content
+          index: position,
+          isTrendingBlock: true,
+        };
+
+        // Insert at the specified position and update indices of following blocks
+        sections.splice(position, 0, trendingSection);
+
+        // Update indices for blocks after the trending block (but keep originalIndex)
+        sections = sections.map((section, idx) => ({
+          ...section,
+          index: idx,
+        }));
+      }
+    }
 
     // Add totalSections to each section for display ad calculation
     const totalSections = sections.length;
