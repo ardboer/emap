@@ -18,7 +18,6 @@ import { AdSizeType } from "@/types/ads";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { BannerAdSize } from "react-native-google-mobile-ads";
-import { AdPlaceholder } from "./AdPlaceholder";
 import { BannerAd } from "./BannerAd";
 
 interface DisplayAdProps {
@@ -100,6 +99,7 @@ export function DisplayAd({
   const [shouldRender, setShouldRender] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(!enableLazyLoad);
   const [adFailed, setAdFailed] = useState(false);
+  const [adLoaded, setAdLoaded] = useState(false);
   const adId = useRef(
     `display-ad-${context}-${size}-${Date.now()}-${Math.random()}`
   ).current;
@@ -176,14 +176,14 @@ export function DisplayAd({
   // Determine ad format based on size
   const adFormat = size === "MEDIUM_RECTANGLE" ? "mpu" : "banner";
 
-  // Determine if we have content to show
-  // Don't show content if ad failed to load
-  const hasContent = !adFailed && (shouldLoad || showPlaceholder);
+  // Only show container with spacing if ad has successfully loaded
+  // This prevents flickering when ads fail to load (no-fill)
+  const showContainer = adLoaded && !adFailed;
 
   return (
     <View
       ref={ref}
-      style={[hasContent ? styles.container : styles.emptyContainer, style]}
+      style={[showContainer ? styles.container : styles.hiddenContainer, style]}
     >
       {shouldLoad ? (
         <BannerAd
@@ -194,6 +194,7 @@ export function DisplayAd({
           showErrorMessage={false}
           onAdLoaded={() => {
             displayAdLazyLoadManager.markAsLoaded(adId);
+            setAdLoaded(true);
             // console.log(`[DisplayAd] Ad loaded: ${context} - ${size}`);
             onAdLoaded?.();
           }}
@@ -221,8 +222,6 @@ export function DisplayAd({
             onAdClicked?.();
           }}
         />
-      ) : showPlaceholder ? (
-        <AdPlaceholder size={size} showLoadingIndicator={true} />
       ) : null}
     </View>
   );
@@ -234,10 +233,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    // No margin when empty - prevents spacing when ad can't load
+  hiddenContainer: {
+    height: 0,
+    overflow: "hidden",
+    // Completely hidden - no space reserved until ad loads
   },
 });
 
