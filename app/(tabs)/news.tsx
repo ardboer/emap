@@ -249,7 +249,49 @@ export default function NewsScreen() {
   ) => {
     setActiveTabIndex(index);
 
-    if (item.hasChildren) {
+    // Check if this is a favorite topic (ID starts with 9)
+    const isFavoriteTopic = item.ID.toString().startsWith("9");
+
+    if (isFavoriteTopic) {
+      // This is a favorite topic - treat it like a selected child
+      // Extract the original ID by removing the "9" prefix
+      const originalId = item.ID.toString().substring(1);
+
+      // Find the parent of this favorite topic
+      const parentItem = menuItems.find((parent) =>
+        parent.children?.some((child) => child.ID.toString() === originalId)
+      );
+
+      if (parentItem) {
+        const parentId = parentItem.ID.toString();
+
+        // Update menu state to show the second bar
+        setMenuState((prev) => ({
+          ...prev,
+          expandedParentId: parentId,
+          selectedChildId: originalId,
+          selectedParentId: parentId,
+        }));
+
+        // Load content for this favorite topic
+        const tabKey = item.object_id.toString();
+        setTabLoadingStates((prev) => ({ ...prev, [tabKey]: true }));
+
+        try {
+          const categoryContent = await fetchCategoryContent(
+            item.object_id.toString()
+          );
+          setTabContent((prev) => ({ ...prev, [tabKey]: categoryContent }));
+        } catch (err) {
+          console.error(
+            `Error loading favorite topic content for ${item.title}:`,
+            err
+          );
+        } finally {
+          setTabLoadingStates((prev) => ({ ...prev, [tabKey]: false }));
+        }
+      }
+    } else if (item.hasChildren) {
       // Load persisted topics from AsyncStorage
       const persistedTopics = await loadSelectedTopics();
       const parentId = item.ID.toString();

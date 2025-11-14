@@ -17,6 +17,7 @@ import { AudioProvider } from "@/contexts/AudioContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BookmarkProvider } from "@/contexts/BookmarkContext";
 import { ColorSchemeProvider } from "@/contexts/ColorSchemeContext";
+import { FavoriteTopicsProvider } from "@/contexts/FavoriteTopicsContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { analyticsService } from "@/services/analytics";
@@ -266,57 +267,61 @@ function RootLayoutContent() {
             (colorScheme === "dark" ? "#151718" : "#fff"),
         }}
       >
-        <AuthProvider>
-          <BookmarkProvider>
-            <AudioProvider>
-              <ThemeProvider
-                value={
-                  colorScheme === "dark" ? customDarkTheme : customLightTheme
-                }
-              >
-                <Stack>
-                  <Stack.Screen
-                    name="(tabs)"
-                    options={{ headerShown: false, title: "" }}
-                  />
-                  <Stack.Screen
-                    name="article/[id]"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="event/[id]"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="pdf/[id]"
-                    options={{
-                      headerBackTitle: " ",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="search"
-                    options={{
-                      presentation: "modal",
-                      headerShown: false,
-                    }}
-                  />
-                  <Stack.Screen
-                    name="webview"
-                    options={{
-                      headerShown: false,
-                      title: "Web Content",
-                    }}
-                  />
-                  <Stack.Screen name="+not-found" />
-                </Stack>
-                <StatusBar style="auto" />
-                {showOnboarding && (
-                  <OnboardingContainer onComplete={handleOnboardingComplete} />
-                )}
-              </ThemeProvider>
-            </AudioProvider>
-          </BookmarkProvider>
-        </AuthProvider>
+        <FavoriteTopicsProvider>
+          <AuthProvider>
+            <BookmarkProvider>
+              <AudioProvider>
+                <ThemeProvider
+                  value={
+                    colorScheme === "dark" ? customDarkTheme : customLightTheme
+                  }
+                >
+                  <Stack>
+                    <Stack.Screen
+                      name="(tabs)"
+                      options={{ headerShown: false, title: "" }}
+                    />
+                    <Stack.Screen
+                      name="article/[id]"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="event/[id]"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="pdf/[id]"
+                      options={{
+                        headerBackTitle: " ",
+                      }}
+                    />
+                    <Stack.Screen
+                      name="search"
+                      options={{
+                        presentation: "modal",
+                        headerShown: false,
+                      }}
+                    />
+                    <Stack.Screen
+                      name="webview"
+                      options={{
+                        headerShown: false,
+                        title: "Web Content",
+                      }}
+                    />
+                    <Stack.Screen name="+not-found" />
+                  </Stack>
+                  <StatusBar style="auto" />
+                  {showOnboarding && (
+                    <OnboardingContainer
+                      onComplete={handleOnboardingComplete}
+                    />
+                  )}
+                </ThemeProvider>
+              </AudioProvider>
+            </BookmarkProvider>
+          </AuthProvider>
+        </FavoriteTopicsProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>
   );

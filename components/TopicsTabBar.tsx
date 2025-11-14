@@ -1,9 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
 import TopicsBottomSheet from "@/components/TopicsBottomSheet";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useFavoriteTopics } from "@/hooks/useFavoriteTopics";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { HierarchicalMenuItem, MenuItem } from "@/types";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface TopicsTabBarProps {
@@ -28,6 +29,7 @@ export default function TopicsTabBar({
 }: TopicsTabBarProps) {
   const scrollViewRef = useRef<ScrollView>(null);
   const { brandConfig } = useBrandConfig();
+  const { favoriteTopicIds } = useFavoriteTopics();
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
 
   // Get brand-aware colors for parent row
@@ -51,6 +53,41 @@ export default function TopicsTabBar({
     (tab) => tab.ID.toString() === expandedParentId
   );
   const childItems = expandedParent?.children || [];
+
+  // Build tabs with favorite topics inserted after first item
+  const tabsWithFavorites = useMemo(() => {
+    if (tabs.length === 0) return tabs;
+
+    // Get all child topics from all parents
+    const allChildTopics: MenuItem[] = [];
+    tabs.forEach((tab) => {
+      if (tab.children) {
+        allChildTopics.push(...tab.children);
+      }
+    });
+
+    // Filter to get only favorited child topics
+    const favoriteTopics = allChildTopics.filter((topic) =>
+      favoriteTopicIds.includes(topic.ID.toString())
+    );
+
+    if (favoriteTopics.length === 0) return tabs;
+
+    // Insert favorite topics after the first item
+    const result = [...tabs];
+    favoriteTopics.forEach((favTopic, index) => {
+      // Create a special menu item for each favorite
+      const favoriteMenuItem: HierarchicalMenuItem = {
+        ...favTopic,
+        hasChildren: false,
+        // Mark it as a favorite with a special prefix in the ID
+        ID: Number(`9${favTopic.ID}`), // Prefix with 9 to make it unique
+      };
+      result.splice(1 + index, 0, favoriteMenuItem);
+    });
+
+    return result;
+  }, [tabs, favoriteTopicIds]);
 
   // Determine if parent should be highlighted
   const isParentHighlighted = (
@@ -104,9 +141,11 @@ export default function TopicsTabBar({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {tabs.map((tab, index) => {
+          {tabsWithFavorites.map((tab, index) => {
             const isHighlighted = isParentHighlighted(index, tab);
             const isFirst = index === 0;
+            // Check if this is a favorite topic (ID starts with 9)
+            const isFavoriteTopic = tab.ID.toString().startsWith("9");
 
             return (
               <TouchableOpacity
@@ -133,6 +172,7 @@ export default function TopicsTabBar({
                     },
                   ]}
                 >
+                  {isFavoriteTopic && "★ "}
                   {tab.title.toUpperCase()}
                 </ThemedText>
               </TouchableOpacity>

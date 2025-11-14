@@ -1,11 +1,11 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import { useFavoriteTopics } from "@/hooks/useFavoriteTopics";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { MenuItem } from "@/types";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   FlatList,
   ImageBackground,
@@ -16,9 +16,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-// AsyncStorage key for favorite topics
-const FAVORITE_TOPICS_KEY = "@news_favorite_topics";
 
 interface TopicsBottomSheetProps {
   visible: boolean;
@@ -36,10 +33,8 @@ export default function TopicsBottomSheet({
   onClose,
 }: TopicsBottomSheetProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [favoriteTopicIds, setFavoriteTopicIds] = useState<Set<string>>(
-    new Set()
-  );
   const { brandConfig } = useBrandConfig();
+  const { favoriteTopicIds, toggleFavorite } = useFavoriteTopics();
 
   // Get theme colors
   const backgroundColor = useThemeColor({}, "contentBackground");
@@ -54,51 +49,14 @@ export default function TopicsBottomSheet({
   const brandPrimaryColor =
     brandConfig?.theme.colors.light.primary || activeColor;
 
-  // Load favorite topics from AsyncStorage
-  useEffect(() => {
-    loadFavorites();
-  }, [visible]);
-
-  const loadFavorites = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(FAVORITE_TOPICS_KEY);
-      if (stored) {
-        const favorites = JSON.parse(stored) as string[];
-        setFavoriteTopicIds(new Set(favorites));
-      }
-    } catch (error) {
-      console.error("Error loading favorite topics:", error);
-    }
-  };
-
-  const toggleFavorite = async (topicId: string) => {
-    const newFavorites = new Set(favoriteTopicIds);
-    if (newFavorites.has(topicId)) {
-      newFavorites.delete(topicId);
-    } else {
-      newFavorites.add(topicId);
-    }
-    setFavoriteTopicIds(newFavorites);
-
-    // Persist to AsyncStorage
-    try {
-      await AsyncStorage.setItem(
-        FAVORITE_TOPICS_KEY,
-        JSON.stringify(Array.from(newFavorites))
-      );
-    } catch (error) {
-      console.error("Error saving favorite topics:", error);
-    }
-  };
-
   // Filter and sort topics: favorites first, then alphabetically
   const filteredTopics = topics
     .filter((topic) =>
       topic.title.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
-      const aIsFavorite = favoriteTopicIds.has(a.ID.toString());
-      const bIsFavorite = favoriteTopicIds.has(b.ID.toString());
+      const aIsFavorite = favoriteTopicIds.includes(a.ID.toString());
+      const bIsFavorite = favoriteTopicIds.includes(b.ID.toString());
 
       // Favorites come first
       if (aIsFavorite && !bIsFavorite) return -1;
@@ -116,7 +74,7 @@ export default function TopicsBottomSheet({
 
   const renderTopicItem = ({ item }: { item: MenuItem }) => {
     const isSelected = item.ID.toString() === selectedTopicId;
-    const isFavorite = favoriteTopicIds.has(item.ID.toString());
+    const isFavorite = favoriteTopicIds.includes(item.ID.toString());
 
     return (
       <View style={styles.topicItemContainer}>
