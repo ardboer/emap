@@ -6,9 +6,38 @@
  */
 
 import { brandManager } from "@/config/BrandManager";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// Cache for staging mode setting to avoid async calls in sync contexts
+let cachedUseStagingMode: boolean | null = null;
+let cachedDebugModeEnabled: boolean | null = null;
+let cacheInitialized = false;
+
+// Initialize cache on module load
+AsyncStorage.getItem("debug_use_staging").then((value) => {
+  cachedUseStagingMode = value === "true";
+  cacheInitialized = true;
+  console.log("🔧 Staging mode cache initialized:", cachedUseStagingMode);
+});
+
+// Also cache debug mode status for production
+AsyncStorage.getItem("debug_mode_enabled").then((value) => {
+  cachedDebugModeEnabled = value === "true";
+  console.log("🔧 Debug mode cache initialized:", cachedDebugModeEnabled);
+});
+
+/**
+ * Update the staging mode cache
+ * Call this when the debug setting changes
+ */
+export function updateStagingModeCache(enabled: boolean) {
+  cachedUseStagingMode = enabled;
+  console.log("🔧 Staging mode cache updated:", enabled);
+}
 
 /**
  * Get API configuration from the active brand
+ * Checks for staging mode and returns staging config if enabled (DEV only)
  *
  * @returns API configuration object containing baseUrl, hash, and other settings
  *
@@ -18,7 +47,27 @@ import { brandManager } from "@/config/BrandManager";
  */
 export function getApiConfig() {
   const config = brandManager.getApiConfig();
-  console.log("🔍 API Config:", {
+
+  // Check if staging mode is enabled (when __DEV__ OR debug mode is enabled in production)
+  const isDebugEnabled = __DEV__ || cachedDebugModeEnabled;
+  if (
+    isDebugEnabled &&
+    cachedUseStagingMode &&
+    config.stagingBaseUrl &&
+    config.stagingHash
+  ) {
+    console.log("🔧 Using STAGING environment:", {
+      baseUrl: config.stagingBaseUrl,
+      hash: config.stagingHash,
+    });
+    return {
+      ...config,
+      baseUrl: config.stagingBaseUrl,
+      hash: config.stagingHash,
+    };
+  }
+
+  console.log("🔍 Using PRODUCTION environment:", {
     baseUrl: config.baseUrl,
     hash: config.hash,
   });

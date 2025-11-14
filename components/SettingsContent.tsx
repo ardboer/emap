@@ -68,6 +68,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     React.useState(false);
   const [debugNeverShowPaywall, setDebugNeverShowPaywall] =
     React.useState(false);
+  const [debugUseStaging, setDebugUseStaging] = React.useState(false);
   const [useTestAds, setUseTestAds] = React.useState(true);
   const [versionTapCount, setVersionTapCount] = React.useState(0);
   const [lastTapTime, setLastTapTime] = React.useState<number>(0);
@@ -197,6 +198,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     AsyncStorage.getItem("debug_never_show_paywall").then((value) => {
       if (value !== null) {
         setDebugNeverShowPaywall(value === "true");
+      }
+    });
+  }, []);
+
+  // Load debug use staging flag
+  React.useEffect(() => {
+    AsyncStorage.getItem("debug_use_staging").then((value) => {
+      if (value !== null) {
+        setDebugUseStaging(value === "true");
       }
     });
   }, []);
@@ -548,6 +558,29 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
       value
         ? "Paywall will never be shown. Access checks will always return allowed. (DEV only)"
         : "Paywall behavior restored to normal.",
+      [{ text: "OK" }]
+    );
+  };
+
+  const handleUseStagingToggle = async (value: boolean) => {
+    setDebugUseStaging(value);
+    await AsyncStorage.setItem("debug_use_staging", value.toString());
+
+    // Update the API config cache
+    try {
+      const { updateStagingModeCache } = await import(
+        "@/services/api/wordpress/config"
+      );
+      updateStagingModeCache(value);
+    } catch (error) {
+      console.error("Error updating staging mode cache:", error);
+    }
+
+    Alert.alert(
+      "Setting Updated",
+      value
+        ? "Now using STAGING environment. Restart the app to apply changes."
+        : "Now using PRODUCTION environment. Restart the app to apply changes.",
       [{ text: "OK" }]
     );
   };
@@ -1125,6 +1158,28 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
                 }
               />
             )}
+
+            {/* Use Staging Environment Toggle - Show when debug mode is enabled */}
+            {shouldShowDebugSection() &&
+              brandConfig?.apiConfig?.stagingBaseUrl && (
+                <SettingsItem
+                  title="Use Staging Environment"
+                  subtitle={
+                    debugUseStaging
+                      ? "Using STAGING - restart app to apply"
+                      : "Using PRODUCTION environment"
+                  }
+                  icon="server.rack"
+                  rightElement={
+                    <Switch
+                      value={debugUseStaging}
+                      onValueChange={handleUseStagingToggle}
+                      trackColor={{ false: "#767577", true: primaryColor }}
+                      thumbColor={debugUseStaging ? "#00334C" : "#fff"}
+                    />
+                  }
+                />
+              )}
 
             {/* Use Test Ads Toggle */}
             <SettingsItem
