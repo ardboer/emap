@@ -1,4 +1,5 @@
 import { AccessCheckDebugInfo } from "@/components/AccessCheckDebugInfo";
+import { ArticleDetailSkeleton } from "@/components/ArticleDetailSkeleton";
 import BookmarkButton from "@/components/BookmarkButton";
 import { DisplayAd } from "@/components/DisplayAd";
 import { FadeInImage } from "@/components/FadeInImage";
@@ -51,9 +52,20 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const HEADER_HEIGHT = screenHeight * 0.4;
 
 function ArticleScreenContent() {
-  const { id, source } = useLocalSearchParams<{
+  const {
+    id,
+    source,
+    previewTitle,
+    previewImage,
+    previewCategory,
+    previewDate,
+  } = useLocalSearchParams<{
     id: string;
     source?: string;
+    previewTitle?: string;
+    previewImage?: string;
+    previewCategory?: string;
+    previewDate?: string;
   }>();
   const { user, isAuthenticated, login } = useAuth();
   const colorScheme = useColorScheme() ?? "light";
@@ -62,6 +74,14 @@ function ArticleScreenContent() {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Check if we have preview data to show immediately
+  const hasPreviewData = !!previewTitle;
+
+  // Use preview data while loading, then switch to full article data
+  const displayTitle = article?.title || previewTitle;
+  const displayCategory = article?.category || previewCategory;
+  const displayDate = article?.publishDate || article?.timestamp || previewDate;
   const insets = useSafeAreaInsets();
   const contentBackground = useThemeColor({}, "contentBackground");
 
@@ -429,7 +449,8 @@ function ArticleScreenContent() {
     })
     .runOnJS(true);
 
-  if (loading) {
+  // Show loading state only if we don't have preview data
+  if (loading && !hasPreviewData) {
     return (
       <SafeAreaView
         style={[styles.container, { backgroundColor: contentBackground }]}
@@ -444,11 +465,29 @@ function ArticleScreenContent() {
     );
   }
 
-  if (error || !article) {
+  // Only show error if we have an error AND no preview data to show
+  if (error && !hasPreviewData) {
     return (
       <SafeAreaView style={styles.container}>
         <ThemedView style={styles.errorContainer}>
-          <ThemedText type="title">{error || "Article not found"}</ThemedText>
+          <ThemedText type="title">{error}</ThemedText>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <ThemedText style={styles.backButtonText}>Go Back</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error if article failed to load and we're done loading
+  if (!loading && !article && !hasPreviewData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ThemedView style={styles.errorContainer}>
+          <ThemedText type="title">Article not found</ThemedText>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
@@ -463,12 +502,27 @@ function ArticleScreenContent() {
   return (
     <GestureDetector gesture={panGesture}>
       <View style={styles.container}>
-        {/* Fixed Header Image */}
+        {/* Fixed Header Image - Show skeleton while loading, then high-res image */}
         <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
-          <FadeInImage
-            source={{ uri: article.imageUrl }}
-            style={styles.headerImage}
-          />
+          {article?.imageUrl ? (
+            <FadeInImage
+              source={{ uri: article.imageUrl }}
+              style={styles.headerImage}
+              fadeDuration={300}
+            />
+          ) : (
+            <View
+              style={[
+                styles.headerImage,
+                {
+                  backgroundColor:
+                    colorScheme === "dark"
+                      ? "rgba(255, 255, 255, 0.08)"
+                      : "rgba(0, 0, 0, 0.08)",
+                },
+              ]}
+            />
+          )}
         </Animated.View>
 
         {/* Back Button */}
@@ -491,38 +545,42 @@ function ArticleScreenContent() {
           <View
             style={[styles.shareButtonContainer, { marginTop: insets.top }]}
           >
-            <BookmarkButton
-              article={article}
-              iconColor={styles.colors.contentBackButtonText}
-              iconSize={24}
-            />
-            <ShareButton
-              title={article.title}
-              message={
-                extractTextFromStructured(article.leadText) ||
-                article.subtitle ||
-                ""
-              }
-              url={(() => {
-                // Use article.link from API, or construct fallback URL
-                const fallbackUrl = brandConfig?.domain
-                  ? `${brandConfig.domain}${
-                      brandConfig.domain.endsWith("/") ? "" : "/"
-                    }article/${id}`
-                  : `article/${id}`;
-                const shareUrl = article.link || fallbackUrl;
-                console.log("[ArticleScreen] Share URL:", {
-                  articleLink: article.link,
-                  brandDomain: brandConfig?.domain,
-                  articleId: id,
-                  fallbackUrl,
-                  finalUrl: shareUrl,
-                });
-                return shareUrl;
-              })()}
-              iconColor={styles.colors.contentBackButtonText}
-              iconSize={20}
-            />
+            {article && (
+              <>
+                <BookmarkButton
+                  article={article}
+                  iconColor={styles.colors.contentBackButtonText}
+                  iconSize={24}
+                />
+                <ShareButton
+                  title={article.title}
+                  message={
+                    extractTextFromStructured(article.leadText) ||
+                    article.subtitle ||
+                    ""
+                  }
+                  url={(() => {
+                    // Use article.link from API, or construct fallback URL
+                    const fallbackUrl = brandConfig?.domain
+                      ? `${brandConfig.domain}${
+                          brandConfig.domain.endsWith("/") ? "" : "/"
+                        }article/${id}`
+                      : `article/${id}`;
+                    const shareUrl = article.link || fallbackUrl;
+                    console.log("[ArticleScreen] Share URL:", {
+                      articleLink: article.link,
+                      brandDomain: brandConfig?.domain,
+                      articleId: id,
+                      fallbackUrl,
+                      finalUrl: shareUrl,
+                    });
+                    return shareUrl;
+                  })()}
+                  iconColor={styles.colors.contentBackButtonText}
+                  iconSize={20}
+                />
+              </>
+            )}
           </View>
         </Animated.View>
 
@@ -574,142 +632,189 @@ function ArticleScreenContent() {
 
           {/* Article Content */}
           <View style={[styles.contentContainer, { paddingBottom: 40 }]}>
-            {/* Author and Date Row */}
-            <View style={styles.metaContainer}>
-              {/* Author Info - Left Side */}
-              {article.author_data && article.author_data.last_name ? (
-                <TouchableOpacity
-                  style={styles.authorInfoCompact}
-                  onPress={() => setShowAuthorBio(!showAuthorBio)}
-                  activeOpacity={0.7}
-                >
-                  <MaterialCommunityIcons
-                    name="account-edit"
-                    size={18}
-                    color={Colors[colorScheme].contentMetaText}
-                    style={styles.authorIconCompact}
-                  />
-                  <Text
-                    style={[
-                      styles.authorNameCompact,
-                      {
-                        color: Colors[colorScheme].contentMetaText,
-                        fontFamily: brandConfig?.theme.fonts.primarySemiBold,
-                      },
-                    ]}
-                  >
-                    {article.author_data.first_name}{" "}
-                    {article.author_data.last_name}
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <View />
-              )}
-
-              {/* Date - Right Side */}
-              <Text
-                style={[
-                  styles.timestamp,
-                  {
-                    color: Colors[colorScheme].contentMetaText,
-                    fontFamily: brandConfig?.theme.fonts.primaryMedium,
-                  },
-                ]}
-              >
-                {article.publishDate
-                  ? formatArticleDetailDate(article.publishDate).toUpperCase()
-                  : article.timestamp?.toUpperCase() || "RECENTLY"}
-              </Text>
-            </View>
-
-            {/* Author Bio - Expandable */}
-            {article.author_data &&
-              article.author_data.last_name &&
-              showAuthorBio &&
-              article.author_data.bio && (
-                <View style={styles.authorBioContainer}>
-                  <Text
-                    style={[
-                      styles.authorBio,
-                      {
-                        color: Colors[colorScheme].contentMetaText,
-                        fontFamily: brandConfig?.theme.fonts.primary,
-                      },
-                    ]}
-                  >
-                    {article.author_data.bio}
-                  </Text>
+            {/* Show preview data with skeleton while loading */}
+            {loading && hasPreviewData && (
+              <>
+                {/* Preview metadata */}
+                <View style={styles.metaContainer}>
+                  <View />
+                  {displayDate && (
+                    <Text
+                      style={[
+                        styles.timestamp,
+                        {
+                          color: Colors[colorScheme].contentMetaText,
+                          fontFamily: brandConfig?.theme.fonts.primaryMedium,
+                        },
+                      ]}
+                    >
+                      {displayDate.toUpperCase()}
+                    </Text>
+                  )}
                 </View>
-              )}
 
-            <Text
-              style={[
-                styles.title,
-                {
-                  color: Colors[colorScheme].contentTitleText,
-                  fontFamily: brandConfig?.theme.fonts.primaryBold,
-                },
-              ]}
-            >
-              {article.title}
-            </Text>
+                {/* Preview title */}
+                <Text
+                  style={[
+                    styles.title,
+                    {
+                      color: Colors[colorScheme].contentTitleText,
+                      fontFamily: brandConfig?.theme.fonts.primaryBold,
+                    },
+                  ]}
+                >
+                  {displayTitle}
+                </Text>
 
-            {article.subtitle && (
-              <Text
-                style={[
-                  styles.subtitle,
-                  {
-                    color: Colors[colorScheme].contentTitleText,
-                    fontFamily: brandConfig?.theme.fonts.primaryBold,
-                  },
-                ]}
-              >
-                {article.subtitle}
-              </Text>
+                {/* Skeleton for rest of content */}
+                <ArticleDetailSkeleton />
+              </>
             )}
 
-            {/* Render leadText - support both string and structured content */}
-            {article.leadText && (
+            {/* Show full article content when loaded */}
+            {!loading && article && (
               <>
-                {Array.isArray(article.leadText) ? (
-                  <>
-                    <RichContentRenderer
-                      content={article.leadText as StructuredContentNode[]}
-                      style={styles.leadText}
-                      articleId={id}
-                      textStyleOverride="leadText"
-                    />
-                  </>
-                ) : (
+                {/* Author and Date Row */}
+                <View style={styles.metaContainer}>
+                  {/* Author Info - Left Side */}
+                  {article.author_data && article.author_data.last_name ? (
+                    <TouchableOpacity
+                      style={styles.authorInfoCompact}
+                      onPress={() => setShowAuthorBio(!showAuthorBio)}
+                      activeOpacity={0.7}
+                    >
+                      <MaterialCommunityIcons
+                        name="account-edit"
+                        size={18}
+                        color={Colors[colorScheme].contentMetaText}
+                        style={styles.authorIconCompact}
+                      />
+                      <Text
+                        style={[
+                          styles.authorNameCompact,
+                          {
+                            color: Colors[colorScheme].contentMetaText,
+                            fontFamily:
+                              brandConfig?.theme.fonts.primarySemiBold,
+                          },
+                        ]}
+                      >
+                        {article.author_data.first_name}{" "}
+                        {article.author_data.last_name}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View />
+                  )}
+
+                  {/* Date - Right Side */}
                   <Text
                     style={[
-                      styles.leadText,
+                      styles.timestamp,
+                      {
+                        color: Colors[colorScheme].contentMetaText,
+                        fontFamily: brandConfig?.theme.fonts.primaryMedium,
+                      },
+                    ]}
+                  >
+                    {article.publishDate
+                      ? formatArticleDetailDate(
+                          article.publishDate
+                        ).toUpperCase()
+                      : article.timestamp?.toUpperCase() || "RECENTLY"}
+                  </Text>
+                </View>
+
+                {/* Author Bio - Expandable */}
+                {article.author_data &&
+                  article.author_data.last_name &&
+                  showAuthorBio &&
+                  article.author_data.bio && (
+                    <View style={styles.authorBioContainer}>
+                      <Text
+                        style={[
+                          styles.authorBio,
+                          {
+                            color: Colors[colorScheme].contentMetaText,
+                            fontFamily: brandConfig?.theme.fonts.primary,
+                          },
+                        ]}
+                      >
+                        {article.author_data.bio}
+                      </Text>
+                    </View>
+                  )}
+
+                <Text
+                  style={[
+                    styles.title,
+                    {
+                      color: Colors[colorScheme].contentTitleText,
+                      fontFamily: brandConfig?.theme.fonts.primaryBold,
+                    },
+                  ]}
+                >
+                  {article.title}
+                </Text>
+
+                {article.subtitle && (
+                  <Text
+                    style={[
+                      styles.subtitle,
                       {
                         color: Colors[colorScheme].contentTitleText,
                         fontFamily: brandConfig?.theme.fonts.primaryBold,
                       },
                     ]}
-                    allowFontScaling={false}
                   >
-                    {article.leadText}
+                    {article.subtitle}
                   </Text>
                 )}
+
+                {/* Render leadText - support both string and structured content */}
+                {article.leadText && (
+                  <>
+                    {Array.isArray(article.leadText) ? (
+                      <>
+                        <RichContentRenderer
+                          content={article.leadText as StructuredContentNode[]}
+                          style={styles.leadText}
+                          articleId={id}
+                          textStyleOverride="leadText"
+                        />
+                      </>
+                    ) : (
+                      <Text
+                        style={[
+                          styles.leadText,
+                          {
+                            color: Colors[colorScheme].contentTitleText,
+                            fontFamily: brandConfig?.theme.fonts.primaryBold,
+                          },
+                        ]}
+                        allowFontScaling={false}
+                      >
+                        {article.leadText}
+                      </Text>
+                    )}
+                  </>
+                )}
+                {/* Display ad after lead text if configured */}
+                {afterLeadAdPosition && (
+                  <DisplayAd
+                    context="article_detail"
+                    size={afterLeadAdPosition.size}
+                    onAdLoaded={() => console.log("After-lead ad loaded")}
+                  />
+                )}
+
+                {/* Render content - in-content ads are injected by RichContentRenderer */}
+                {renderContent()}
+
+                {/* Trending Articles Section */}
+                <TrendingArticles />
               </>
             )}
-            {/* Display ad after lead text if configured */}
-            {afterLeadAdPosition && (
-              <DisplayAd
-                context="article_detail"
-                size={afterLeadAdPosition.size}
-                onAdLoaded={() => console.log("After-lead ad loaded")}
-              />
-            )}
-
-            {/* Render content - in-content ads are injected by RichContentRenderer */}
-            {renderContent()}
-
-            {/* Trending Articles Section */}
-            <TrendingArticles />
           </View>
         </Animated.ScrollView>
 

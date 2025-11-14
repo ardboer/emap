@@ -14,6 +14,7 @@ import { getCenteredContentStyle } from "@/constants/Layout";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { analyticsService } from "@/services/analytics";
 import { brandManager, fetchCategoryContent } from "@/services/api";
+import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { displayAdManager } from "@/services/displayAdManager";
 import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { Article, CategoryContentResponse } from "@/types";
@@ -98,7 +99,19 @@ export default function ClinicalScreen() {
   );
 
   const handleArticlePress = (article: Article) => {
-    router.push(`/article/${article.id}`);
+    // Pre-format the date to avoid flickering
+    const formattedDate = article.publishDate
+      ? formatArticleDetailDate(article.publishDate).toUpperCase()
+      : article.timestamp?.toUpperCase() || "RECENTLY";
+
+    router.push({
+      pathname: `/article/${article.id}` as any,
+      params: {
+        previewTitle: article.title,
+        previewCategory: article.category || "",
+        previewDate: formattedDate,
+      },
+    });
   };
 
   const handleSearchPress = () => {

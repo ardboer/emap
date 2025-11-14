@@ -30,7 +30,14 @@ export default function SearchTeaser({ result, onPress }: SearchTeaserProps) {
     } else {
       // Navigate to the article using the ID
       const articleId = result.id.toString();
-      router.push(`/article/${articleId}`);
+      router.push({
+        pathname: `/article/${articleId}` as any,
+        params: {
+          previewTitle: result.title,
+          previewCategory: "",
+          previewDate: "",
+        },
+      });
     }
   };
 

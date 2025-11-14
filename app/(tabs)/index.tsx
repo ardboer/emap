@@ -14,6 +14,7 @@ import {
   fetchHighlightsWithRecommendations,
   fetchRecommendedArticlesWithExclude,
 } from "@/services/api";
+import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { nativeAdInstanceManager } from "@/services/nativeAdInstanceManager";
 import { Article } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -108,7 +109,20 @@ export default function HighlightedScreen() {
       article.title
     );
 
-    router.push(`/article/${article.id}?source=highlights`);
+    // Pre-format the date to avoid flickering
+    const formattedDate = article.publishDate
+      ? formatArticleDetailDate(article.publishDate).toUpperCase()
+      : article.timestamp?.toUpperCase() || "RECENTLY";
+
+    router.push({
+      pathname: `/article/${article.id}` as any,
+      params: {
+        source: "highlights",
+        previewTitle: article.title,
+        previewCategory: article.category || "",
+        previewDate: formattedDate,
+      },
+    });
   };
 
   const extractImageColors = async (imageUrl: string, articleId: string) => {

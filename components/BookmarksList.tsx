@@ -3,6 +3,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBookmarks } from "@/contexts/BookmarkContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
@@ -49,7 +50,21 @@ export default function BookmarksList() {
       renderItem={({ item }) => (
         <ArticleTeaser
           article={item as any}
-          onPress={() => router.push(`/article/${item.id}`)}
+          onPress={() => {
+            // Pre-format the date to avoid flickering
+            const formattedDate = item.publishDate
+              ? formatArticleDetailDate(item.publishDate).toUpperCase()
+              : item.timestamp?.toUpperCase() || "RECENTLY";
+
+            router.push({
+              pathname: `/article/${item.id}` as any,
+              params: {
+                previewTitle: item.title,
+                previewCategory: item.category || "",
+                previewDate: formattedDate,
+              },
+            });
+          }}
         />
       )}
       ItemSeparatorComponent={() => <ThemedView style={styles.separator} />}

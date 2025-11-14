@@ -1,6 +1,7 @@
 import { FadeInImage } from "@/components/FadeInImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { Article } from "@/types";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -30,7 +31,20 @@ export default function ArticleTeaserHero({
       onPress(article);
     } else {
       console.log("opening article.id", article.id);
-      router.push(`/article/${article.id}`);
+
+      // Pre-format the date to avoid flickering
+      const formattedDate = article.publishDate
+        ? formatArticleDetailDate(article.publishDate).toUpperCase()
+        : article.timestamp?.toUpperCase() || "RECENTLY";
+
+      router.push({
+        pathname: `/article/${article.id}` as any,
+        params: {
+          previewTitle: article.title,
+          previewCategory: article.category || "",
+          previewDate: formattedDate,
+        },
+      });
     }
   };
 
