@@ -48,7 +48,7 @@
         "highlightBoxBorder": "#10D1F0",
         "articleListBackground": "#FFFFFF",
         "articleTeaserTitleText": "#00334C",
-        "linkColor": "#007AFF"
+        "linkColor": "#00334C"
       },
       "dark": {
         "primary": "#fff",

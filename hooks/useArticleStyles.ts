@@ -205,7 +205,7 @@ export function useArticleStyles() {
       // ============================================
       link: {
         ...ArticleStyles.link,
-        color: (themeColors as any).linkColor || "#007AFF",
+        color: (themeColors as any).linkColor || "#FF0000",
       },
 
       // ============================================
@@ -301,7 +301,7 @@ export function useArticleStyles() {
         highlightBoxBg: themeColors.highlightBoxBg,
         highlightBoxText: themeColors.highlightBoxText,
         highlightBoxBorder: themeColors.highlightBoxBorder,
-        linkColor: (themeColors as any).linkColor || "#007AFF",
+        linkColor: (themeColors as any).linkColor || "#FF0000",
         contentBackButtonBg: themeColors.contentBackButtonBg,
         contentBackButtonText: themeColors.contentBackButtonText,
       },

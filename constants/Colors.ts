@@ -92,6 +92,7 @@ export const Colors = {
       (brandColors.light as any).articleListBackground || "#FFFFFF",
     articleTeaserTitleText:
       (brandColors.light as any).articleTeaserTitleText || "#00334C",
+    linkColor: (brandColors.light as any).linkColor || "#FF0000",
     recommendedBadgeBg:
       (brandColors.light as any).recommendedBadgeBg ||
       "rgba(16, 209, 240, 0.9)",
@@ -130,6 +131,7 @@ export const Colors = {
       (brandColors.dark as any).articleListBackground || "#011620",
     articleTeaserTitleText:
       (brandColors.dark as any).articleTeaserTitleText || "#FFFFFF",
+    linkColor: (brandColors.dark as any).linkColor || "#FF0000",
     recommendedBadgeBg:
       (brandColors.dark as any).recommendedBadgeBg || "rgba(16, 209, 240, 0.9)",
   },

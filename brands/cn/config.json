@@ -45,7 +45,7 @@
         "highlightBoxBorder": "#FFDD00",
         "articleListBackground": "#FFFFFF",
         "articleTeaserTitleText": "#1a1a1a",
-        "linkColor": "#007AFF",
+        "linkColor": "#FF0000",
         "recommendedBadgeBg": "rgba(255, 221, 0, 0.9)"
       },
       "dark": {
@@ -80,7 +80,7 @@
         "highlightBoxBorder": "#FFDD00",
         "articleListBackground": "#1a1a1a",
         "articleTeaserTitleText": "#FFFFFF",
-        "linkColor": "#FFDD00",
+        "linkColor": "#FF0000",
         "recommendedBadgeBg": "rgba(255, 221, 0, 0.9)"
       }
     },
