@@ -736,13 +736,6 @@ export default function HighlightedScreen() {
   if (loading) {
     return (
       <ThemedView style={styles.container}>
-        <CarouselProgressIndicator
-          currentIndex={0}
-          duration={SLIDE_DURATION}
-          isPlaying={false}
-          onProgressComplete={() => {}}
-          showMiniPlayer={audioState.showMiniPlayer}
-        />
         <BrandLogo
           style={[styles.brandLogo, { top: insets.top + 10 }]}
           width={100}
