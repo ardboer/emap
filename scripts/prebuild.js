@@ -527,7 +527,7 @@ const addGAMConfigToAppJson = (iosAppId, androidAppId) => {
     const appJsonPath = path.join(projectRoot, "app.json");
     const appJson = JSON.parse(fs.readFileSync(appJsonPath, "utf8"));
 
-    // Add react-native-google-mobile-ads configuration
+    // Update root-level react-native-google-mobile-ads configuration
     if (!appJson["react-native-google-mobile-ads"]) {
       appJson["react-native-google-mobile-ads"] = {};
     }
@@ -535,8 +535,37 @@ const addGAMConfigToAppJson = (iosAppId, androidAppId) => {
     appJson["react-native-google-mobile-ads"].android_app_id = androidAppId;
     appJson["react-native-google-mobile-ads"].ios_app_id = iosAppId;
 
+    // Update plugin configuration in expo.plugins array
+    if (appJson.expo && appJson.expo.plugins) {
+      const pluginIndex = appJson.expo.plugins.findIndex((plugin) => {
+        if (Array.isArray(plugin)) {
+          return plugin[0] === "react-native-google-mobile-ads";
+        }
+        return plugin === "react-native-google-mobile-ads";
+      });
+
+      if (pluginIndex !== -1) {
+        const plugin = appJson.expo.plugins[pluginIndex];
+        if (Array.isArray(plugin)) {
+          // Update existing plugin config
+          if (!plugin[1]) {
+            plugin[1] = {};
+          }
+          plugin[1].androidAppId = androidAppId;
+          plugin[1].iosAppId = iosAppId;
+          console.log(
+            `✅ Updated react-native-google-mobile-ads plugin config`
+          );
+        }
+      } else {
+        console.log(
+          `ℹ️  react-native-google-mobile-ads plugin not found in plugins array`
+        );
+      }
+    }
+
     fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2));
-    console.log(`✅ Added react-native-google-mobile-ads config to app.json`);
+    console.log(`✅ Updated react-native-google-mobile-ads config in app.json`);
     console.log(`   iOS App ID: ${iosAppId}`);
     console.log(`   Android App ID: ${androidAppId}`);
   } catch (error) {

@@ -115,8 +115,37 @@ class GAMService {
 
       // Step 1: Initialize consent management (REQUIRED)
       console.log("[GAM] Initializing consent management...");
-      await consentService.initialize();
-      this.consentInitialized = true;
+      try {
+        await consentService.initialize();
+        this.consentInitialized = true;
+      } catch (error) {
+        console.error("[GAM] Consent initialization failed:", error);
+
+        // Check if it's a consent screen configuration error
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const isConsentScreenError =
+          errorMessage.toLowerCase().includes("consent screen") ||
+          errorMessage
+            .toLowerCase()
+            .includes("not configured for production") ||
+          errorMessage.toLowerCase().includes("oauth") ||
+          errorMessage.toLowerCase().includes("unverified app") ||
+          errorMessage.toLowerCase().includes("no form(s) configured") ||
+          errorMessage.toLowerCase().includes("failed to read publisher") ||
+          errorMessage
+            .toLowerCase()
+            .includes("publisher's account configuration");
+
+        if (isConsentScreenError) {
+          console.warn(
+            "⚠️ [GAM] Consent screen not configured - proceeding with non-personalized ads"
+          );
+          this.consentInitialized = true; // Allow initialization to continue
+        } else {
+          throw error; // Re-throw other errors
+        }
+      }
 
       // Step 2: Check if we can request ads
       const canRequestAds = consentService.canRequestAds();
@@ -126,7 +155,12 @@ class GAMService {
         // Show consent form if required
         if (consentService.shouldShowConsentForm()) {
           console.log("[GAM] Showing consent form...");
-          await consentService.showConsentFormIfRequired();
+          try {
+            await consentService.showConsentFormIfRequired();
+          } catch (error) {
+            console.error("[GAM] Failed to show consent form:", error);
+            // Continue initialization even if consent form fails
+          }
         }
       }
 

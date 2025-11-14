@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+  AdsConsentDebugGeography,
+  AdsConsentStatus,
   consentService,
   ConsentState,
-  AdsConsentStatus,
-  AdsConsentDebugGeography,
 } from "../services/consent";
 
 /**
@@ -50,8 +50,38 @@ export function useConsent() {
           err instanceof Error
             ? err
             : new Error("Failed to initialize consent");
-        setError(error);
-        console.error("[useConsent] Initialization error:", error);
+
+        // Check if it's a consent screen configuration error
+        const errorMessage = error.message;
+        const isConsentScreenError =
+          errorMessage.toLowerCase().includes("consent screen") ||
+          errorMessage
+            .toLowerCase()
+            .includes("not configured for production") ||
+          errorMessage.toLowerCase().includes("oauth") ||
+          errorMessage.toLowerCase().includes("unverified app") ||
+          errorMessage.toLowerCase().includes("no form(s) configured") ||
+          errorMessage.toLowerCase().includes("failed to read publisher") ||
+          errorMessage
+            .toLowerCase()
+            .includes("publisher's account configuration");
+
+        if (isConsentScreenError) {
+          console.warn(
+            "⚠️ [useConsent] Consent screen not configured - using fallback state"
+          );
+          // Set a fallback state that allows non-personalized ads
+          setConsentState({
+            status: AdsConsentStatus.NOT_REQUIRED,
+            canRequestAds: true,
+            isConsentFormAvailable: false,
+            lastUpdated: Date.now(),
+          });
+          // Don't set error for this case
+        } else {
+          setError(error);
+          console.error("[useConsent] Initialization error:", error);
+        }
       } finally {
         setIsLoading(false);
       }

@@ -1,11 +1,10 @@
-import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   AdsConsent,
   AdsConsentDebugGeography,
-  AdsConsentStatus,
   AdsConsentInfo,
+  AdsConsentStatus,
 } from "react-native-google-mobile-ads";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
  * Consent Management Service
@@ -101,7 +100,52 @@ class ConsentService {
     } catch (error) {
       console.error("[Consent] Initialization failed:", error);
 
-      // Try to load cached consent state
+      // Check if it's a production consent screen configuration error
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const isConsentScreenError =
+        errorMessage.toLowerCase().includes("consent screen") ||
+        errorMessage.toLowerCase().includes("not configured for production") ||
+        errorMessage.toLowerCase().includes("oauth") ||
+        errorMessage.toLowerCase().includes("unverified app") ||
+        errorMessage.toLowerCase().includes("no form(s) configured") ||
+        errorMessage.toLowerCase().includes("failed to read publisher") ||
+        errorMessage
+          .toLowerCase()
+          .includes("publisher's account configuration");
+
+      if (isConsentScreenError && __DEV__) {
+        console.warn(
+          "⚠️ [Consent] Production consent screen not configured - treating as consent denied for testing"
+        );
+        console.warn("[Consent] Non-personalized ads will be allowed");
+
+        // Set consentInfo to allow non-personalized ads
+        this.consentInfo = {
+          status: AdsConsentStatus.NOT_REQUIRED,
+          isConsentFormAvailable: false,
+        } as AdsConsentInfo;
+
+        // Return a state that allows non-personalized ads
+        const fallbackState: ConsentState = {
+          status: AdsConsentStatus.NOT_REQUIRED,
+          canRequestAds: true,
+          isConsentFormAvailable: false,
+          lastUpdated: Date.now(),
+        };
+
+        // Cache this fallback state
+        await this.cacheConsentState(fallbackState);
+
+        console.log(
+          "[Consent] Fallback initialization complete:",
+          fallbackState
+        );
+
+        return fallbackState;
+      }
+
+      // Try to load cached consent state for other errors
       const cachedState = await this.loadCachedConsentState();
       if (cachedState) {
         console.log("[Consent] Using cached consent state");
@@ -158,6 +202,31 @@ class ConsentService {
       return updatedState;
     } catch (error) {
       console.error("[Consent] Error showing consent form:", error);
+
+      // Check if it's a production consent screen configuration error
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const isConsentScreenError =
+        errorMessage.toLowerCase().includes("consent screen") ||
+        errorMessage.toLowerCase().includes("not configured for production") ||
+        errorMessage.toLowerCase().includes("oauth") ||
+        errorMessage.toLowerCase().includes("unverified app") ||
+        errorMessage.toLowerCase().includes("no form(s) configured") ||
+        errorMessage.toLowerCase().includes("failed to read publisher") ||
+        errorMessage
+          .toLowerCase()
+          .includes("publisher's account configuration");
+
+      if (isConsentScreenError) {
+        console.warn(
+          "⚠️ [Consent] Production consent screen not configured - treating as consent denied"
+        );
+        console.warn("[Consent] Non-personalized ads will be allowed");
+
+        // Return current state (which should already be set to allow non-personalized ads)
+        return this.getConsentState();
+      }
+
       throw error;
     }
   }
@@ -342,4 +411,4 @@ class ConsentService {
 export const consentService = new ConsentService();
 
 // Export types and enums for convenience
-export { AdsConsentStatus, AdsConsentDebugGeography };
+export { AdsConsentDebugGeography, AdsConsentStatus };
