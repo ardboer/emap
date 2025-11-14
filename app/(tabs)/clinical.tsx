@@ -91,10 +91,24 @@ export default function ClinicalScreen() {
     loadClinicalContent();
   }, []);
 
-  // Track screen view when tab is focused
+  // Track screen view and refresh data when tab is focused
   useFocusEffect(
     useCallback(() => {
       analyticsService.logScreenView("Clinical", "ClinicalScreen");
+
+      // Refresh clinical content silently when coming into view
+      // Only if we already have data (not initial load)
+      if (categoryContent && !loading && !refreshing) {
+        fetchCategoryContent(CLINICAL_CATEGORY_ID)
+          .then((content) => {
+            setCategoryContent(content);
+            setError(null);
+          })
+          .catch((err) => {
+            console.error("Error refreshing clinical content on focus:", err);
+            // Don't show error to user for background refresh
+          });
+      }
     }, [])
   );
 

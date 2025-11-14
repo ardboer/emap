@@ -27,7 +27,7 @@ import { displayAdManager } from "@/services/displayAdManager";
 import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
 import { Article, CategoryContentResponse } from "@/types";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -48,6 +48,9 @@ export default function NewsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
   const contentBackground = useThemeColor({}, "contentBackground");
+
+  // Refs to track if we've already refreshed on this focus
+  const hasRefreshedOnFocus = useRef(false);
 
   // Initialize display ad manager and native ad variant manager with brand config
   useEffect(() => {
@@ -145,10 +148,43 @@ export default function NewsScreen() {
     loadInitialData();
   }, []);
 
-  // Track screen view when tab is focused
+  // Track screen view and refresh active category when tab is focused
   useFocusEffect(
     useCallback(() => {
       analyticsService.logScreenView("News", "NewsScreen");
+
+      // Only refresh once per focus event
+      if (!hasRefreshedOnFocus.current && menuItems.length > 0 && !loading) {
+        const menuItem = menuItems[activeTabIndex];
+        if (menuItem) {
+          const tabKey = menuItem.object_id.toString();
+          const isRefreshing = tabRefreshingStates[tabKey];
+
+          // Only refresh if this tab already has content loaded and not currently refreshing
+          if (tabContent[tabKey] && !isRefreshing) {
+            hasRefreshedOnFocus.current = true;
+            fetchCategoryContent(menuItem.object_id.toString())
+              .then((categoryContent) => {
+                setTabContent((prev) => ({
+                  ...prev,
+                  [tabKey]: categoryContent,
+                }));
+              })
+              .catch((err) => {
+                console.error(
+                  `Error refreshing content for tab ${menuItem.title} on focus:`,
+                  err
+                );
+                // Don't show error to user for background refresh
+              });
+          }
+        }
+      }
+
+      // Reset the flag when the screen loses focus
+      return () => {
+        hasRefreshedOnFocus.current = false;
+      };
     }, [])
   );
 
@@ -181,6 +217,22 @@ export default function NewsScreen() {
 
     if (!tabContent[tabKey]) {
       await loadTabContent(index);
+    } else {
+      // Refresh content silently when switching to a tab that already has content
+      const isRefreshing = tabRefreshingStates[tabKey];
+      if (!isRefreshing) {
+        fetchCategoryContent(menuItem.object_id.toString())
+          .then((categoryContent) => {
+            setTabContent((prev) => ({ ...prev, [tabKey]: categoryContent }));
+          })
+          .catch((err) => {
+            console.error(
+              `Error refreshing content for tab ${menuItem.title}:`,
+              err
+            );
+            // Don't show error to user for background refresh
+          });
+      }
     }
   };
 

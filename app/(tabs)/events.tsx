@@ -67,10 +67,24 @@ export default function EventsScreen() {
     loadData();
   }, []);
 
-  // Track screen view when tab is focused
+  // Track screen view and refresh data when tab is focused
   useFocusEffect(
     useCallback(() => {
       analyticsService.logScreenView("Events", "EventsScreen");
+
+      // Refresh events data silently when coming into view
+      // Only if we already have data (not initial load)
+      if (events.length > 0 && !loading && !refreshing) {
+        fetchEvents()
+          .then((fetchedEvents) => {
+            setEvents(fetchedEvents);
+            setError(null);
+          })
+          .catch((err) => {
+            console.error("Error refreshing events on focus:", err);
+            // Don't show error to user for background refresh
+          });
+      }
     }, [])
   );
 
