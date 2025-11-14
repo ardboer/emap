@@ -1,4 +1,5 @@
 import { AccessCheckDebugInfo } from "@/components/AccessCheckDebugInfo";
+import BookmarkButton from "@/components/BookmarkButton";
 import { DisplayAd } from "@/components/DisplayAd";
 import { FadeInImage } from "@/components/FadeInImage";
 import { PaywallBottomSheet } from "@/components/PaywallBottomSheet";
@@ -485,11 +486,16 @@ function ArticleScreenContent() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Share Button */}
+        {/* Action Buttons (Share & Bookmark) */}
         <Animated.View style={[styles.shareButtonTop, backButtonAnimatedStyle]}>
           <View
             style={[styles.shareButtonContainer, { marginTop: insets.top }]}
           >
+            <BookmarkButton
+              article={article}
+              iconColor={styles.colors.contentBackButtonText}
+              iconSize={24}
+            />
             <ShareButton
               title={article.title}
               message={

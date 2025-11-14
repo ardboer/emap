@@ -1,3 +1,4 @@
+import BookmarkButton from "@/components/BookmarkButton";
 import { FadeInImage } from "@/components/FadeInImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -51,7 +52,15 @@ export default function ArticleTeaserHorizontal({
         />
       </ThemedView>
       <ThemedView style={styles.contentContainer}>
-        <ThemedText style={styles.category}>{article.category}</ThemedText>
+        <ThemedView style={styles.headerRow}>
+          <ThemedText style={styles.category}>{article.category}</ThemedText>
+          <BookmarkButton
+            article={article}
+            iconSize={18}
+            iconColor={Colors[colorScheme].text}
+            style={styles.bookmarkButton}
+          />
+        </ThemedView>
         <ThemedText
           type="defaultSemiBold"
           style={[
@@ -87,11 +96,20 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     backgroundColor: "transparent",
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+    backgroundColor: "transparent",
+  },
   category: {
     fontSize: 12,
     fontWeight: "600",
     opacity: 0.7,
-    marginBottom: 4,
+  },
+  bookmarkButton: {
+    padding: 4,
   },
   title: {
     fontSize: 16,

@@ -142,7 +142,7 @@ class ConsentService {
           fallbackState
         );
 
-        return fallbackState;
+        // return fallbackState;
       }
 
       // Try to load cached consent state for other errors

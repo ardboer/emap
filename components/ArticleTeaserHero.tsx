@@ -47,9 +47,17 @@ export default function ArticleTeaserHero({
           style={styles.gradient}
         >
           <ThemedView style={styles.contentContainer}>
-            <ThemedText type="defaultSemiBold" style={styles.title}>
-              {article.title}
-            </ThemedText>
+            <ThemedView style={styles.headerRow}>
+              <ThemedText type="defaultSemiBold" style={styles.title}>
+                {article.title}
+              </ThemedText>
+              {/* <BookmarkButton
+                article={article}
+                iconColor="#FFFFFF"
+                iconSize={20}
+                style={styles.bookmarkButton}
+              /> */}
+            </ThemedView>
           </ThemedView>
         </LinearGradient>
       </ThemedView>
@@ -85,10 +93,20 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "transparent",
   },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "transparent",
+  },
   title: {
+    flex: 1,
     fontSize: 20,
     lineHeight: 24,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  bookmarkButton: {
+    marginTop: -4,
   },
 });

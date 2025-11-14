@@ -345,6 +345,62 @@ class AnalyticsService {
       results_count: resultsCount,
     });
   }
+
+  /**
+   * Log bookmark added event
+   */
+  async logBookmarkAdded(
+    articleId: string,
+    articleTitle: string,
+    category?: string,
+    source?: string,
+    isAuthenticated?: boolean
+  ): Promise<void> {
+    await this.logEvent("bookmark_added", {
+      article_id: articleId,
+      article_title: articleTitle,
+      article_category: category,
+      source: source,
+      user_authenticated: isAuthenticated,
+    });
+  }
+
+  /**
+   * Log bookmark removed event
+   */
+  async logBookmarkRemoved(
+    articleId: string,
+    isAuthenticated?: boolean
+  ): Promise<void> {
+    await this.logEvent("bookmark_removed", {
+      article_id: articleId,
+      user_authenticated: isAuthenticated,
+    });
+  }
+
+  /**
+   * Log bookmarks list viewed event
+   */
+  async logBookmarksListViewed(bookmarkCount: number): Promise<void> {
+    await this.logEvent("bookmarks_list_viewed", {
+      bookmark_count: bookmarkCount,
+    });
+  }
+
+  /**
+   * Log bookmark clicked from list event
+   */
+  async logBookmarkClicked(
+    articleId: string,
+    position: number,
+    totalBookmarks: number
+  ): Promise<void> {
+    await this.logEvent("bookmark_clicked", {
+      article_id: articleId,
+      position: position,
+      total_bookmarks: totalBookmarks,
+    });
+  }
 }
 
 // Export singleton instance

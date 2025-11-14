@@ -4,6 +4,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { brandManager } from "@/config/BrandManager";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBookmarks } from "@/contexts/BookmarkContext";
 import { useColorSchemeContext } from "@/contexts/ColorSchemeContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -50,6 +51,7 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   const colorScheme = useColorScheme();
   const { mode, setMode } = useColorSchemeContext();
   const { user, isAuthenticated, isLoading, error, login, logout } = useAuth();
+  const { bookmarkedArticles } = useBookmarks();
   const [notificationStatus, setNotificationStatus] = React.useState<{
     enabled: boolean;
     loading: boolean;
@@ -829,6 +831,27 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
             {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}
           </>
         )}
+      </ThemedView>
+
+      {/* Saved Content Section */}
+      <ThemedView transparant style={styles.section}>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          Saved Content
+        </ThemedText>
+        <SettingsItem
+          title="My Bookmarks"
+          subtitle={`${bookmarkedArticles.length} ${
+            bookmarkedArticles.length === 1 ? "article" : "articles"
+          } saved`}
+          icon="bookmark.fill"
+          onPress={() => {
+            router.push("/bookmarks");
+            onClose?.();
+          }}
+          rightElement={
+            <IconSymbol name="chevron.right" size={20} color={primaryColor} />
+          }
+        />
       </ThemedView>
 
       {/* Notifications Section */}

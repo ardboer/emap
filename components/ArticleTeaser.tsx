@@ -70,7 +70,12 @@ export default function ArticleTeaser({
           <ThemedText style={styles.category} numberOfLines={1}>
             {article.category}
           </ThemedText>
-          {/* <ThemedText style={styles.timestamp}>{article.timestamp}</ThemedText> */}
+          {/* <BookmarkButton
+            article={article}
+            iconSize={16}
+            iconColor={Colors[colorScheme].text}
+            style={styles.bookmarkButton}
+          /> */}
         </ThemedView>
         <ThemedText
           type="defaultSemiBold"
@@ -136,6 +141,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     opacity: 0.7,
+    flex: 1,
+  },
+  bookmarkButton: {
+    padding: 4,
+    marginRight: -4,
   },
   timestamp: {
     fontSize: 12,
