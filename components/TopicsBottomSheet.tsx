@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   starIcon: {
-    fontSize: 20,
+    fontSize: 25,
   },
   emptyContainer: {
     padding: 40,
