@@ -139,14 +139,14 @@ export const ArticleStyles = StyleSheet.create({
   },
 
   authorNameCompact: {
-    fontSize: 12,
+    fontSize: 14,
     lineHeight: 16,
     fontWeight: "600",
   },
 
   timestamp: {
     fontSize: 12,
-    lineHeight: 12,
+    lineHeight: 14,
     fontWeight: "500",
     textTransform: "uppercase",
   },
@@ -186,7 +186,7 @@ export const ArticleStyles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 25,
     fontWeight: "400",
-    marginBottom: 8,
+    marginBottom: 4,
   },
 
   // ============================================
@@ -194,7 +194,7 @@ export const ArticleStyles = StyleSheet.create({
   // ============================================
   inlineText: {
     fontSize: 17,
-    lineHeight: 25,
+    lineHeight: 24,
   },
 
   h1: {

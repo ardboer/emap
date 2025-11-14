@@ -119,7 +119,7 @@ export function useArticleStyles() {
       leadText: {
         ...ArticleStyles.leadText,
         color: themeColors.contentTitleText,
-        fontFamily: fonts?.primaryBold,
+        fontFamily: fonts?.primarySemiBold,
       },
 
       // ============================================

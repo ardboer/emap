@@ -330,15 +330,15 @@ const staticStyles = StyleSheet.create({
   },
   title: {
     color: "#FFFFFF",
-    fontSize: 24,
+    fontSize: 22,
     lineHeight: 26,
     fontWeight: "bold",
     marginBottom: 16,
   },
   leadText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 18,
+    lineHeight: 25,
     fontWeight: "600",
     marginBottom: 16,
   },
