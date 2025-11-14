@@ -8,7 +8,6 @@ import { NativeAdListItem } from "@/components/NativeAdListItem";
 import RecommendedBlockHorizontal from "@/components/RecommendedBlockHorizontal";
 import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
-import SwipeableTabView from "@/components/SwipeableTabView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TopicsTabBar from "@/components/TopicsTabBar";
@@ -25,7 +24,13 @@ import {
 import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { displayAdManager } from "@/services/displayAdManager";
 import { nativeAdVariantManager } from "@/services/nativeAdVariantManager";
-import { Article, CategoryContentResponse } from "@/types";
+import {
+  Article,
+  CategoryContentResponse,
+  HierarchicalMenuItem,
+  MenuState,
+} from "@/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -38,16 +43,26 @@ import {
   useColorScheme,
 } from "react-native";
 
+// AsyncStorage key for persisting selected child topics
+const SELECTED_TOPICS_KEY = "@news_selected_topics";
+
 const { width: screenWidth } = Dimensions.get("window");
 
 export default function NewsScreen() {
   const colorScheme = useColorScheme() ?? "light";
-  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [menuItems, setMenuItems] = useState<HierarchicalMenuItem[]>([]);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
   const contentBackground = useThemeColor({}, "contentBackground");
+
+  // Menu state for hierarchical navigation
+  const [menuState, setMenuState] = useState<MenuState>({
+    expandedParentId: null,
+    selectedChildId: null,
+    selectedParentId: null,
+  });
 
   // Refs to track if we've already refreshed on this focus
   const hasRefreshedOnFocus = useRef(false);
@@ -73,6 +88,26 @@ export default function NewsScreen() {
   const [tabRefreshingStates, setTabRefreshingStates] = useState<{
     [key: string]: boolean;
   }>({});
+  // Helper functions for persisting selected topics
+  const loadSelectedTopics = async (): Promise<Record<string, string>> => {
+    try {
+      const stored = await AsyncStorage.getItem(SELECTED_TOPICS_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      console.error("Error loading selected topics:", error);
+      return {};
+    }
+  };
+
+  const saveSelectedTopic = async (parentId: string, childId: string) => {
+    try {
+      const stored = await loadSelectedTopics();
+      stored[parentId] = childId;
+      await AsyncStorage.setItem(SELECTED_TOPICS_KEY, JSON.stringify(stored));
+    } catch (error) {
+      console.error("Error saving selected topic:", error);
+    }
+  };
 
   const loadInitialData = async () => {
     try {
@@ -208,31 +243,134 @@ export default function NewsScreen() {
     router.push("/search");
   };
 
-  const handleTabChange = async (index: number) => {
+  const handleParentTabChange = async (
+    index: number,
+    item: HierarchicalMenuItem
+  ) => {
     setActiveTabIndex(index);
 
-    // Load content for this tab if not already loaded
-    const menuItem = menuItems[index];
-    const tabKey = menuItem.object_id.toString();
+    if (item.hasChildren) {
+      // Load persisted topics from AsyncStorage
+      const persistedTopics = await loadSelectedTopics();
+      const parentId = item.ID.toString();
 
-    if (!tabContent[tabKey]) {
-      await loadTabContent(index);
-    } else {
-      // Refresh content silently when switching to a tab that already has content
-      const isRefreshing = tabRefreshingStates[tabKey];
-      if (!isRefreshing) {
-        fetchCategoryContent(menuItem.object_id.toString())
-          .then((categoryContent) => {
-            setTabContent((prev) => ({ ...prev, [tabKey]: categoryContent }));
-          })
-          .catch((err) => {
-            console.error(
-              `Error refreshing content for tab ${menuItem.title}:`,
-              err
-            );
-            // Don't show error to user for background refresh
-          });
+      // Determine which child to load:
+      // 1. Check AsyncStorage for persisted selection
+      // 2. If this parent was previously selected in current session, use that
+      // 3. Otherwise, use the first child as default
+      const persistedChildId = persistedTopics[parentId];
+      const wasThisParentSelected = menuState.selectedParentId === parentId;
+      const sessionChildId = wasThisParentSelected
+        ? menuState.selectedChildId
+        : null;
+
+      const firstChild = item.children?.[0];
+
+      // Priority: persisted > session > first child
+      let childToLoad = firstChild;
+      if (persistedChildId) {
+        childToLoad =
+          item.children?.find((c) => c.ID.toString() === persistedChildId) ||
+          firstChild;
+      } else if (sessionChildId) {
+        childToLoad =
+          item.children?.find((c) => c.ID.toString() === sessionChildId) ||
+          firstChild;
       }
+
+      // Update menu state with the selected child
+      const newChildId = childToLoad?.ID.toString() || null;
+      setMenuState((prev) => ({
+        ...prev,
+        expandedParentId: parentId,
+        selectedChildId: newChildId,
+        selectedParentId: parentId,
+      }));
+
+      // Always load the selected child's content (persisted, session, or first)
+      if (childToLoad) {
+        const tabKey = childToLoad.object_id.toString();
+        setTabLoadingStates((prev) => ({ ...prev, [tabKey]: true }));
+
+        try {
+          const categoryContent = await fetchCategoryContent(
+            childToLoad.object_id.toString()
+          );
+          setTabContent((prev) => ({ ...prev, [tabKey]: categoryContent }));
+        } catch (err) {
+          console.error(
+            `Error loading child content for ${childToLoad.title}:`,
+            err
+          );
+        } finally {
+          setTabLoadingStates((prev) => ({ ...prev, [tabKey]: false }));
+        }
+      }
+    } else {
+      // Parent without children - fetch its content
+      setMenuState((prev) => ({
+        ...prev,
+        expandedParentId: null,
+        selectedChildId: null,
+        selectedParentId: null,
+      }));
+
+      // Load content for this tab if not already loaded
+      const tabKey = item.object_id.toString();
+
+      if (!tabContent[tabKey]) {
+        await loadTabContent(index);
+      } else {
+        // Refresh content silently when switching to a tab that already has content
+        const isRefreshing = tabRefreshingStates[tabKey];
+        if (!isRefreshing) {
+          fetchCategoryContent(item.object_id.toString())
+            .then((categoryContent) => {
+              setTabContent((prev) => ({ ...prev, [tabKey]: categoryContent }));
+            })
+            .catch((err) => {
+              console.error(
+                `Error refreshing content for tab ${item.title}:`,
+                err
+              );
+              // Don't show error to user for background refresh
+            });
+        }
+      }
+    }
+  };
+
+  const handleChildTabChange = async (
+    childItem: HierarchicalMenuItem,
+    parentIndex: number
+  ) => {
+    const childId = childItem.ID.toString();
+    const parentId = childItem.parent;
+
+    // Update menu state
+    setMenuState((prev) => ({
+      ...prev,
+      selectedChildId: childId,
+      selectedParentId: parentId,
+    }));
+
+    // Persist the selection to AsyncStorage
+    await saveSelectedTopic(parentId, childId);
+
+    // Fetch category content for the child
+    const tabKey = childItem.object_id.toString();
+
+    setTabLoadingStates((prev) => ({ ...prev, [tabKey]: true }));
+
+    try {
+      const categoryContent = await fetchCategoryContent(
+        childItem.object_id.toString()
+      );
+      setTabContent((prev) => ({ ...prev, [tabKey]: categoryContent }));
+    } catch (err) {
+      console.error(`Error loading child content:`, err);
+    } finally {
+      setTabLoadingStates((prev) => ({ ...prev, [tabKey]: false }));
     }
   };
 
@@ -444,7 +582,8 @@ export default function NewsScreen() {
 
   // Helper function to prepare sections for a given tab index
   const prepareSectionsForTab = (tabIndex: number) => {
-    const menuItemKey = menuItems[tabIndex]?.object_id.toString() || "default";
+    // Use the current content key (either parent or selected child)
+    const menuItemKey = getCurrentContentKey();
     const content = tabContent[menuItemKey];
 
     // All tabs now use CategoryContentResponse with blocks
@@ -556,9 +695,28 @@ export default function NewsScreen() {
     return sections;
   };
 
-  // Render content for a specific tab
+  // Get the current content key (either parent or selected child)
+  const getCurrentContentKey = (): string => {
+    if (menuState.selectedChildId) {
+      // Find the child item to get its object_id
+      const parent = menuItems.find(
+        (item) => item.ID.toString() === menuState.selectedParentId
+      );
+      const child = parent?.children?.find(
+        (c) => c.ID.toString() === menuState.selectedChildId
+      );
+      return (
+        child?.object_id.toString() ||
+        menuItems[activeTabIndex]?.object_id.toString() ||
+        "default"
+      );
+    }
+    return menuItems[activeTabIndex]?.object_id.toString() || "default";
+  };
+
+  // Render content for current selection (parent or child)
   const renderTabContent = (tabIndex: number) => {
-    const menuItemKey = menuItems[tabIndex]?.object_id.toString() || "default";
+    const menuItemKey = getCurrentContentKey();
     const isTabLoading = tabLoadingStates[menuItemKey] || false;
     const isTabRefreshing = tabRefreshingStates[menuItemKey] || false;
     const hasTabContent = !!tabContent[menuItemKey];
@@ -643,15 +801,14 @@ export default function NewsScreen() {
         onUserPress={() => setSettingsDrawerVisible(true)}
       />
       <TopicsTabBar
-        tabs={tabs.map((t) => ({ id: t.id, title: t.title }))}
-        activeTabIndex={activeTabIndex}
-        onTabChange={handleTabChange}
+        tabs={menuItems}
+        activeParentIndex={activeTabIndex}
+        activeChildId={menuState.selectedChildId}
+        expandedParentId={menuState.expandedParentId}
+        onParentTabChange={handleParentTabChange}
+        onChildTabChange={handleChildTabChange}
       />
-      <SwipeableTabView
-        tabs={tabs}
-        activeTabIndex={activeTabIndex}
-        onTabChange={handleTabChange}
-      />
+      {renderTabContent(activeTabIndex)}
       <SettingsDrawer
         visible={settingsDrawerVisible}
         onClose={() => setSettingsDrawerVisible(false)}

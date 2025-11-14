@@ -5,22 +5,28 @@
  * Provides navigation menu data for the application.
  */
 
+import { HierarchicalMenuItem } from "@/types";
 import { ENDPOINTS, getApiConfig } from "./config";
+import { organizeMenuHierarchy } from "./menuUtils";
 
 /**
  * Fetch menu items from menu API
  *
- * Retrieves navigation menu items for the current brand.
+ * Retrieves navigation menu items for the current brand and organizes them
+ * into a hierarchical structure with parent-child relationships.
  * The menu ID is configured per brand in the API configuration.
  *
- * @returns Promise resolving to array of menu item objects
+ * @returns Promise resolving to array of hierarchical menu items
  * @throws Error if menuId is not configured for the brand
  *
  * @example
  * const menuItems = await fetchMenuItems();
- * // Returns: [{ id: 1, title: "Home", url: "/", ... }, ...]
+ * // Returns: [
+ * //   { ID: 1, title: "Home", hasChildren: false, children: [], ... },
+ * //   { ID: 2, title: "Topics", hasChildren: true, children: [...], ... }
+ * // ]
  */
-export async function fetchMenuItems(): Promise<any[]> {
+export async function fetchMenuItems(): Promise<HierarchicalMenuItem[]> {
   const apiConfig = getApiConfig() as any;
   const { hash, menuId, baseUrl } = apiConfig;
 
@@ -41,5 +47,9 @@ export async function fetchMenuItems(): Promise<any[]> {
 
   const menuItems = menuData.menu_items || [];
 
-  return menuItems;
+  // Organize flat menu items into hierarchical structure
+  const hierarchicalMenu = organizeMenuHierarchy(menuItems);
+  console.log("Hierarchical menu:", hierarchicalMenu);
+
+  return hierarchicalMenu;
 }

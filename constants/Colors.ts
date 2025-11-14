@@ -75,6 +75,14 @@ export const Colors = {
     topicsActiveText: (brandColors.light as any).topicsActiveText || "#011620",
     topicsInactiveText:
       (brandColors.light as any).topicsInactiveText || "#B3F4FF",
+    topicsChildBackground:
+      (brandColors.light as any).topicsChildBackground || "#004D66",
+    topicsChildActiveTab:
+      (brandColors.light as any).topicsChildActiveTab || "#FFFFFF",
+    topicsChildActiveText:
+      (brandColors.light as any).topicsChildActiveText || "#00334C",
+    topicsChildInactiveText:
+      (brandColors.light as any).topicsChildInactiveText || "#B3F4FF",
     contentBackground:
       (brandColors.light as any).contentBackground || "#FFFFFF",
     contentTitleText: (brandColors.light as any).contentTitleText || "#00334C",
@@ -115,6 +123,14 @@ export const Colors = {
     topicsActiveText: (brandColors.dark as any).topicsActiveText || "#011620",
     topicsInactiveText:
       (brandColors.dark as any).topicsInactiveText || "#B3F4FF",
+    topicsChildBackground:
+      (brandColors.dark as any).topicsChildBackground || "#002A3A",
+    topicsChildActiveTab:
+      (brandColors.dark as any).topicsChildActiveTab || "#FFFFFF",
+    topicsChildActiveText:
+      (brandColors.dark as any).topicsChildActiveText || "#00334C",
+    topicsChildInactiveText:
+      (brandColors.dark as any).topicsChildInactiveText || "#B3F4FF",
     contentBackground: (brandColors.dark as any).contentBackground || "#011620",
     contentTitleText: (brandColors.dark as any).contentTitleText || "#FFFFFF",
     contentBodyText: (brandColors.dark as any).contentBodyText || "#FFFFFF",

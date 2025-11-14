@@ -85,6 +85,18 @@ export interface MenuItem {
   menu_order: number;
   parent: string;
   target: string;
+  image_url?: string;
+}
+
+export interface HierarchicalMenuItem extends MenuItem {
+  children?: MenuItem[];
+  hasChildren: boolean;
+}
+
+export interface MenuState {
+  expandedParentId: string | null;
+  selectedChildId: string | null;
+  selectedParentId: string | null;
 }
 
 export interface MenuResponse {
