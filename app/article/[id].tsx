@@ -669,30 +669,33 @@ function ArticleScreenContent() {
             )}
 
             {/* Render leadText - support both string and structured content */}
-            {Array.isArray(article.leadText) ? (
+            {article.leadText && (
               <>
-                <RichContentRenderer
-                  content={article.leadText as StructuredContentNode[]}
-                  style={styles.leadText}
-                  articleId={id}
-                  textStyleOverride="leadText"
-                />
+                {Array.isArray(article.leadText) ? (
+                  <>
+                    <RichContentRenderer
+                      content={article.leadText as StructuredContentNode[]}
+                      style={styles.leadText}
+                      articleId={id}
+                      textStyleOverride="leadText"
+                    />
+                  </>
+                ) : (
+                  <Text
+                    style={[
+                      styles.leadText,
+                      {
+                        color: Colors[colorScheme].contentTitleText,
+                        fontFamily: brandConfig?.theme.fonts.primaryBold,
+                      },
+                    ]}
+                    allowFontScaling={false}
+                  >
+                    {article.leadText}
+                  </Text>
+                )}
               </>
-            ) : (
-              <Text
-                style={[
-                  styles.leadText,
-                  {
-                    color: Colors[colorScheme].contentTitleText,
-                    fontFamily: brandConfig?.theme.fonts.primaryBold,
-                  },
-                ]}
-                allowFontScaling={false}
-              >
-                {article.leadText}
-              </Text>
             )}
-
             {/* Display ad after lead text if configured */}
             {afterLeadAdPosition && (
               <DisplayAd

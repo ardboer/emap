@@ -319,7 +319,7 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
   const { cacheService } = await import("../../cache");
   const cacheKey = "single_article";
   const apiConfig = getApiConfig();
-  const { hash, baseUrl, leadtext = "excerpt" } = apiConfig;
+  const { hash, baseUrl, leadtext } = apiConfig;
   console.log(
     "fetching article",
     `${baseUrl}${ENDPOINTS.INDIVIDUAL_POST}/${articleId}/?hash=${hash}`
@@ -365,38 +365,28 @@ export async function fetchSingleArticle(articleId: string): Promise<Article> {
       content = postData.content.rendered;
     }
 
-    // Handle structured leadText using configured field (default: excerpt)
-    // Fallback to excerpt if configured field is empty or doesn't exist
+    // Handle structured leadText using configured field
+    // Only show leadText if configured field exists and has content
     let leadText: string | StructuredContentNode[] = "";
-    const leadTextField = postData[leadtext as keyof PostApiResponse];
 
-    // Try to get content from configured field
-    if (
-      leadTextField &&
-      typeof leadTextField === "object" &&
-      "rendered" in leadTextField &&
-      Array.isArray(leadTextField.rendered)
-    ) {
-      leadText = leadTextField.rendered;
-    } else if (
-      leadTextField &&
-      typeof leadTextField === "object" &&
-      "rendered" in leadTextField &&
-      typeof leadTextField.rendered === "string"
-    ) {
-      leadText = stripHtml(leadTextField.rendered);
-    }
+    if (leadtext) {
+      const leadTextField = postData[leadtext as keyof PostApiResponse];
 
-    // Fallback to excerpt if configured field is empty or doesn't exist
-    if (!leadText || (typeof leadText === "string" && leadText.trim() === "")) {
+      // Try to get content from configured field
       if (
-        postData.excerpt &&
-        postData.excerpt.rendered &&
-        Array.isArray(postData.excerpt.rendered)
+        leadTextField &&
+        typeof leadTextField === "object" &&
+        "rendered" in leadTextField &&
+        Array.isArray(leadTextField.rendered)
       ) {
-        leadText = postData.excerpt.rendered;
-      } else if (typeof postData.excerpt?.rendered === "string") {
-        leadText = stripHtml(postData.excerpt.rendered);
+        leadText = leadTextField.rendered;
+      } else if (
+        leadTextField &&
+        typeof leadTextField === "object" &&
+        "rendered" in leadTextField &&
+        typeof leadTextField.rendered === "string"
+      ) {
+        leadText = stripHtml(leadTextField.rendered);
       }
     }
 
