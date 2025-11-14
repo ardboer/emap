@@ -8,7 +8,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TrendingArticles from "@/components/TrendingArticles";
 import { Colors } from "@/constants/Colors";
-import { getCenteredContentStyle } from "@/constants/Layout";
+import {
+  ArticleStyleProvider,
+  useArticleStyleContext,
+} from "@/contexts/ArticleStyleContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useArticleAccess } from "@/hooks/useArticleAccess";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
@@ -26,7 +29,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
-  StyleSheet,
   Text,
   TouchableOpacity,
   useColorScheme,
@@ -47,7 +49,7 @@ import {
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const HEADER_HEIGHT = screenHeight * 0.4;
 
-export default function ArticleScreen() {
+function ArticleScreenContent() {
   const { id, source } = useLocalSearchParams<{
     id: string;
     source?: string;
@@ -55,6 +57,7 @@ export default function ArticleScreen() {
   const { user, isAuthenticated, login } = useAuth();
   const colorScheme = useColorScheme() ?? "light";
   const { brandConfig } = useBrandConfig();
+  const styles = useArticleStyleContext();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -458,12 +461,7 @@ export default function ArticleScreen() {
 
   return (
     <GestureDetector gesture={panGesture}>
-      <View
-        style={[
-          styles.container,
-          { backgroundColor: Colors[colorScheme].contentBackground },
-        ]}
-      >
+      <View style={styles.container}>
         {/* Fixed Header Image */}
         <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
           <FadeInImage
@@ -475,44 +473,22 @@ export default function ArticleScreen() {
         {/* Back Button */}
         <Animated.View style={[styles.backButtonTop, backButtonAnimatedStyle]}>
           <TouchableOpacity
-            style={[
-              styles.backButtonContainer,
-              {
-                backgroundColor: Colors[colorScheme].contentBackButtonBg,
-                marginTop: insets.top,
-              },
-            ]}
+            style={[styles.backButtonContainer, { marginTop: insets.top }]}
             onPress={() => router.back()}
           >
             <Ionicons
               name="chevron-back"
               size={10}
-              color={Colors[colorScheme].contentBackButtonText}
+              color={styles.colors.contentBackButtonText}
             />
-            <Text
-              style={[
-                styles.backButtonText,
-                {
-                  color: Colors[colorScheme].contentBackButtonText,
-                  fontFamily: brandConfig?.theme.fonts.primarySemiBold,
-                },
-              ]}
-            >
-              BACK
-            </Text>
+            <Text style={styles.backButtonText}>BACK</Text>
           </TouchableOpacity>
         </Animated.View>
 
         {/* Share Button */}
         <Animated.View style={[styles.shareButtonTop, backButtonAnimatedStyle]}>
           <View
-            style={[
-              styles.shareButtonContainer,
-              {
-                backgroundColor: Colors[colorScheme].contentBackButtonBg,
-                marginTop: insets.top,
-              },
-            ]}
+            style={[styles.shareButtonContainer, { marginTop: insets.top }]}
           >
             <ShareButton
               title={article.title}
@@ -538,7 +514,7 @@ export default function ArticleScreen() {
                 });
                 return shareUrl;
               })()}
-              iconColor={Colors[colorScheme].contentBackButtonText}
+              iconColor={styles.colors.contentBackButtonText}
               iconSize={20}
             />
           </View>
@@ -591,15 +567,7 @@ export default function ArticleScreen() {
           <View style={styles.headerSpacer} />
 
           {/* Article Content */}
-          <View
-            style={[
-              styles.contentContainer,
-              {
-                backgroundColor: Colors[colorScheme].contentBackground,
-                paddingBottom: 40,
-              },
-            ]}
-          >
+          <View style={[styles.contentContainer, { paddingBottom: 40 }]}>
             {/* Author and Date Row */}
             <View style={styles.metaContainer}>
               {/* Author Info - Left Side */}
@@ -701,6 +669,7 @@ export default function ArticleScreen() {
                   content={article.leadText as StructuredContentNode[]}
                   style={styles.leadText}
                   articleId={id}
+                  textStyleOverride="leadText"
                 />
               </>
             ) : (
@@ -747,208 +716,11 @@ export default function ArticleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  backButtonContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    marginTop: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
-  },
-  headerContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: HEADER_HEIGHT,
-    zIndex: 0,
-  },
-  headerImage: {
-    width: "100%",
-    height: "100%",
-  },
-  backButtonTop: {
-    position: "absolute",
-    top: 8,
-    left: 16,
-    zIndex: 10,
-  },
-  shareButtonTop: {
-    position: "absolute",
-    top: 8,
-    right: 16,
-    zIndex: 10,
-  },
-  debugInfoContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    zIndex: 5,
-  },
-  shareButtonContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 4,
-    marginTop: 16,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    fontSize: 12,
-    paddingTop: 4,
-    lineHeight: 12,
-    fontWeight: "600" as "600",
-    textTransform: "uppercase" as "uppercase",
-  },
-  scrollView: {
-    flex: 1,
-    zIndex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  headerSpacer: {
-    height: HEADER_HEIGHT,
-  },
-  contentContainer: {
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    padding: 16,
-    marginTop: -20,
-    minHeight: screenHeight - HEADER_HEIGHT + 40,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    ...getCenteredContentStyle(),
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-  },
-  backButton: {
-    marginTop: 16,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  metaContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 18,
-  },
-  authorInfoCompact: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  authorIconCompact: {
-    marginRight: 6,
-  },
-  authorNameCompact: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "600" as "600",
-  },
-  timestamp: {
-    fontSize: 12,
-    lineHeight: 12,
-    fontWeight: "500" as "500",
-    textTransform: "uppercase" as "uppercase",
-  },
-  authorBioContainer: {
-    marginBottom: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: "rgba(0, 0, 0, 0.03)",
-    borderRadius: 8,
-  },
-  authorBio: {
-    fontSize: 14,
-    lineHeight: 20,
-    opacity: 0.8,
-  },
-  title: {
-    fontSize: 22,
-    lineHeight: 26,
-    fontWeight: "700" as "700",
-    marginBottom: 18,
-  },
-  subtitle: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "700" as "700",
-    marginBottom: 18,
-  },
-  leadText: {
-    fontSize: 16,
-    lineHeight: 200,
-    fontWeight: "400" as "400",
-    marginBottom: 20,
-  },
-  bannerAd: {
-    marginVertical: 20,
-    alignSelf: "center",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
-    marginBottom: 8,
-  },
-  content: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 16,
-    opacity: 0.8,
-  },
-  richContent: {
-    marginBottom: 16,
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-  },
-  swipeIndicator: {
-    position: "absolute",
-    top: 100,
-    right: 16,
-    zIndex: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    flexDirection: "column",
-    alignItems: "flex-end",
-  },
-  swipeIndicatorText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  swipeProgress: {
-    color: "white",
-    fontSize: 10,
-    marginTop: 2,
-    opacity: 0.8,
-  },
-});
+// Wrapper component that provides article styles via context
+export default function ArticleScreen() {
+  return (
+    <ArticleStyleProvider>
+      <ArticleScreenContent />
+    </ArticleStyleProvider>
+  );
+}

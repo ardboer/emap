@@ -2,9 +2,9 @@ import { DisplayAd } from "@/components/DisplayAd";
 import { ExploreModuleWebView } from "@/components/ExploreModuleWebView";
 import { FadeInImage } from "@/components/FadeInImage";
 import { getMaxContentWidth, isTablet } from "@/constants/Layout";
+import { useArticleStyleContext } from "@/contexts/ArticleStyleContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { useImageViewer } from "@/hooks/useImageViewer";
 import { brandManager } from "@/services/api";
 import { displayAdManager } from "@/services/displayAdManager";
@@ -139,6 +139,7 @@ interface RichContentRendererProps {
   content: StructuredContentNode[];
   style?: any;
   articleId?: string;
+  textStyleOverride?: "leadText" | "paragraph" | "inlineText";
 }
 
 interface RichContentNodeProps {
@@ -149,6 +150,7 @@ interface RichContentNodeProps {
   isBlockquote?: boolean;
   isLink?: boolean;
   isInSpecialContainer?: boolean;
+  textStyleOverride?: "leadText" | "paragraph" | "inlineText";
 }
 
 interface RichContentTableCellProps {
@@ -242,31 +244,12 @@ const RichContentTableCell: React.FC<RichContentTableCellProps> = ({
   isHeader,
   onImagePress,
 }) => {
-  const { colors, fonts } = useBrandConfig();
-  const colorScheme = useColorScheme();
-  const themeColors = colors?.[colorScheme ?? "light"];
+  const styles = useArticleStyleContext();
   const textContent = extractSingleNodeTextContent(node);
   return (
-    <ThemedView
-      style={[
-        styles.tableCell,
-        isHeader && styles.tableHeaderCell,
-        {
-          backgroundColor: isHeader
-            ? themeColors?.highlightBoxBg || "#00334C"
-            : themeColors?.highlightBoxBg || "#FFFFFF",
-        },
-      ]}
-    >
+    <ThemedView style={[styles.tableCell, isHeader && styles.tableHeaderCell]}>
       <ThemedText
-        style={[
-          styles.tableCellText,
-          isHeader && { fontFamily: fonts?.primaryBold },
-          isHeader && styles.tableHeaderText,
-          isHeader && {
-            color: themeColors?.highlightBoxText || "#FFFFFF",
-          },
-        ]}
+        style={[styles.tableCellText, isHeader && styles.tableHeaderText]}
       >
         {textContent}
       </ThemedText>
@@ -298,10 +281,10 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
   isBlockquote = false,
   isLink = false,
   isInSpecialContainer = false,
+  textStyleOverride,
 }) => {
-  const { colors, fonts, brandConfig } = useBrandConfig();
-  const colorScheme = useColorScheme();
-  const themeColors = colors?.[colorScheme ?? "light"];
+  const styles = useArticleStyleContext();
+  const { brandConfig } = useBrandConfig();
 
   // Get link interceptor configuration
   const linkInterceptorConfig = useMemo(
@@ -317,15 +300,12 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
   if (node.typename === "HTMLTextNode") {
     if (forceHighlightBoxText) {
       const textStyle = isBlockquote
-        ? [
-            styles.blockquoteText,
-            { fontFamily: fonts?.primaryItalic || "OpenSans-Italic" },
-          ]
+        ? styles.blockquoteText
         : styles.inlineText;
       return (
         <HighlightBoxText
           style={textStyle}
-          color={themeColors?.highlightBoxText}
+          color={styles.colors.highlightBoxText}
         >
           {node.text || ""}
         </HighlightBoxText>
@@ -333,15 +313,13 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
     }
     // If inside a link, use RNText with link color to avoid ThemedText overriding it
     if (isLink) {
-      return (
-        <RNText
-          style={[styles.link, { color: themeColors?.linkColor || "#007AFF" }]}
-        >
-          {node.text || ""}
-        </RNText>
-      );
+      return <RNText style={styles.link}>{node.text || ""}</RNText>;
     }
-    return <ThemedText style={styles.inlineText}>{node.text || ""}</ThemedText>;
+    // Use textStyleOverride if provided, otherwise use inlineText
+    const textStyle = textStyleOverride
+      ? styles[textStyleOverride]
+      : styles.inlineText;
+    return <ThemedText style={textStyle}>{node.text || ""}</ThemedText>;
   }
 
   // Handle HTML elements
@@ -354,6 +332,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         isBlockquote={isBlockquote}
         isLink={isLink}
         isInSpecialContainer={isInSpecialContainer}
+        textStyleOverride={textStyleOverride}
       />
     ) : null;
 
@@ -366,8 +345,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
             return (
               <HighlightBoxText
                 key={index}
-                style={[styles.h1, { fontSize: 28, fontWeight: "bold" }]}
-                color={themeColors?.highlightBoxText}
+                style={styles.h1}
+                color={styles.colors.highlightBoxText}
               >
                 {textContent}
               </HighlightBoxText>
@@ -384,8 +363,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           return (
             <HighlightBoxText
               key={index}
-              style={[styles.h1, { fontSize: 28, fontWeight: "bold" }]}
-              color={themeColors?.highlightBoxText}
+              style={styles.h1}
+              color={styles.colors.highlightBoxText}
             >
               {children}
             </HighlightBoxText>
@@ -405,8 +384,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
             return (
               <HighlightBoxText
                 key={index}
-                style={[styles.h2, { fontSize: 24, fontWeight: "bold" }]}
-                color={themeColors?.highlightBoxText}
+                style={styles.h2}
+                color={styles.colors.highlightBoxText}
               >
                 {textContent}
               </HighlightBoxText>
@@ -423,8 +402,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           return (
             <HighlightBoxText
               key={index}
-              style={[styles.h2, { fontSize: 24, fontWeight: "bold" }]}
-              color={themeColors?.highlightBoxText}
+              style={styles.h2}
+              color={styles.colors.highlightBoxText}
             >
               {children}
             </HighlightBoxText>
@@ -444,8 +423,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
             return (
               <HighlightBoxText
                 key={index}
-                style={[styles.h3, { fontSize: 20, fontWeight: "bold" }]}
-                color={themeColors?.highlightBoxText}
+                style={styles.h3}
+                color={styles.colors.highlightBoxText}
               >
                 {textContent}
               </HighlightBoxText>
@@ -462,8 +441,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           return (
             <HighlightBoxText
               key={index}
-              style={[styles.h3, { fontSize: 20, fontWeight: "bold" }]}
-              color={themeColors?.highlightBoxText}
+              style={styles.h3}
+              color={styles.colors.highlightBoxText}
             >
               {children}
             </HighlightBoxText>
@@ -480,7 +459,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           return (
             <HighlightBoxText
               key={index}
-              style={[styles.h5, { fontSize: 16, fontWeight: "bold" }]}
+              style={styles.h5}
+              color={styles.colors.highlightBoxText}
             >
               {children}
             </HighlightBoxText>
@@ -579,11 +559,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           return (
             <HighlightBoxText
               key={index}
-              style={[
-                styles.blockquoteText,
-                { fontFamily: fonts?.primaryItalic || "OpenSans-Italic" },
-              ]}
-              color={themeColors?.highlightBoxText}
+              style={styles.blockquoteText}
+              color={styles.colors.highlightBoxText}
             >
               {children}
             </HighlightBoxText>
@@ -602,7 +579,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
             <ThemedText key={index} style={styles.paragraph}>
               {renderInlineContent(
                 node.children,
-                themeColors?.linkColor || "#007AFF",
+                styles.colors.linkColor,
                 handleLinkPressInternal
               )}
             </ThemedText>
@@ -622,7 +599,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
             <HighlightBoxText
               key={index}
               style={styles.bold}
-              color={themeColors?.highlightBoxText}
+              color={styles.colors.highlightBoxText}
             >
               {children}
             </HighlightBoxText>
@@ -640,7 +617,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
             <HighlightBoxText
               key={index}
               style={styles.italic}
-              color={themeColors?.highlightBoxText}
+              color={styles.colors.highlightBoxText}
             >
               {children}
             </HighlightBoxText>
@@ -658,7 +635,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
             <HighlightBoxText
               key={index}
               style={styles.span}
-              color={themeColors?.highlightBoxText}
+              color={styles.colors.highlightBoxText}
             >
               {children}
             </HighlightBoxText>
@@ -675,8 +652,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
         const blockquoteStyle = [
           styles.blockquote,
           {
-            backgroundColor: themeColors?.highlightBoxBg || "#00334C",
-            borderTopColor: themeColors?.highlightBoxBorder || "#10D1F0",
+            backgroundColor: styles.colors.highlightBoxBg,
+            borderTopColor: styles.colors.highlightBoxBorder,
           },
         ];
 
@@ -695,7 +672,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
             <View key={index} style={blockquoteStyle}>
               <HighlightBoxText
                 style={styles.blockquoteTitle}
-                color={themeColors?.highlightBoxText}
+                color={styles.colors.highlightBoxText}
               >
                 {titleText}
               </HighlightBoxText>
@@ -735,7 +712,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                 {forceHighlightBoxText ? (
                   <HighlightBoxText
                     style={styles.bullet}
-                    color={themeColors?.highlightBoxText}
+                    color={styles.colors.highlightBoxText}
                   >
                     •
                   </HighlightBoxText>
@@ -764,7 +741,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
                 {forceHighlightBoxText ? (
                   <HighlightBoxText
                     style={styles.bullet}
-                    color={themeColors?.highlightBoxText}
+                    color={styles.colors.highlightBoxText}
                   >
                     {childIndex + 1}.
                   </HighlightBoxText>
@@ -836,8 +813,8 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
           const factBoxStyle = [
             styles.factBox,
             {
-              backgroundColor: themeColors?.highlightBoxBg || "#00334C",
-              borderTopColor: themeColors?.highlightBoxBorder || "#10D1F0",
+              backgroundColor: styles.colors.highlightBoxBg,
+              borderTopColor: styles.colors.highlightBoxBorder,
             },
           ];
 
@@ -946,7 +923,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
     return (
       <RNText
         key={index}
-        style={[styles.link, { color: themeColors?.linkColor || "#007AFF" }]}
+        style={styles.link}
         onPress={() => node.href && handleLinkPressInternal(node.href)}
       >
         {linkText}
@@ -977,9 +954,7 @@ const RichContentNode: React.FC<RichContentNodeProps> = ({
     const embedHeight = heightMatch ? parseInt(heightMatch[1], 10) : 300;
 
     // For Spotify and other embeds, use WebView with appropriate height
-    const backgroundColor =
-      themeColors?.background ||
-      (colorScheme === "dark" ? "#000000" : "#FFFFFF");
+    const backgroundColor = styles.colors.contentBackground;
 
     return (
       <View
@@ -1075,6 +1050,7 @@ interface RichContentRendererInternalProps extends RichContentRendererProps {
   isBlockquote?: boolean;
   isLink?: boolean;
   isInSpecialContainer?: boolean; // Track if we're inside infobox, blockquote, or other special containers
+  textStyleOverride?: "leadText" | "paragraph" | "inlineText";
 }
 
 const RichContentRendererInternal: React.FC<
@@ -1088,6 +1064,7 @@ const RichContentRendererInternal: React.FC<
   isBlockquote = false,
   isLink = false,
   isInSpecialContainer = false,
+  textStyleOverride,
 }) => {
   // Get brand configuration for display ads
   const brandConfig = brandManager.getCurrentBrand();
@@ -1187,6 +1164,7 @@ const RichContentRendererInternal: React.FC<
             isBlockquote={isBlockquote}
             isLink={isLink}
             isInSpecialContainer={isInSpecialContainer}
+            textStyleOverride={textStyleOverride}
           />
         );
       })}
@@ -1198,6 +1176,7 @@ export const RichContentRenderer: React.FC<RichContentRendererProps> = ({
   content,
   style,
   articleId,
+  textStyleOverride,
 }) => {
   const { imageViewer, openImageViewer, closeImageViewer } = useImageViewer();
 
@@ -1212,6 +1191,7 @@ export const RichContentRenderer: React.FC<RichContentRendererProps> = ({
         style={style}
         articleId={articleId}
         onImagePress={handleImagePress}
+        textStyleOverride={textStyleOverride}
       />
       <ImageViewer
         visible={imageViewer.visible}
