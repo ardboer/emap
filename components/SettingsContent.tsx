@@ -66,6 +66,8 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
   const [debugAdsEnabled, setDebugAdsEnabled] = React.useState(false);
   const [debugAccessCheckEnabled, setDebugAccessCheckEnabled] =
     React.useState(false);
+  const [debugNeverShowPaywall, setDebugNeverShowPaywall] =
+    React.useState(false);
   const [useTestAds, setUseTestAds] = React.useState(true);
   const [versionTapCount, setVersionTapCount] = React.useState(0);
   const [lastTapTime, setLastTapTime] = React.useState<number>(0);
@@ -186,6 +188,15 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
     AsyncStorage.getItem("debug_access_check_enabled").then((value) => {
       if (value !== null) {
         setDebugAccessCheckEnabled(value === "true");
+      }
+    });
+  }, []);
+
+  // Load debug never show paywall flag
+  React.useEffect(() => {
+    AsyncStorage.getItem("debug_never_show_paywall").then((value) => {
+      if (value !== null) {
+        setDebugNeverShowPaywall(value === "true");
       }
     });
   }, []);
@@ -514,6 +525,29 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
       value
         ? "Ad debug information will now be displayed on all ads."
         : "Ad debug information has been hidden.",
+      [{ text: "OK" }]
+    );
+  };
+
+  const handleNeverShowPaywallToggle = async (value: boolean) => {
+    // SAFETY: Only allow enabling in development mode
+    if (value && !__DEV__) {
+      Alert.alert(
+        "Not Available",
+        "This debug feature is only available in development mode for safety reasons.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    setDebugNeverShowPaywall(value);
+    await AsyncStorage.setItem("debug_never_show_paywall", value.toString());
+
+    Alert.alert(
+      "Setting Updated",
+      value
+        ? "Paywall will never be shown. Access checks will always return allowed. (DEV only)"
+        : "Paywall behavior restored to normal.",
       [{ text: "OK" }]
     );
   };
@@ -1070,6 +1104,27 @@ export function SettingsContent({ onClose }: SettingsContentProps) {
                 />
               }
             />
+
+            {/* Never Show Paywall Toggle - Only show in development */}
+            {__DEV__ && (
+              <SettingsItem
+                title="Never Show Paywall"
+                subtitle={
+                  debugNeverShowPaywall
+                    ? "Paywall disabled - all articles accessible"
+                    : "Paywall enabled - normal access control"
+                }
+                icon="lock.open.fill"
+                rightElement={
+                  <Switch
+                    value={debugNeverShowPaywall}
+                    onValueChange={handleNeverShowPaywallToggle}
+                    trackColor={{ false: "#767577", true: primaryColor }}
+                    thumbColor={debugNeverShowPaywall ? "#00334C" : "#fff"}
+                  />
+                }
+              />
+            )}
 
             {/* Use Test Ads Toggle */}
             <SettingsItem

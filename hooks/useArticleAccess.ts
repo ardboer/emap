@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { checkArticleAccess } from "@/services/auth";
 import { AccessControlResponse } from "@/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
@@ -34,6 +35,7 @@ export function useArticleAccess(articleId: string) {
   const authStateChangeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
+  const [debugNeverShowPaywall, setDebugNeverShowPaywall] = useState(false);
 
   const [state, setState] = useState<{
     isChecking: boolean;
@@ -46,6 +48,13 @@ export function useArticleAccess(articleId: string) {
     error: null,
     response: null,
   });
+
+  // Load debug never show paywall setting
+  useEffect(() => {
+    AsyncStorage.getItem("debug_never_show_paywall").then((value) => {
+      setDebugNeverShowPaywall(value === "true");
+    });
+  }, []);
 
   /**
    * Check article access
@@ -61,6 +70,29 @@ export function useArticleAccess(articleId: string) {
           response: null,
         });
         return;
+      }
+
+      // Check debug setting first - if enabled, always allow access
+      // SAFETY: Only works in development mode to prevent production issues
+      if (__DEV__) {
+        const debugSetting = await AsyncStorage.getItem(
+          "debug_never_show_paywall"
+        );
+        if (debugSetting === "true") {
+          console.log("🔓 Debug mode: Never show paywall - allowing access");
+          setState({
+            isChecking: false,
+            isAllowed: true,
+            error: null,
+            response: {
+              allowed: true,
+              user_id: 0,
+              post_id: parseInt(articleId) || 0,
+              message: "Debug mode: Never show paywall enabled",
+            },
+          });
+          return;
+        }
       }
 
       // Prevent duplicate checks if already checking
@@ -187,9 +219,13 @@ export function useArticleAccess(articleId: string) {
 
     /**
      * Whether the paywall should be shown
-     * (access denied and not currently checking)
+     * (access denied and not currently checking, and debug mode not enabled)
+     * Note: debugNeverShowPaywall only works in __DEV__ mode for safety
      */
-    shouldShowPaywall: !state.isAllowed && !state.isChecking,
+    shouldShowPaywall:
+      !state.isAllowed &&
+      !state.isChecking &&
+      !(__DEV__ && debugNeverShowPaywall),
 
     /**
      * Error message if the access check failed
