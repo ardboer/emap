@@ -896,7 +896,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   leadText: {
-    fontSize: 180,
+    fontSize: 16,
     lineHeight: 200,
     fontWeight: "400" as "400",
     marginBottom: 20,

@@ -511,11 +511,37 @@ const updateGAMAppIds = () => {
   console.log(`✅ Found iOS App ID: ${iosAppId}`);
   console.log(`✅ Found Android App ID: ${androidAppId}`);
 
+  // Add react-native-google-mobile-ads configuration to app.json
+  addGAMConfigToAppJson(iosAppId, androidAppId);
+
   // Update iOS Info.plist
   updateIOSGAMAppId(iosAppId);
 
   // Update Android AndroidManifest.xml
   updateAndroidGAMAppId(androidAppId);
+};
+
+// Add GAM configuration to app.json for react-native-google-mobile-ads
+const addGAMConfigToAppJson = (iosAppId, androidAppId) => {
+  try {
+    const appJsonPath = path.join(projectRoot, "app.json");
+    const appJson = JSON.parse(fs.readFileSync(appJsonPath, "utf8"));
+
+    // Add react-native-google-mobile-ads configuration
+    if (!appJson["react-native-google-mobile-ads"]) {
+      appJson["react-native-google-mobile-ads"] = {};
+    }
+
+    appJson["react-native-google-mobile-ads"].android_app_id = androidAppId;
+    appJson["react-native-google-mobile-ads"].ios_app_id = iosAppId;
+
+    fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2));
+    console.log(`✅ Added react-native-google-mobile-ads config to app.json`);
+    console.log(`   iOS App ID: ${iosAppId}`);
+    console.log(`   Android App ID: ${androidAppId}`);
+  } catch (error) {
+    console.error(`❌ Failed to update app.json: ${error.message}`);
+  }
 };
 
 // Update iOS Info.plist with GAM App ID
