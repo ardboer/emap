@@ -136,7 +136,13 @@ export default function EventsScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={[styles.container, styles.centerContent]}>
+      <ThemedView
+        style={[
+          styles.container,
+          styles.centerContent,
+          { backgroundColor: Colors[colorScheme].articleListBackground },
+        ]}
+      >
         <ActivityIndicator size="large" />
         <ThemedText style={styles.loadingText}>Loading events...</ThemedText>
       </ThemedView>
@@ -145,7 +151,13 @@ export default function EventsScreen() {
 
   if (error && events.length === 0) {
     return (
-      <ThemedView style={[styles.container, styles.centerContent]}>
+      <ThemedView
+        style={[
+          styles.container,
+          styles.centerContent,
+          { backgroundColor: Colors[colorScheme].articleListBackground },
+        ]}
+      >
         <ThemedText style={styles.errorText}>{error}</ThemedText>
         <TouchableOpacity style={styles.retryButton} onPress={loadData}>
           <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
