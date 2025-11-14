@@ -2,18 +2,32 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
+import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import React from "react";
-import { ScrollView, StyleSheet, Switch, TouchableOpacity } from "react-native";
+import {
+  Alert,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+} from "react-native";
+
+// Helper function to create support email URL
+function createSupportEmailUrl(email: string, brandName?: string): string {
+  const subject = encodeURIComponent(`Support Request - ${brandName || "App"}`);
+  const body = encodeURIComponent(
+    `Please describe your issue:\n\n\n\n---\nDevice Information:\nPlatform: ${
+      require("react-native").Platform.OS
+    }\nVersion: ${require("react-native").Platform.Version}`
+  );
+  return `mailto:${email}?subject=${subject}&body=${body}`;
+}
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
-  const [cacheStats, setCacheStats] = React.useState<{
-    totalKeys: number;
-    totalSize: number;
-    formattedSize: string;
-  } | null>(null);
 
   // Get brand configuration for test article
   const { brandConfig } = useBrandConfig();
@@ -24,64 +38,6 @@ export default function SettingsScreen() {
     console.log("Settings - testArticleId:", brandConfig?.testArticleId);
     console.log("Settings - __DEV__:", __DEV__);
   }, [brandConfig]);
-
-  // Load cache stats on component mount
-  React.useEffect(() => {
-    loadCacheStats();
-  }, []);
-
-  const loadCacheStats = async () => {
-    try {
-      const { cacheService } = await import("@/services/cache");
-      const stats = await cacheService.getCacheStats();
-      setCacheStats({
-        totalKeys: stats.totalKeys,
-        totalSize: stats.totalSize,
-        formattedSize: cacheService.formatCacheSize(stats.totalSize),
-      });
-    } catch (error) {
-      console.error("Error loading cache stats:", error);
-    }
-  };
-
-  const handleClearCache = async () => {
-    const { Alert } = await import("react-native");
-
-    Alert.alert(
-      "Clear WordPress Cache",
-      `This will remove all cached WordPress content (${
-        cacheStats?.formattedSize || "unknown size"
-      }). The app will need to reload content from the server.`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Clear Cache",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const { cacheService } = await import("@/services/cache");
-              await cacheService.clearAll();
-              await loadCacheStats(); // Refresh stats
-
-              Alert.alert(
-                "Cache Cleared",
-                "WordPress cache has been successfully cleared.",
-                [{ text: "OK" }]
-              );
-            } catch (error) {
-              console.error("Error clearing cache:", error);
-              Alert.alert("Error", "Failed to clear cache. Please try again.", [
-                { text: "OK" },
-              ]);
-            }
-          },
-        },
-      ]
-    );
-  };
 
   const handleTestArticle = () => {
     if (brandConfig?.testArticleId) {
@@ -217,22 +173,6 @@ export default function SettingsScreen() {
             subtitle="Manage your news categories"
             icon="list.bullet"
             onPress={() => {}}
-          />
-        </ThemedView>
-
-        <ThemedView style={styles.section}>
-          <ThemedText type="subtitle" style={styles.sectionTitle}>
-            Storage
-          </ThemedText>
-          <SettingsItem
-            title="Clear WordPress Cache"
-            subtitle={
-              cacheStats
-                ? `${cacheStats.totalKeys} cached items (${cacheStats.formattedSize})`
-                : "Loading cache information..."
-            }
-            icon="trash.fill"
-            onPress={handleClearCache}
           />
         </ThemedView>
 

@@ -21,51 +21,25 @@ import { ENDPOINTS, getApiConfig } from "./config";
  * // Returns: [{ id: 1, title: "Home", url: "/", ... }, ...]
  */
 export async function fetchMenuItems(): Promise<any[]> {
-  const { cacheService } = await import("../../cache");
-  const cacheKey = "menu_items";
   const apiConfig = getApiConfig() as any;
-  const { hash, menuId } = apiConfig;
+  const { hash, menuId, baseUrl } = apiConfig;
 
   if (!menuId) {
     throw new Error("Menu ID not configured for this brand");
   }
 
-  // Try to get from cache first
-  const cached = await cacheService.get<any[]>(cacheKey, { menuId, hash });
-  if (cached) {
-    console.log("Returning cached menu items");
-    return cached;
+  const response = await fetch(
+    `${baseUrl}${ENDPOINTS.MENU}/${menuId}/?hash=${hash}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch menu items");
   }
 
-  try {
-    const { baseUrl } = apiConfig;
-    const response = await fetch(
-      `${baseUrl}${ENDPOINTS.MENU}/${menuId}/?hash=${hash}`
-    );
+  const menuData = await response.json();
+  console.log("Menu response:", menuData);
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch menu items");
-    }
+  const menuItems = menuData.menu_items || [];
 
-    const menuData = await response.json();
-    console.log("Menu response:", menuData);
-
-    const menuItems = menuData.menu_items || [];
-
-    // Cache the result
-    await cacheService.set(cacheKey, menuItems, { menuId, hash });
-
-    return menuItems;
-  } catch (error) {
-    console.error("Error fetching menu items:", error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<any[]>(cacheKey, { menuId });
-    if (staleCache) {
-      console.log("Returning stale cached menu items due to API error");
-      return staleCache;
-    }
-
-    throw error;
-  }
+  return menuItems;
 }

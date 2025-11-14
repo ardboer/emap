@@ -181,54 +181,24 @@ async function transformHighlightsItemToArticle(
  * // Returns: [{ id: "123", title: "Article Title", ... }, ...]
  */
 export async function fetchArticles(): Promise<Article[]> {
-  const { cacheService } = await import("../../cache");
-  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-  const isDeviceLandscape = screenWidth > screenHeight;
-  const orientation = isDeviceLandscape ? "landscape" : "portrait";
-  const cacheKey = `highlights_${orientation}`;
-  const { hash } = getApiConfig();
+  const { hash, baseUrl } = getApiConfig();
 
-  console.log(
-    `📦 Cache key: ${cacheKey} (device: ${screenWidth}x${screenHeight})`
+  console.log("api call", `${baseUrl}${ENDPOINTS.HIGHLIGHTS}?hash=${hash}`);
+
+  const response = await fetch(
+    `${baseUrl}${ENDPOINTS.HIGHLIGHTS}?hash=${hash}`
   );
 
-  // Try to get from cache first
-  const cached = await cacheService.get<Article[]>(cacheKey, { hash });
-  if (cached) {
-    console.log(`✅ Returning cached articles for ${orientation} mode`);
-    return cached;
+  if (!response.ok) {
+    throw new Error("Failed to fetch articles");
   }
-  try {
-    const { baseUrl } = getApiConfig();
-    console.log("api call", `${baseUrl}${ENDPOINTS.HIGHLIGHTS}?hash=${hash}`);
-    const response = await fetch(
-      `${baseUrl}${ENDPOINTS.HIGHLIGHTS}?hash=${hash}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch articles");
-    }
 
-    const highlightsItems: HighlightsApiItem[] = await response.json();
-    const articles = await Promise.all(
-      highlightsItems.map(transformHighlightsItemToArticle)
-    );
+  const highlightsItems: HighlightsApiItem[] = await response.json();
+  const articles = await Promise.all(
+    highlightsItems.map(transformHighlightsItemToArticle)
+  );
 
-    // Cache the result
-    await cacheService.set(cacheKey, articles, { hash });
-
-    return articles;
-  } catch (error) {
-    console.error("Error fetching articles:", error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<Article[]>(cacheKey);
-    if (staleCache) {
-      console.log("Returning stale cached articles due to API error");
-      return staleCache;
-    }
-
-    throw error;
-  }
+  return articles;
 }
 
 /**
@@ -244,62 +214,36 @@ export async function fetchArticles(): Promise<Article[]> {
  * // Returns: [{ id: "123", title: "Featured Article", ... }, ...]
  */
 export async function fetchFeaturedArticles(): Promise<Article[]> {
-  const { cacheService } = await import("../../cache");
-  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-  const isDeviceLandscape = screenWidth > screenHeight;
-  const orientation = isDeviceLandscape ? "landscape" : "portrait";
-  const cacheKey = `featured_articles_${orientation}`;
-  const { hash, maxNbOfItems = 10 } = getApiConfig();
+  const { hash, baseUrl, maxNbOfItems = 10 } = getApiConfig();
 
-  // Try to get from cache first
-  const cached = await cacheService.get<Article[]>(cacheKey, { hash });
-  if (cached) {
-    // return cached;
+  console.log("api call", `${baseUrl}${ENDPOINTS.HIGHLIGHTS}?hash=${hash}`);
+
+  const response = await fetch(
+    `${baseUrl}${ENDPOINTS.HIGHLIGHTS}?hash=${hash}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch featured articles");
   }
 
-  try {
-    const { baseUrl } = getApiConfig();
-    console.log("api call", `${baseUrl}${ENDPOINTS.HIGHLIGHTS}?hash=${hash}`);
-    const response = await fetch(
-      `${baseUrl}${ENDPOINTS.HIGHLIGHTS}?hash=${hash}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch featured articles");
-    }
+  const highlightsItems: HighlightsApiItem[] = await response.json();
 
-    const highlightsItems: HighlightsApiItem[] = await response.json();
+  // Filter to only include items with valid post_highlights_image
+  const itemsWithHighlightImages = highlightsItems.filter(
+    (item) =>
+      item.post_highlights_image && item.post_highlights_image.trim() !== ""
+  );
 
-    // Filter to only include items with valid post_highlights_image
-    const itemsWithHighlightImages = highlightsItems.filter(
-      (item) =>
-        item.post_highlights_image && item.post_highlights_image.trim() !== ""
-    );
+  // Transform and return limited by maxNbOfItems
+  console.log("itemsWithHighlightImages", itemsWithHighlightImages.length);
+  console.log("maxNbOfItems", maxNbOfItems);
+  const featuredArticles = await Promise.all(
+    itemsWithHighlightImages
+      .slice(0, maxNbOfItems)
+      .map(transformHighlightsItemToArticle)
+  );
 
-    // Transform and return limited by maxNbOfItems
-    console.log("itemsWithHighlightImages", itemsWithHighlightImages.length);
-    console.log("maxNbOfItems", maxNbOfItems);
-    const featuredArticles = await Promise.all(
-      itemsWithHighlightImages
-        .slice(0, maxNbOfItems)
-        .map(transformHighlightsItemToArticle)
-    );
-
-    // Cache the result
-    await cacheService.set(cacheKey, featuredArticles, { hash });
-
-    return featuredArticles;
-  } catch (error) {
-    console.error("Error fetching featured articles:", error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<Article[]>(cacheKey);
-    if (staleCache) {
-      console.log("Returning stale cached featured articles due to API error");
-      return staleCache;
-    }
-
-    throw error;
-  }
+  return featuredArticles;
 }
 
 /**
@@ -316,112 +260,88 @@ export async function fetchFeaturedArticles(): Promise<Article[]> {
  * // Returns: { id: "12345", title: "Article Title", content: [...], ... }
  */
 export async function fetchSingleArticle(articleId: string): Promise<Article> {
-  const { cacheService } = await import("../../cache");
-  const cacheKey = "single_article";
   const apiConfig = getApiConfig();
   const { hash, baseUrl, leadtext } = apiConfig;
+
   console.log(
     "fetching article",
     `${baseUrl}${ENDPOINTS.INDIVIDUAL_POST}/${articleId}/?hash=${hash}`
   );
-  // Try to get from cache first
-  const cached = await cacheService.get<Article>(cacheKey, { articleId, hash });
-  if (cached) {
-    console.log(`Returning cached single article for ${articleId}`);
-    return cached;
+
+  const response = await fetch(
+    `${baseUrl}${ENDPOINTS.INDIVIDUAL_POST}/${articleId}/?hash=${hash}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch article");
   }
 
-  try {
-    const response = await fetch(
-      `${baseUrl}${ENDPOINTS.INDIVIDUAL_POST}/${articleId}/?hash=${hash}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch article");
+  const postData: PostApiResponse = await response.json();
+  console.log("Single article response - author_data:", postData.author_data);
+
+  // Extract image URL from featured_media if available
+  let imageUrl = "https://picsum.photos/800/600?random=1";
+  if (postData.featured_media) {
+    try {
+      imageUrl = await fetchMediaUrl(postData.featured_media);
+    } catch {
+      console.warn("Failed to fetch featured media, using fallback");
     }
+  }
 
-    const postData: PostApiResponse = await response.json();
-    console.log("Single article response - author_data:", postData.author_data);
+  // Extract category from URL
+  const category = extractCategoryFromUrl(postData.link);
 
-    // Extract image URL from featured_media if available
-    let imageUrl = "https://picsum.photos/800/600?random=1";
-    if (postData.featured_media) {
-      try {
-        imageUrl = await fetchMediaUrl(postData.featured_media);
-      } catch {
-        console.warn("Failed to fetch featured media, using fallback");
-      }
-    }
+  // Return structured content instead of parsed text
+  let content: string | StructuredContentNode[] = "";
+  if (
+    postData.content &&
+    postData.content.rendered &&
+    Array.isArray(postData.content.rendered)
+  ) {
+    content = postData.content.rendered;
+  }
 
-    // Extract category from URL
-    const category = extractCategoryFromUrl(postData.link);
+  // Handle structured leadText using configured field
+  // Only show leadText if configured field exists and has content
+  let leadText: string | StructuredContentNode[] = "";
 
-    // Return structured content instead of parsed text
-    let content: string | StructuredContentNode[] = "";
+  if (leadtext) {
+    const leadTextField = postData[leadtext as keyof PostApiResponse];
+
+    // Try to get content from configured field
     if (
-      postData.content &&
-      postData.content.rendered &&
-      Array.isArray(postData.content.rendered)
+      leadTextField &&
+      typeof leadTextField === "object" &&
+      "rendered" in leadTextField &&
+      Array.isArray(leadTextField.rendered)
     ) {
-      content = postData.content.rendered;
+      leadText = leadTextField.rendered;
+    } else if (
+      leadTextField &&
+      typeof leadTextField === "object" &&
+      "rendered" in leadTextField &&
+      typeof leadTextField.rendered === "string"
+    ) {
+      leadText = stripHtml(leadTextField.rendered);
     }
-
-    // Handle structured leadText using configured field
-    // Only show leadText if configured field exists and has content
-    let leadText: string | StructuredContentNode[] = "";
-
-    if (leadtext) {
-      const leadTextField = postData[leadtext as keyof PostApiResponse];
-
-      // Try to get content from configured field
-      if (
-        leadTextField &&
-        typeof leadTextField === "object" &&
-        "rendered" in leadTextField &&
-        Array.isArray(leadTextField.rendered)
-      ) {
-        leadText = leadTextField.rendered;
-      } else if (
-        leadTextField &&
-        typeof leadTextField === "object" &&
-        "rendered" in leadTextField &&
-        typeof leadTextField.rendered === "string"
-      ) {
-        leadText = stripHtml(leadTextField.rendered);
-      }
-    }
-
-    // Transform to Article interface
-    const article: Article = {
-      id: postData.id.toString(),
-      title: decodeHtmlEntities(stripHtml(postData.title.rendered)),
-      leadText,
-      content,
-      imageUrl,
-      timestamp: formatDate(postData.date), // Pre-formatted for list views
-      publishDate: postData.date, // Raw ISO date for detail view
-      category,
-      link: postData.link, // Include the shareable link from API
-      author_data: postData.author_data, // Include author information if available
-    };
-
-    // Cache the result
-    await cacheService.set(cacheKey, article, { articleId, hash });
-
-    return article;
-  } catch (error) {
-    console.error("Error fetching single article:", error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<Article>(cacheKey, { articleId });
-    if (staleCache) {
-      console.log(
-        `Returning stale cached single article for ${articleId} due to API error`
-      );
-      return staleCache;
-    }
-
-    throw error;
   }
+
+  // Transform to Article interface
+  const article: Article = {
+    id: postData.id.toString(),
+    title: decodeHtmlEntities(stripHtml(postData.title.rendered)),
+    leadText,
+    content,
+    imageUrl,
+    timestamp: formatDate(postData.date), // Pre-formatted for list views
+    publishDate: postData.date, // Raw ISO date for detail view
+    category,
+    link: postData.link, // Include the shareable link from API
+    author_data: postData.author_data, // Include author information if available
+  };
+
+  return article;
 }
 
 /**

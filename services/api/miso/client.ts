@@ -68,16 +68,6 @@ export async function fetchMisoRecommendations(
   cacheKey: string,
   cacheParams?: Record<string, any>
 ): Promise<Article[]> {
-  const { cacheService } = await import("../../cache");
-
-  // Try to get from cache first
-  const cached = await cacheService.get<Article[]>(cacheKey, cacheParams);
-  // Cache is currently disabled in original code (commented out)
-  // if (cached) {
-  //   console.log(`Returning cached ${cacheKey}`);
-  //   return cached;
-  // }
-
   try {
     // Get brand config to access Miso configuration
     const brandConfig = brandManager.getCurrentBrand();
@@ -190,20 +180,9 @@ export async function fetchMisoRecommendations(
     const products = (data.data && data.data.products) || data.products || [];
     const articles: Article[] = products.map(transformMisoProductToArticle);
 
-    // Cache the result
-    await cacheService.set(cacheKey, articles, cacheParams);
-
     return articles;
   } catch (error) {
     console.error(`Error fetching from Miso (${endpoint}):`, error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<Article[]>(cacheKey, cacheParams);
-    if (staleCache) {
-      console.log(`Returning stale cached ${cacheKey} due to API error`);
-      return staleCache;
-    }
-
     // Return empty array instead of throwing to gracefully handle errors
     return [];
   }

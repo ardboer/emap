@@ -104,21 +104,12 @@ export async function fetchRecommendedArticlesWithExclude(
   userId?: string,
   isAuthenticated: boolean = false
 ): Promise<Article[]> {
-  const { cacheService } = await import("../../cache");
   const { brandManager } = await import("@/config/BrandManager");
   const config = brandManager.getApiConfig();
   const { hash } = config;
 
   const cacheKey = "recommended_articles_exclude";
   const cacheParams = { limit, excludeIds: excludeIds.join(","), hash };
-
-  // Try to get from cache first
-  const cached = await cacheService.get<Article[]>(cacheKey, cacheParams);
-  // Cache is currently disabled in original code (commented out)
-  // if (cached) {
-  //   console.log("Returning cached recommended articles with exclusions");
-  //   return cached;
-  // }
 
   try {
     // Get brand config to access Miso configuration
@@ -128,9 +119,6 @@ export async function fetchRecommendedArticlesWithExclude(
       console.warn("Miso configuration not found for current brand");
       return [];
     }
-
-    const { apiKey, brandFilter, baseUrl } = brandConfig.misoConfig;
-    const endpoint = `${baseUrl}/recommendation/user_to_products`;
 
     // Use the shared client with custom transformation for landscape images
     const articles = await fetchMisoRecommendations(
@@ -156,16 +144,6 @@ export async function fetchRecommendedArticlesWithExclude(
       "Error fetching recommended articles with exclusions from Miso:",
       error
     );
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<Article[]>(cacheKey, cacheParams);
-    if (staleCache) {
-      console.log(
-        "Returning stale cached recommended articles with exclusions due to API error"
-      );
-      return staleCache;
-    }
-
     // Return empty array instead of throwing to gracefully handle errors
     return [];
   }

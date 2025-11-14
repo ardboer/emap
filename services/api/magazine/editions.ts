@@ -5,7 +5,7 @@
  * Uses the emap-epaper-development API.
  */
 
-import { CACHE_KEYS, MAGAZINE_API_BASE_URL } from "./config";
+import { MAGAZINE_API_BASE_URL } from "./config";
 import type { MagazineEdition, MagazineEditionsResponse } from "./types";
 
 /**
@@ -24,45 +24,20 @@ import type { MagazineEdition, MagazineEditionsResponse } from "./types";
  * ```
  */
 export async function fetchMagazineEditions(): Promise<string[]> {
-  const { cacheService } = await import("../../cache");
-  const cacheKey = CACHE_KEYS.EDITIONS;
+  const response = await fetch(`${MAGAZINE_API_BASE_URL}/editions`);
 
-  // Try to get from cache first
-  const cached = await cacheService.get<string[]>(cacheKey);
-  if (cached) {
-    console.log("Returning cached magazine editions");
-    return cached;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch magazine editions: ${response.status}`);
   }
 
-  try {
-    const response = await fetch(`${MAGAZINE_API_BASE_URL}/editions`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch magazine editions: ${response.status}`);
-    }
+  const data: MagazineEditionsResponse = await response.json();
+  console.log("Magazine editions response:", data);
 
-    const data: MagazineEditionsResponse = await response.json();
-    console.log("Magazine editions response:", data);
-
-    if (!data.editions || !Array.isArray(data.editions)) {
-      throw new Error("Invalid editions response format");
-    }
-
-    // Cache the result for 1 hour (3600000 ms)
-    await cacheService.set(cacheKey, data.editions);
-
-    return data.editions;
-  } catch (error) {
-    console.error("Error fetching magazine editions:", error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<string[]>(cacheKey);
-    if (staleCache) {
-      console.log("Returning stale cached magazine editions due to API error");
-      return staleCache;
-    }
-
-    throw error;
+  if (!data.editions || !Array.isArray(data.editions)) {
+    throw new Error("Invalid editions response format");
   }
+
+  return data.editions;
 }
 
 /**
@@ -82,16 +57,6 @@ export async function fetchMagazineEditions(): Promise<string[]> {
  * ```
  */
 export async function fetchMagazineCover(editionId: string): Promise<string> {
-  const { cacheService } = await import("../../cache");
-  const cacheKey = CACHE_KEYS.COVER;
-
-  // Try to get from cache first
-  const cached = await cacheService.get<string>(cacheKey, { editionId });
-  if (cached) {
-    console.log(`Returning cached magazine cover for ${editionId}`);
-    return cached;
-  }
-
   try {
     const response = await fetch(`${MAGAZINE_API_BASE_URL}/cover/${editionId}`);
     if (!response.ok) {
@@ -102,22 +67,9 @@ export async function fetchMagazineCover(editionId: string): Promise<string> {
     const coverUrl = response.url;
     console.log(`Magazine cover URL for ${editionId}:`, coverUrl);
 
-    // Cache the result for 24 hours
-    await cacheService.set(cacheKey, coverUrl, { editionId });
-
     return coverUrl;
   } catch (error) {
     console.error(`Error fetching magazine cover for ${editionId}:`, error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<string>(cacheKey, { editionId });
-    if (staleCache) {
-      console.log(
-        `Returning stale cached magazine cover for ${editionId} due to API error`
-      );
-      return staleCache;
-    }
-
     // Return fallback cover image
     return "https://picsum.photos/400/600?random=1";
   }
@@ -141,67 +93,40 @@ export async function fetchMagazineCover(editionId: string): Promise<string> {
  * ```
  */
 export async function fetchMagazinePDF(editionId: string): Promise<string> {
-  const { cacheService } = await import("../../cache");
-  const cacheKey = CACHE_KEYS.PDF;
+  const response = await fetch(
+    `${MAGAZINE_API_BASE_URL}/editions/${editionId}`
+  );
 
-  // Try to get from cache first
-  const cached = await cacheService.get<string>(cacheKey, { editionId });
-  if (cached) {
-    console.log(`Returning cached magazine PDF for ${editionId}`);
-    return cached;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch magazine PDF: ${response.status}`);
   }
 
-  try {
-    const response = await fetch(
-      `${MAGAZINE_API_BASE_URL}/editions/${editionId}`
-    );
-    if (!response.ok) {
-      throw new Error(`Failed to fetch magazine PDF: ${response.status}`);
-    }
+  // Check if this is a direct PDF or a redirect
+  const contentType = response.headers.get("content-type");
+  console.log(`Content-Type for ${editionId}:`, contentType);
 
-    // Check if this is a direct PDF or a redirect
-    const contentType = response.headers.get("content-type");
-    console.log(`Content-Type for ${editionId}:`, contentType);
+  let pdfUrl: string;
 
-    let pdfUrl: string;
-
-    if (contentType && contentType.includes("application/pdf")) {
-      // Direct PDF response, use the response URL
+  if (contentType && contentType.includes("application/pdf")) {
+    // Direct PDF response, use the response URL
+    pdfUrl = response.url;
+  } else {
+    // Might be a redirect or JSON response with PDF URL
+    try {
+      const data = await response.json();
+      pdfUrl = data.pdf_url || data.url || response.url;
+    } catch {
+      // If not JSON, assume the URL itself is the PDF
       pdfUrl = response.url;
-    } else {
-      // Might be a redirect or JSON response with PDF URL
-      try {
-        const data = await response.json();
-        pdfUrl = data.pdf_url || data.url || response.url;
-      } catch {
-        // If not JSON, assume the URL itself is the PDF
-        pdfUrl = response.url;
-      }
     }
-
-    console.log(`Magazine PDF URL for ${editionId}:`, pdfUrl);
-    console.log(
-      `Original request URL: ${MAGAZINE_API_BASE_URL}/editions/${editionId}`
-    );
-
-    // Cache the result for 24 hours
-    await cacheService.set(cacheKey, pdfUrl, { editionId });
-
-    return pdfUrl;
-  } catch (error) {
-    console.error(`Error fetching magazine PDF for ${editionId}:`, error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<string>(cacheKey, { editionId });
-    if (staleCache) {
-      console.log(
-        `Returning stale cached magazine PDF for ${editionId} due to API error`
-      );
-      return staleCache;
-    }
-
-    throw error;
   }
+
+  console.log(`Magazine PDF URL for ${editionId}:`, pdfUrl);
+  console.log(
+    `Original request URL: ${MAGAZINE_API_BASE_URL}/editions/${editionId}`
+  );
+
+  return pdfUrl;
 }
 
 /**
@@ -228,54 +153,19 @@ export async function fetchMagazinePDF(editionId: string): Promise<string> {
 export async function fetchMagazineEditionData(
   editionId: string
 ): Promise<MagazineEdition> {
-  const { cacheService } = await import("../../cache");
-  const cacheKey = CACHE_KEYS.EDITION_DATA;
+  // Fetch cover and PDF URLs in parallel
+  const [coverUrl, pdfUrl] = await Promise.allSettled([
+    fetchMagazineCover(editionId),
+    fetchMagazinePDF(editionId),
+  ]);
 
-  // Try to get from cache first
-  const cached = await cacheService.get<MagazineEdition>(cacheKey, {
-    editionId,
-  });
-  if (cached) {
-    console.log(`Returning cached magazine edition data for ${editionId}`);
-    return cached;
-  }
+  const editionData: MagazineEdition = {
+    id: editionId,
+    coverUrl: coverUrl.status === "fulfilled" ? coverUrl.value : undefined,
+    pdfUrl: pdfUrl.status === "fulfilled" ? pdfUrl.value : undefined,
+  };
 
-  try {
-    // Fetch cover and PDF URLs in parallel
-    const [coverUrl, pdfUrl] = await Promise.allSettled([
-      fetchMagazineCover(editionId),
-      fetchMagazinePDF(editionId),
-    ]);
+  console.log(`Magazine edition data for ${editionId}:`, editionData);
 
-    const editionData: MagazineEdition = {
-      id: editionId,
-      coverUrl: coverUrl.status === "fulfilled" ? coverUrl.value : undefined,
-      pdfUrl: pdfUrl.status === "fulfilled" ? pdfUrl.value : undefined,
-    };
-
-    console.log(`Magazine edition data for ${editionId}:`, editionData);
-
-    // Cache the result for 24 hours
-    await cacheService.set(cacheKey, editionData, { editionId });
-
-    return editionData;
-  } catch (error) {
-    console.error(
-      `Error fetching magazine edition data for ${editionId}:`,
-      error
-    );
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<MagazineEdition>(cacheKey, {
-      editionId,
-    });
-    if (staleCache) {
-      console.log(
-        `Returning stale cached magazine edition data for ${editionId} due to API error`
-      );
-      return staleCache;
-    }
-
-    throw error;
-  }
+  return editionData;
 }

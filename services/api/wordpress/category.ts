@@ -57,97 +57,63 @@ function transformCategoryPostToArticle(post: any): Article {
 export async function fetchCategoryContent(
   categoryId: string
 ): Promise<CategoryContentResponse> {
-  const { cacheService } = await import("../../cache");
-  const cacheKey = "category_content";
-  const { hash } = getApiConfig();
+  const { hash, baseUrl } = getApiConfig();
 
-  // Try to get from cache first
-  const cached = await cacheService.get<CategoryContentResponse>(cacheKey, {
-    categoryId,
-    hash,
-  });
-  if (cached) {
-    console.log(`Returning cached category content for ${categoryId}`);
-    return cached;
+  console.log(
+    "fetch category content from ",
+    `${baseUrl}${ENDPOINTS.CATEGORY}/${categoryId}/?hash=${hash}`
+  );
+
+  const response = await fetch(
+    `${baseUrl}${ENDPOINTS.CATEGORY}/${categoryId}/?hash=${hash}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch category content");
   }
 
-  try {
-    const { baseUrl } = getApiConfig();
-    console.log(
-      "fetch category content from ",
-      `${baseUrl}${ENDPOINTS.CATEGORY}/${categoryId}/?hash=${hash}`
-    );
-    const response = await fetch(
-      `${baseUrl}${ENDPOINTS.CATEGORY}/${categoryId}/?hash=${hash}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch category content");
-    }
+  const categoryData: any = await response.json();
+  console.log("Category response:", categoryData);
 
-    const categoryData: any = await response.json();
-    console.log("Category response:", categoryData);
-
-    // Transform blocks to ArticleBlock structure
-    // Filter out blocks with no posts and transform each block
-    const blocks: ArticleBlock[] = [];
-    if (categoryData.blocks && Array.isArray(categoryData.blocks)) {
-      categoryData.blocks.forEach((block: any) => {
-        // Skip blocks without posts
-        if (
-          !block.posts ||
-          !Array.isArray(block.posts) ||
-          block.posts.length === 0
-        ) {
-          return;
-        }
-
-        // Transform block posts to articles
-        const articles = block.posts.map(transformCategoryPostToArticle);
-
-        // Create ArticleBlock
-        blocks.push({
-          blockTitle: block.block_title || "",
-          blockLayout: block.block_layout || "",
-          blockDescription: block.block_description || "",
-          blockBottomLink: block.block_bottom_more_news_link || "",
-          blockBottomLinkUrl: block.block_bottom_more_news_link_url || "",
-          articles,
-        });
-      });
-    }
-
-    // Create response with category info and blocks
-    const result: CategoryContentResponse = {
-      categoryInfo: {
-        id: categoryData.id || 0,
-        name: categoryData.name || "",
-        description: categoryData.description || "",
-        slug: categoryData.slug || "",
-      },
-      blocks,
-    };
-
-    // Cache the result
-    await cacheService.set(cacheKey, result, { categoryId, hash });
-
-    return result;
-  } catch (error) {
-    console.error("Error fetching category content:", error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<CategoryContentResponse>(
-      cacheKey,
-      {
-        categoryId,
+  // Transform blocks to ArticleBlock structure
+  // Filter out blocks with no posts and transform each block
+  const blocks: ArticleBlock[] = [];
+  if (categoryData.blocks && Array.isArray(categoryData.blocks)) {
+    categoryData.blocks.forEach((block: any) => {
+      // Skip blocks without posts
+      if (
+        !block.posts ||
+        !Array.isArray(block.posts) ||
+        block.posts.length === 0
+      ) {
+        return;
       }
-    );
-    if (staleCache) {
-      console.log(
-        `Returning stale cached category content for ${categoryId} due to API error`
-      );
-      return staleCache;
-    }
 
-    throw error;
+      // Transform block posts to articles
+      const articles = block.posts.map(transformCategoryPostToArticle);
+
+      // Create ArticleBlock
+      blocks.push({
+        blockTitle: block.block_title || "",
+        blockLayout: block.block_layout || "",
+        blockDescription: block.block_description || "",
+        blockBottomLink: block.block_bottom_more_news_link || "",
+        blockBottomLinkUrl: block.block_bottom_more_news_link_url || "",
+        articles,
+      });
+    });
   }
+
+  // Create response with category info and blocks
+  const result: CategoryContentResponse = {
+    categoryInfo: {
+      id: categoryData.id || 0,
+      name: categoryData.name || "",
+      description: categoryData.description || "",
+      slug: categoryData.slug || "",
+    },
+    blocks,
+  };
+
+  return result;
 }

@@ -77,65 +77,40 @@ async function transformWordPressEventToEvent(event: any): Promise<any> {
  * // Returns: [{ id: "123", title: "Event Title", ... }, ...]
  */
 export async function fetchEvents(): Promise<any[]> {
-  const { cacheService } = await import("../../cache");
-  const cacheKey = "events";
-  const { hash } = getApiConfig();
+  const { hash, baseUrl } = getApiConfig();
 
-  // Try to get from cache first
-  const cached = await cacheService.get<any[]>(cacheKey, { hash });
-  if (cached) {
-    console.log("Returning cached events");
-    return cached;
+  const response = await fetch(
+    `${baseUrl}${ENDPOINTS.EVENTS}?hash=${hash}&_fields=id,title,excerpt,content,featured_media,date,link`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch events");
   }
 
-  try {
-    const { baseUrl } = getApiConfig();
-    const response = await fetch(
-      `${baseUrl}${ENDPOINTS.EVENTS}?hash=${hash}&_fields=id,title,excerpt,content,featured_media,date,link`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch events");
-    }
+  const wordpressEvents: any[] = await response.json();
 
-    const wordpressEvents: any[] = await response.json();
+  // Filter out empty objects and invalid events
+  const validEvents = wordpressEvents.filter(isValidEvent);
 
-    // Filter out empty objects and invalid events
-    const validEvents = wordpressEvents.filter(isValidEvent);
+  console.log(
+    `Filtered ${wordpressEvents.length - validEvents.length} invalid events`
+  );
 
-    console.log(
-      `Filtered ${wordpressEvents.length - validEvents.length} invalid events`
-    );
+  const events = await Promise.all(
+    validEvents.map(async (event) => {
+      try {
+        return await transformWordPressEventToEvent(event);
+      } catch (error) {
+        console.warn(`Failed to transform event ${event.id}:`, error);
+        return null;
+      }
+    })
+  );
 
-    const events = await Promise.all(
-      validEvents.map(async (event) => {
-        try {
-          return await transformWordPressEventToEvent(event);
-        } catch (error) {
-          console.warn(`Failed to transform event ${event.id}:`, error);
-          return null;
-        }
-      })
-    );
+  // Filter out any null results from failed transformations
+  const successfulEvents = events.filter((event) => event !== null);
 
-    // Filter out any null results from failed transformations
-    const successfulEvents = events.filter((event) => event !== null);
-
-    // Cache the result
-    await cacheService.set(cacheKey, successfulEvents, { hash });
-
-    return successfulEvents;
-  } catch (error) {
-    console.error("Error fetching events:", error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<any[]>(cacheKey);
-    if (staleCache) {
-      console.log("Returning stale cached events due to API error");
-      return staleCache;
-    }
-
-    throw error;
-  }
+  return successfulEvents;
 }
 
 /**
@@ -152,81 +127,55 @@ export async function fetchEvents(): Promise<any[]> {
  * // Returns: { id: "12345", title: "Event Title", content: "...", ... }
  */
 export async function fetchSingleEvent(eventId: string): Promise<any> {
-  const { cacheService } = await import("../../cache");
-  const cacheKey = "single_event";
-  const { hash } = getApiConfig();
+  const { hash, baseUrl } = getApiConfig();
 
-  // Try to get from cache first
-  const cached = await cacheService.get<any>(cacheKey, { eventId, hash });
-  if (cached) {
-    console.log(`Returning cached single event for ${eventId}`);
-    return cached;
+  console.log(
+    "fetchSingleEvent",
+    `${baseUrl}${ENDPOINTS.EVENTS}/${eventId}?hash=${hash}`
+  );
+
+  const response = await fetch(
+    `${baseUrl}${ENDPOINTS.EVENTS}/${eventId}?hash=${hash}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch event");
   }
 
-  try {
-    const { baseUrl } = getApiConfig();
-    console.log(
-      "fetchSingleEvent",
-      `${baseUrl}${ENDPOINTS.EVENTS}/${eventId}?hash=${hash}`
-    );
-    const response = await fetch(
-      `${baseUrl}${ENDPOINTS.EVENTS}/${eventId}?hash=${hash}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch event");
-    }
+  const eventData: any = await response.json();
+  console.log("Single event response:", eventData);
 
-    const eventData: any = await response.json();
-    console.log("Single event response:", eventData);
-
-    // Validate event data
-    if (!isValidEvent(eventData)) {
-      throw new Error("Invalid event data received");
-    }
-
-    // Extract image URL from featured_media if available
-    let imageUrl = "https://picsum.photos/800/600?random=1";
-    if (eventData.featured_media) {
-      try {
-        imageUrl = await fetchMediaUrl(eventData.featured_media);
-      } catch {
-        console.warn("Failed to fetch featured media, using fallback");
-      }
-    }
-
-    // Transform to Event interface
-    const event: any = {
-      id: eventData.id.toString(),
-      title: decodeHtmlEntities(stripHtml(eventData.title.rendered)),
-      excerpt:
-        eventData.excerpt && eventData.excerpt.rendered
-          ? stripHtml(eventData.excerpt.rendered)
-          : "",
-      content:
-        eventData.content && eventData.content.rendered
-          ? stripHtml(eventData.content.rendered)
-          : "",
-      imageUrl,
-      timestamp: formatDate(eventData.date),
-      link: eventData.link || "",
-    };
-
-    // Cache the result
-    await cacheService.set(cacheKey, event, { eventId, hash });
-
-    return event;
-  } catch (error) {
-    console.error("Error fetching single event:", error);
-
-    // Try to return stale cached data if available
-    const staleCache = await cacheService.get<any>(cacheKey, { eventId });
-    if (staleCache) {
-      console.log(
-        `Returning stale cached single event for ${eventId} due to API error`
-      );
-      return staleCache;
-    }
-
-    throw error;
+  // Validate event data
+  if (!isValidEvent(eventData)) {
+    throw new Error("Invalid event data received");
   }
+
+  // Extract image URL from featured_media if available
+  let imageUrl = "https://picsum.photos/800/600?random=1";
+  if (eventData.featured_media) {
+    try {
+      imageUrl = await fetchMediaUrl(eventData.featured_media);
+    } catch {
+      console.warn("Failed to fetch featured media, using fallback");
+    }
+  }
+
+  // Transform to Event interface
+  const event: any = {
+    id: eventData.id.toString(),
+    title: decodeHtmlEntities(stripHtml(eventData.title.rendered)),
+    excerpt:
+      eventData.excerpt && eventData.excerpt.rendered
+        ? stripHtml(eventData.excerpt.rendered)
+        : "",
+    content:
+      eventData.content && eventData.content.rendered
+        ? stripHtml(eventData.content.rendered)
+        : "",
+    imageUrl,
+    timestamp: formatDate(eventData.date),
+    link: eventData.link || "",
+  };
+
+  return event;
 }
