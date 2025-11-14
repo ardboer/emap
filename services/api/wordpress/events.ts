@@ -5,10 +5,9 @@
  * Handles event listings and individual event details.
  */
 
-import { formatDate } from "../utils/formatters";
-import { decodeHtmlEntities, stripHtml } from "../utils/parsers";
+import { formatDate, formatEventDate } from "../utils/formatters";
+import { decodeHtmlEntities } from "../utils/parsers";
 import { ENDPOINTS, getApiConfig } from "./config";
-import { fetchMediaUrl } from "./media";
 
 /**
  * Helper function to validate if an event object has required properties
@@ -20,10 +19,9 @@ function isValidEvent(event: any): boolean {
   return (
     event &&
     typeof event === "object" &&
-    event.id &&
-    event.title &&
-    event.title.rendered &&
-    event.date
+    event.post_id &&
+    event.post_title &&
+    event.start_date
   );
 }
 
@@ -31,7 +29,7 @@ function isValidEvent(event: any): boolean {
  * Transform WordPress event to Event interface
  *
  * Converts raw WordPress event data into a standardized event object.
- * Fetches featured media and formats content.
+ * Handles the new mbm-apps/v1/events API format.
  *
  * @param event - Raw WordPress event data
  * @returns Promise resolving to transformed event object
@@ -43,24 +41,45 @@ async function transformWordPressEventToEvent(event: any): Promise<any> {
     throw new Error("Invalid event data");
   }
 
-  const imageUrl = event.featured_media
-    ? await fetchMediaUrl(event.featured_media)
-    : "https://picsum.photos/800/600?random=1";
+  // Extract excerpt text from structured content array
+  let excerptText = "";
+  if (Array.isArray(event.post_excerpt) && event.post_excerpt.length > 0) {
+    const firstParagraph = event.post_excerpt[0];
+    if (firstParagraph.children && Array.isArray(firstParagraph.children)) {
+      excerptText = firstParagraph.children
+        .filter((child: any) => child.type === "text")
+        .map((child: any) => child.text)
+        .join("");
+    }
+  }
+
+  // Extract content text from structured content array
+  let contentText = "";
+  if (Array.isArray(event.post_content) && event.post_content.length > 0) {
+    contentText = event.post_content
+      .map((node: any) => {
+        if (node.children && Array.isArray(node.children)) {
+          return node.children
+            .filter((child: any) => child.type === "text")
+            .map((child: any) => child.text)
+            .join("");
+        }
+        return "";
+      })
+      .join("\n");
+  }
+
+  const imageUrl = event.post_image || "https://picsum.photos/800/600?random=1";
 
   return {
-    id: event.id.toString(),
-    title: decodeHtmlEntities(stripHtml(event.title.rendered)),
-    excerpt:
-      event.excerpt && event.excerpt.rendered
-        ? stripHtml(event.excerpt.rendered)
-        : "",
-    content:
-      event.content && event.content.rendered
-        ? stripHtml(event.content.rendered)
-        : "",
+    id: event.post_id.toString(),
+    title: decodeHtmlEntities(event.post_title),
+    excerpt: excerptText,
+    content: contentText,
     imageUrl,
-    timestamp: formatDate(event.date),
-    link: event.link || "",
+    timestamp: formatDate(event.start_date),
+    category: formatEventDate(event.start_date),
+    link: event.more_info || "",
   };
 }
 
@@ -79,9 +98,7 @@ async function transformWordPressEventToEvent(event: any): Promise<any> {
 export async function fetchEvents(): Promise<any[]> {
   const { hash, baseUrl } = getApiConfig();
 
-  const response = await fetch(
-    `${baseUrl}${ENDPOINTS.EVENTS}?hash=${hash}&_fields=id,title,excerpt,content,featured_media,date,link`
-  );
+  const response = await fetch(`${baseUrl}${ENDPOINTS.EVENTS}?hash=${hash}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch events");
@@ -101,7 +118,7 @@ export async function fetchEvents(): Promise<any[]> {
       try {
         return await transformWordPressEventToEvent(event);
       } catch (error) {
-        console.warn(`Failed to transform event ${event.id}:`, error);
+        console.warn(`Failed to transform event ${event.post_id}:`, error);
         return null;
       }
     })
@@ -150,32 +167,6 @@ export async function fetchSingleEvent(eventId: string): Promise<any> {
     throw new Error("Invalid event data received");
   }
 
-  // Extract image URL from featured_media if available
-  let imageUrl = "https://picsum.photos/800/600?random=1";
-  if (eventData.featured_media) {
-    try {
-      imageUrl = await fetchMediaUrl(eventData.featured_media);
-    } catch {
-      console.warn("Failed to fetch featured media, using fallback");
-    }
-  }
-
-  // Transform to Event interface
-  const event: any = {
-    id: eventData.id.toString(),
-    title: decodeHtmlEntities(stripHtml(eventData.title.rendered)),
-    excerpt:
-      eventData.excerpt && eventData.excerpt.rendered
-        ? stripHtml(eventData.excerpt.rendered)
-        : "",
-    content:
-      eventData.content && eventData.content.rendered
-        ? stripHtml(eventData.content.rendered)
-        : "",
-    imageUrl,
-    timestamp: formatDate(eventData.date),
-    link: eventData.link || "",
-  };
-
-  return event;
+  // Use the transformation function to ensure consistency
+  return await transformWordPressEventToEvent(eventData);
 }

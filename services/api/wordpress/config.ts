@@ -100,7 +100,7 @@ export const ENDPOINTS = {
   CLINICAL: "/wp-json/mbm-apps/v1/get-post-by-filter",
 
   /** WordPress events endpoint (MEC plugin) */
-  EVENTS: "/wp-json/wp/v2/mec-events",
+  EVENTS: "/wp-json/mbm-apps/v1/events",
 
   /** WordPress search endpoint */
   SEARCH: "/wp-json/wp/v2/search",

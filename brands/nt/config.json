@@ -167,12 +167,12 @@
     }
   ],
   "trendingBlockListView": {
-    "enabled": false,
+    "enabled": true,
     "position": 3,
     "itemCount": 5
   },
   "recommendedBlockListView": {
-    "enabled": false,
+    "enabled": true,
     "position": 1,
     "itemCount": 5
   },

@@ -100,6 +100,44 @@ export function formatArticleDetailDate(dateString: string): string {
 }
 
 /**
+ * Formats a date for event display in "10 Nov 2025" format
+ *
+ * Always formats dates in the day-month-year format, regardless of age.
+ * Used for event start dates where we want to show the actual date.
+ *
+ * @param dateString - ISO 8601 date string or YYYY-MM-DD format
+ * @returns Formatted date string in "10 Nov 2025" format
+ *
+ * @example
+ * formatEventDate('2025-11-10') // Returns: "10 Nov 2025"
+ * formatEventDate('2025-01-05T10:00:00Z') // Returns: "5 Jan 2025"
+ */
+export function formatEventDate(dateString: string): string {
+  const date = new Date(dateString);
+
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const day = date.getDate();
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+
+  return `${day} ${month} ${year}`;
+}
+
+/**
  * Extracts a category name from a WordPress article URL
  *
  * Analyzes the URL path to identify category segments based on common patterns.
