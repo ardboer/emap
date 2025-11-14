@@ -15,19 +15,26 @@ import {
   DisplayAdsConfig,
   ListViewAdConfig,
 } from "@/types/ads";
-import { Platform } from "react-native";
 import { gamService } from "./gam";
 
 class DisplayAdManager {
   private config: DisplayAdsConfig | null = null;
   private canRequestAds = false;
+  private initialized = false;
 
   /**
    * Initialize the manager with brand configuration
    * Now integrates with GAM service for consent management
+   * Uses initialization guard to prevent redundant initialization
    */
   async initialize(config: DisplayAdsConfig): Promise<void> {
+    // Guard: Skip if already initialized with same config
+    if (this.initialized && this.config?.enabled === config.enabled) {
+      return;
+    }
+
     this.config = config;
+    this.initialized = true;
 
     // Initialize GAM service if not already initialized
     if (!gamService.isInitialized()) {
