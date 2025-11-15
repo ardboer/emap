@@ -801,9 +801,9 @@ export default function HighlightedScreen() {
         />
       )}
       <BrandLogo
-        style={[styles.brandLogo, { top: insets.top + 10 }]}
+        style={[styles.brandLogo, { top: insets.top + 16 }]}
         width={100}
-        height={35}
+        height={32}
       />
 
       {/* Top Right Icons Container */}
@@ -854,8 +854,7 @@ export default function HighlightedScreen() {
 const staticStyles = StyleSheet.create({
   brandLogo: {
     position: "absolute",
-    top: 20,
-    left: 12,
+    left: 16,
     zIndex: 10,
     borderRadius: 8,
     padding: 8,
