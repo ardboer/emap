@@ -18,7 +18,7 @@ export default function TrendingArticles() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const contentBackground = useThemeColor({}, "contentBackground");
-
+  const dividerBackground = useThemeColor({}, "linkColor");
   // Check if trending articles detail is enabled
   const isEnabled = brandConfig?.trendingArticlesDetail?.enabled ?? true;
   const itemCount = brandConfig?.trendingArticlesDetail?.itemCount || 5;
@@ -104,7 +104,9 @@ export default function TrendingArticles() {
     <ThemedView
       style={[styles.container, { backgroundColor: contentBackground }]}
     >
-      <ThemedView style={styles.divider} />
+      <ThemedView
+        style={[styles.divider, { backgroundColor: dividerBackground }]}
+      />
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Trending Articles
       </ThemedText>

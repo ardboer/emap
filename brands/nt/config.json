@@ -47,7 +47,8 @@
         "highlightBoxText": "#011620",
         "highlightBoxBorder": "#10D1F0",
         "articleListBackground": "#FFFFFF",
-        "articleTeaserTitleText": "#00334C",
+        "articlePreTeaserTitleText": "#00334C",
+        "articleTeaserTitleText": "#011620",
         "linkColor": "#00334C"
       },
       "dark": {
@@ -81,6 +82,7 @@
         "highlightBoxText": "#FFFFFF",
         "highlightBoxBorder": "#10D1F0",
         "articleListBackground": "#011620",
+        "articlePreTeaserTitleText": "#95EEFD",
         "articleTeaserTitleText": "#FFFFFF",
         "linkColor": "#10D1F0"
       }
@@ -144,7 +146,7 @@
     "enabled": true,
     "misoItemCount": 10,
     "mixAndMatch": true,
-    "slideDurationSeconds": 5,
+    "slideDurationSeconds": 6,
     "endlessScroll": {
       "enabled": true,
       "itemsPerLoad": 5,

@@ -98,6 +98,8 @@ export const Colors = {
       (brandColors.light as any).highlightBoxBorder || "#10D1F0",
     articleListBackground:
       (brandColors.light as any).articleListBackground || "#FFFFFF",
+    articlePreTeaserTitleText:
+      (brandColors.light as any).articlePreTeaserTitleText || "#FFFFFF",
     articleTeaserTitleText:
       (brandColors.light as any).articleTeaserTitleText || "#00334C",
     linkColor: (brandColors.light as any).linkColor || "#FF0000",
@@ -145,6 +147,8 @@ export const Colors = {
       (brandColors.dark as any).highlightBoxBorder || "#10D1F0",
     articleListBackground:
       (brandColors.dark as any).articleListBackground || "#011620",
+    articlePreTeaserTitleText:
+      (brandColors.dark as any).articlePreTeaserTitleText || "#FFFFFF",
     articleTeaserTitleText:
       (brandColors.dark as any).articleTeaserTitleText || "#FFFFFF",
     linkColor: (brandColors.dark as any).linkColor || "#FF0000",

@@ -251,6 +251,7 @@ export const ArticleStyles = StyleSheet.create({
     borderLeftWidth: 0,
     padding: 12,
     marginVertical: 16,
+    marginBottom: 32,
     borderRadius: 4,
     gap: 16,
   },
@@ -263,7 +264,7 @@ export const ArticleStyles = StyleSheet.create({
 
   blockquoteText: {
     fontSize: 22,
-    fontWeight: "400",
+    fontWeight: "600",
     lineHeight: 32,
     marginVertical: 8,
   },
@@ -273,6 +274,7 @@ export const ArticleStyles = StyleSheet.create({
     borderLeftWidth: 0,
     padding: 12,
     marginVertical: 16,
+    marginBottom: 32,
     borderRadius: 4,
     gap: 16,
   },

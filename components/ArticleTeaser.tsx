@@ -84,7 +84,13 @@ function ArticleTeaser({ article, onPress }: ArticleTeaserProps) {
       </ThemedView>
       <ThemedView style={styles.contentContainer}>
         <ThemedView style={styles.metaContainer}>
-          <ThemedText style={styles.category} numberOfLines={1}>
+          <ThemedText
+            style={[
+              styles.category,
+              { color: Colors[colorScheme].articlePreTeaserTitleText },
+            ]}
+            numberOfLines={1}
+          >
             {article.category}
           </ThemedText>
           {/* <BookmarkButton
