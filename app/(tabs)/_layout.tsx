@@ -1,7 +1,13 @@
 import { Tabs, router } from "expo-router";
 import React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HapticTab } from "@/components/HapticTab";
+import { CalendarDotsIcon } from "@/components/icons/CalendarDotsIcon";
+import { HighlightsIcon } from "@/components/icons/HighlightsIcon";
+import { NewspaperIcon } from "@/components/icons/NewspaperIcon";
+import { QuestionIcon } from "@/components/icons/QuestionIcon";
+import { StethoscopeIcon } from "@/components/icons/StethoscopeIcon";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { PodcastPlayer } from "@/components/PodcastPlayer";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -12,6 +18,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { features, brandConfig } = useBrandConfig();
+  const insets = useSafeAreaInsets();
 
   // Get brand-specific colors
   const themeColors = brandConfig?.theme.colors[colorScheme ?? "light"];
@@ -45,10 +52,19 @@ export default function TabLayout() {
             position: "absolute",
             backgroundColor: tabBarBackgroundColor,
             borderTopWidth: 0,
+            marginTop: 0,
+            marginBottom: 0,
+            paddingTop: 4,
+            paddingBottom: Math.max(8, insets.bottom),
+            paddingLeft: 0,
+            paddingRight: 0,
+            height: 60 + Math.max(0, insets.bottom - 8),
           },
           tabBarLabelStyle: {
             textTransform: "uppercase",
             fontSize: 9,
+            fontFamily: "OpenSans-Medium",
+            letterSpacing: 0.36,
           },
         }}
         initialRouteName={features?.enableHighlights ? "index" : "news"}
@@ -60,7 +76,7 @@ export default function TabLayout() {
             headerShown: false, // No header for highlighted tab (full-screen carousel)
             href: !features?.enableHighlights ? null : undefined,
             tabBarIcon: ({ color }) => (
-              <IconSymbol size={28} name="star.fill" color={color} />
+              <HighlightsIcon size={25} color={color} />
             ),
           }}
           listeners={({ navigation }) => ({
@@ -84,10 +100,10 @@ export default function TabLayout() {
         <Tabs.Screen
           name="news"
           options={{
-            title: "Latest",
+            title: "Articles",
             headerShown: false, // Hide header - using custom GradientHeader in news.tsx
             tabBarIcon: ({ color }) => (
-              <IconSymbol size={28} name="newspaper.fill" color={color} />
+              <NewspaperIcon size={25} color={color} />
             ),
           }}
         />
@@ -98,11 +114,7 @@ export default function TabLayout() {
             headerShown: false, // Hide header - using custom GradientHeader in clinical.tsx
             href: features?.enableClinical ? "/(tabs)/clinical" : null,
             tabBarIcon: ({ color }) => (
-              <IconSymbol
-                size={28}
-                name="heart.text.square.fill"
-                color={color}
-              />
+              <StethoscopeIcon size={25} color={color} />
             ),
           }}
         />
@@ -113,7 +125,7 @@ export default function TabLayout() {
             headerShown: false, // Hide header - using custom GradientHeader in events.tsx
             href: features?.enableEvents ? "/(tabs)/events" : null,
             tabBarIcon: ({ color }) => (
-              <IconSymbol size={28} name="calendar" color={color} />
+              <CalendarDotsIcon size={25} color={color} />
             ),
           }}
         />
@@ -146,13 +158,7 @@ export default function TabLayout() {
             //   </TouchableOpacity>
             // ),
             href: features?.enableAsk ? "/(tabs)/ask" : null,
-            tabBarIcon: ({ color }) => (
-              <IconSymbol
-                size={28}
-                name="questionmark.circle.fill"
-                color={color}
-              />
-            ),
+            tabBarIcon: ({ color }) => <QuestionIcon size={25} color={color} />,
           }}
         />
         <Tabs.Screen

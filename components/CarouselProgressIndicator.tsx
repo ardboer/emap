@@ -40,8 +40,8 @@ export const CarouselProgressIndicator: React.FC<
   // Calculate bottom position based on mini player visibility
   // Tab bar is ~49px, mini player adds ~44px
   const bottomPosition = showMiniPlayer
-    ? 93 + insets.bottom // Above mini player
-    : 49 + insets.bottom; // Above tab bar
+    ? 90 + insets.bottom // Above mini player
+    : 46 + insets.bottom; // Above tab bar
 
   useEffect(() => {
     if (isPlaying) {

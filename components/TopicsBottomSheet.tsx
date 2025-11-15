@@ -155,9 +155,7 @@ export default function TopicsBottomSheet({
                 All Topics
               </ThemedText>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Text
-                  style={[styles.closeButtonText, { color: brandPrimaryColor }]}
-                >
+                <Text style={[styles.closeButtonText, { color: titleColor }]}>
                   ✕
                 </Text>
               </TouchableOpacity>
