@@ -51,6 +51,7 @@ fastlane/screenshots
 fastlane/test_output
 fastlane/builds
 fastlane/derived_data
+fastlane/emap-service-account.json
 
 # Android keystore
 android/keystore.properties
