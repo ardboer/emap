@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useFavoriteTopics } from "@/hooks/useFavoriteTopics";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -14,6 +15,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from "react-native";
 
@@ -35,6 +37,7 @@ export default function TopicsBottomSheet({
   const [searchQuery, setSearchQuery] = useState("");
   const { brandConfig } = useBrandConfig();
   const { favoriteTopicIds, toggleFavorite } = useFavoriteTopics();
+  const colorScheme = useColorScheme() ?? "light";
 
   // Get theme colors
   const backgroundColor = useThemeColor({}, "contentBackground");
@@ -48,6 +51,9 @@ export default function TopicsBottomSheet({
     brandConfig?.theme.fonts.primarySemiBold || "OpenSans-SemiBold";
   const brandPrimaryColor =
     brandConfig?.theme.colors.light.primary || activeColor;
+
+  // Use same color as ArticleTeaser title
+  const titleColor = Colors[colorScheme].articleTeaserTitleText;
 
   // Filter and sort topics: favorites first, then alphabetically
   const filteredTopics = topics
@@ -143,18 +149,29 @@ export default function TopicsBottomSheet({
           <ThemedView style={[styles.bottomSheet, { backgroundColor }]}>
             {/* Header */}
             <View style={styles.header}>
-              <ThemedText style={[styles.headerTitle, { fontFamily }]}>
+              <ThemedText
+                style={[styles.headerTitle, { fontFamily, color: titleColor }]}
+              >
                 All Topics
               </ThemedText>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <ThemedText style={styles.closeButtonText}>✕</ThemedText>
+                <Text
+                  style={[styles.closeButtonText, { color: brandPrimaryColor }]}
+                >
+                  ✕
+                </Text>
               </TouchableOpacity>
             </View>
 
             {/* Search Bar */}
-            <View style={[styles.searchContainer, { borderColor }]}>
+            <View
+              style={[
+                styles.searchContainer,
+                { borderColor: brandPrimaryColor },
+              ]}
+            >
               <TextInput
-                style={[styles.searchInput, { color: textColor, fontFamily }]}
+                style={[styles.searchInput, { color: titleColor, fontFamily }]}
                 placeholder="Search topics..."
                 placeholderTextColor={borderColor}
                 value={searchQuery}
