@@ -268,18 +268,19 @@ function ArticleScreenContent() {
   }, [isAllowed, paywallVisible, id, article]);
 
   /**
-   * Handle paywall close - navigate back to previous screen
+   * Handle paywall close - always navigate to home tab
    */
   const handleClosePaywall = () => {
-    console.log("ℹ️ User closed paywall, navigating back");
+    console.log("ℹ️ User closed paywall, navigating to home");
 
     analyticsService.logEvent("article_paywall_dismissed", {
       article_id: id,
       article_title: article?.title,
     });
 
-    // Navigate back to previous screen (e.g., highlights carousel)
-    router.back();
+    // Always navigate to home tab - works in all scenarios
+    // Whether app was running or opened from closed state
+    router.replace("/(tabs)");
   };
 
   /**

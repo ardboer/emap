@@ -108,26 +108,28 @@ export default function DeepLinkHandler() {
 
               setError(null);
 
-              // On Android, the browser opens this deep link screen
-              // We need to go back to the article where the paywall is
-              // On iOS, this doesn't happen as the browser session closes differently
+              // Auth tokens processed successfully
+              // Just dismiss this auth callback screen - user stays on article
+              // The paywall will automatically disappear when AuthContext detects the tokens
               console.log(
-                "🔗 Auth tokens processed - navigating back to article"
+                "🔗 Auth tokens processed - dismissing auth callback screen"
               );
-              router.back();
+              router.dismiss();
               return;
             } else {
               console.warn("⚠️ No tokens found in auth callback URL");
-              // No tokens - go back to article with paywall still showing
-              console.log("🔗 No tokens found - navigating back to article");
-              router.back();
+              // No tokens - dismiss to go back
+              console.log(
+                "🔗 No tokens found - dismissing auth callback screen"
+              );
+              router.dismiss();
               return;
             }
           } catch (authError) {
             console.error("❌ Error processing auth callback:", authError);
-            // On error, go back to article
-            console.log("🔗 Auth error - navigating back to article");
-            router.back();
+            // On error, dismiss to go back
+            console.log("🔗 Auth error - dismissing auth callback screen");
+            router.dismiss();
             return;
           }
         }
@@ -213,8 +215,8 @@ export default function DeepLinkHandler() {
         console.log(`🔗 ✅ Successfully resolved slug to article ID: ${id}`);
         console.log(`🔗 Navigating to: /article/${id}`);
 
-        // Redirect to the article
-        // Using replace ensures the deep link URL is removed from history
+        // Replace the deep link handler screen with the article
+        // This removes the [...slug] screen from the navigation stack
         router.replace(`/article/${id}`);
       } catch (error) {
         console.error("❌ Error resolving deep link:", error);
