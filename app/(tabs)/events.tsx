@@ -2,6 +2,7 @@ import ArticleTeaser from "@/components/ArticleTeaser";
 import GradientHeader from "@/components/GradientHeader";
 import { NativeAdListItem } from "@/components/NativeAdListItem";
 import { SettingsDrawer } from "@/components/SettingsDrawer";
+import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
@@ -13,7 +14,6 @@ import { router, useFocusEffect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -136,15 +136,17 @@ export default function EventsScreen() {
 
   if (loading) {
     return (
-      <ThemedView
-        style={[
-          styles.container,
-          styles.centerContent,
-          { backgroundColor: Colors[colorScheme].articleListBackground },
-        ]}
-      >
-        <ActivityIndicator size="large" />
-        <ThemedText style={styles.loadingText}>Loading events...</ThemedText>
+      <ThemedView style={styles.container}>
+        <GradientHeader
+          onSearchPress={handleSearchPress}
+          showUserIcon={true}
+          onUserPress={() => setSettingsDrawerVisible(true)}
+        />
+        <SkeletonLoader variant="list" count={5} showHero={false} />
+        <SettingsDrawer
+          visible={settingsDrawerVisible}
+          onClose={() => setSettingsDrawerVisible(false)}
+        />
       </ThemedView>
     );
   }
