@@ -66,6 +66,38 @@ Upload Construction News to App Store
 
 Upload Nursing Times to App Store
 
+### ios build_upload_cn_testflight
+
+```sh
+[bundle exec] fastlane ios build_upload_cn_testflight
+```
+
+Build and upload Construction News locally to TestFlight
+
+### ios build_upload_nt_testflight
+
+```sh
+[bundle exec] fastlane ios build_upload_nt_testflight
+```
+
+Build and upload Nursing Times locally to TestFlight
+
+### ios build_upload_cn_appstore
+
+```sh
+[bundle exec] fastlane ios build_upload_cn_appstore
+```
+
+Build and upload Construction News locally to App Store
+
+### ios build_upload_nt_appstore
+
+```sh
+[bundle exec] fastlane ios build_upload_nt_appstore
+```
+
+Build and upload Nursing Times locally to App Store
+
 ----
 
 
@@ -134,6 +166,70 @@ Upload Construction News to Google Play Store (Production)
 ```
 
 Upload Nursing Times to Google Play Store (Production)
+
+### android build_upload_cn_beta
+
+```sh
+[bundle exec] fastlane android build_upload_cn_beta
+```
+
+Build and upload Construction News locally to Google Play (Beta)
+
+### android build_upload_nt_beta
+
+```sh
+[bundle exec] fastlane android build_upload_nt_beta
+```
+
+Build and upload Nursing Times locally to Google Play (Beta)
+
+### android build_upload_cn_alpha
+
+```sh
+[bundle exec] fastlane android build_upload_cn_alpha
+```
+
+Build and upload Construction News locally to Google Play (Alpha)
+
+### android build_upload_nt_alpha
+
+```sh
+[bundle exec] fastlane android build_upload_nt_alpha
+```
+
+Build and upload Nursing Times locally to Google Play (Alpha)
+
+### android build_upload_cn_internal
+
+```sh
+[bundle exec] fastlane android build_upload_cn_internal
+```
+
+Build and upload Construction News locally to Google Play (Internal)
+
+### android build_upload_nt_internal
+
+```sh
+[bundle exec] fastlane android build_upload_nt_internal
+```
+
+Build and upload Nursing Times locally to Google Play (Internal)
+
+### android build_upload_cn_production
+
+```sh
+[bundle exec] fastlane android build_upload_cn_production
+```
+
+Build and upload Construction News locally to Google Play (Production)
+
+### android build_upload_nt_production
+
+```sh
+[bundle exec] fastlane android build_upload_nt_production
+```
+
+Build and upload Nursing Times locally to Google Play (Production)
 
 ----
 

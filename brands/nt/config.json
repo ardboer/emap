@@ -183,7 +183,7 @@
   "nativeAds": {
     "enabled": true,
     "carousel": {
-      "enabled": true,
+      "enabled": false,
       "firstAdPosition": 2,
       "adInterval": 5,
       "preloadDistance": 1,
@@ -252,7 +252,7 @@
       ]
     },
     "listView": {
-      "enabled": true,
+      "enabled": false,
       "maxAdsPerPage": 1,
       "blockInterval": 3,
       "allowedSizes": ["MEDIUM_RECTANGLE", "BANNER"],

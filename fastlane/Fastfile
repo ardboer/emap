@@ -428,16 +428,16 @@ platform :android do
     UI.message("🚀 Starting local Android build and Google Play upload for #{brand_name} (#{track} track)")
     
     # Check for Google Play authentication
-    if ENV["GOOGLE_PLAY_JSON_KEY_PATH"].nil? || ENV["GOOGLE_PLAY_JSON_KEY_PATH"].empty?
-      UI.user_error!("❌ Google Play Console requires a service account JSON key file.\n" +
-                     "Please set GOOGLE_PLAY_JSON_KEY_PATH in your .env.fastlane file.\n" +
-                     "See the authentication setup guide for instructions.")
-    end
+    # if "fastlane/"+ENV["GOOGLE_PLAY_JSON_KEY_PATH"].nil? || "fastlane/"+ENV["GOOGLE_PLAY_JSON_KEY_PATH"].empty?
+    #   UI.user_error!("❌ Google Play Console requires a service account JSON key file.\n" +
+    #                  "Please set GOOGLE_PLAY_JSON_KEY_PATH in your .env.fastlane file.\n" +
+    #                  "See the authentication setup guide for instructions.")
+    # end
     
-    unless File.exist?(ENV["GOOGLE_PLAY_JSON_KEY_PATH"])
-      UI.user_error!("❌ Google Play JSON key file not found: #{ENV['GOOGLE_PLAY_JSON_KEY_PATH']}\n" +
-                     "Please ensure the file exists and the path is correct.")
-    end
+    # unless File.exist?("fastlane/"+ENV["GOOGLE_PLAY_JSON_KEY_PATH"])
+    #   UI.user_error!("❌ Google Play JSON key file not found: #{"fastlane/"+ENV["GOOGLE_PLAY_JSON_KEY_PATH"]}\n" +
+    #                  "Please ensure the file exists and the path is correct.")
+    # end
 
     # Set brand for prebuild
     ENV["BRAND"] = brand
@@ -450,13 +450,13 @@ platform :android do
     UI.message("🔨 Building #{brand_name} AAB...")
     
     gradle(
-      project_dir: "../android",
+      project_dir: "android",
       task: "bundleRelease",
       properties: {
         "MYAPP_RELEASE_STORE_FILE" => ENV["ANDROID_KEYSTORE_PATH"],
         "MYAPP_RELEASE_KEY_ALIAS" => ENV["ANDROID_KEY_ALIAS"],
         "MYAPP_RELEASE_STORE_PASSWORD" => ENV["ANDROID_KEYSTORE_PASSWORD"],
-        "MYAPP_RELEASE_KEY_PASSWORD" => ENV["ANDROID_KEY_PASSWORD"]
+        # "MYAPP_RELEASE_KEY_PASSWORD" => ENV["ANDROID_KEY_PASSWORD"]
       }
     )
     
@@ -484,14 +484,14 @@ platform :android do
     begin
       upload_to_play_store(
         package_name: package_name,
-        aab: "../android/app/build/outputs/bundle/release/app-release.aab",
+        aab: "android/app/build/outputs/bundle/release/app-release_nt.aab",
         track: track,
         release_status: track == "production" ? "draft" : "completed",
         skip_upload_metadata: false,
         skip_upload_changelogs: false,
         skip_upload_images: true,
         skip_upload_screenshots: true,
-        json_key: ENV["GOOGLE_PLAY_JSON_KEY_PATH"]
+        json_key: "./fastlane/"+ENV["GOOGLE_PLAY_JSON_KEY_PATH"]
       )
       
       UI.success("✅ Successfully uploaded #{brand_name} to Google Play Store (#{track} track)!")
