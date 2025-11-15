@@ -57,7 +57,7 @@
         "text": "#ECEDEE",
         "icon": "#9BA1A6",
         "tabIconDefault": "#9BA1A6",
-        "tabIconSelected": "#ffffff",
+        "tabIconSelected": "#CFF8FF",
         "tabBarBackground": "#011620",
         "progressIndicator": "#fff",
         "progressIndicatorBackground": "#00334C",

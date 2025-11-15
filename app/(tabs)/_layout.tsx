@@ -17,7 +17,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { features, brandConfig } = useBrandConfig();
+  const { features, brandConfig, fonts } = useBrandConfig();
   const insets = useSafeAreaInsets();
 
   // Get brand-specific colors
@@ -63,7 +63,7 @@ export default function TabLayout() {
           tabBarLabelStyle: {
             textTransform: "uppercase",
             fontSize: 9,
-            fontFamily: "OpenSans-Medium",
+            fontFamily: fonts?.primaryMedium || "OpenSans-Medium",
             letterSpacing: 0.36,
           },
         }}
