@@ -106,6 +106,7 @@ export const Colors = {
     recommendedBadgeBg:
       (brandColors.light as any).recommendedBadgeBg ||
       "rgba(16, 209, 240, 0.9)",
+    actionColor: (brandColors.light as any).actionColor || "#FF8F05CC",
   },
   dark: {
     text: brandColors.dark.text,
@@ -154,5 +155,6 @@ export const Colors = {
     linkColor: (brandColors.dark as any).linkColor || "#FF0000",
     recommendedBadgeBg:
       (brandColors.dark as any).recommendedBadgeBg || "rgba(16, 209, 240, 0.9)",
+    actionColor: (brandColors.dark as any).actionColor || "#CC7204CC",
   },
 };

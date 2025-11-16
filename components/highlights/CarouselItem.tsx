@@ -367,7 +367,7 @@ const staticStyles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 16,
-    marginBottom: 32,
+    marginBottom: 16,
   },
   recommendedBadgeText: {
     color: "#00334C",

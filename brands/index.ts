@@ -52,6 +52,7 @@ export interface BrandConfig {
         articleDetailHighlightBoxText?: string;
         articleDetailHighlightBoxBorder?: string;
         linkColor?: string;
+        actionColor?: string;
       };
       dark: {
         primary: string;
@@ -72,6 +73,7 @@ export interface BrandConfig {
         articleDetailHighlightBoxText?: string;
         articleDetailHighlightBoxBorder?: string;
         linkColor?: string;
+        actionColor?: string;
       };
     };
     fonts: {

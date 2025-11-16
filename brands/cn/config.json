@@ -46,7 +46,8 @@
         "articleListBackground": "#FFFFFF",
         "articleTeaserTitleText": "#1a1a1a",
         "linkColor": "#FF0000",
-        "recommendedBadgeBg": "rgba(255, 221, 0, 0.9)"
+        "recommendedBadgeBg": "rgba(255, 221, 0, 0.9)",
+        "actionColor": "#FF8F05CC"
       },
       "dark": {
         "primary": "#FFDD00",
@@ -81,7 +82,8 @@
         "articleListBackground": "#1a1a1a",
         "articleTeaserTitleText": "#FFFFFF",
         "linkColor": "#FF0000",
-        "recommendedBadgeBg": "rgba(255, 221, 0, 0.9)"
+        "recommendedBadgeBg": "rgba(255, 221, 0, 0.9)",
+        "actionColor": "#CC7204CC"
       }
     },
     "fonts": {

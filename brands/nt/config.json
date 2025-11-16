@@ -49,7 +49,8 @@
         "articleListBackground": "#FFFFFF",
         "articlePreTeaserTitleText": "#00334C",
         "articleTeaserTitleText": "#011620",
-        "linkColor": "#00334C"
+        "linkColor": "#00334C",
+        "actionColor": "#FF8F05CC"
       },
       "dark": {
         "primary": "#fff",
@@ -84,7 +85,8 @@
         "articleListBackground": "#011620",
         "articlePreTeaserTitleText": "#95EEFD",
         "articleTeaserTitleText": "#FFFFFF",
-        "linkColor": "#10D1F0"
+        "linkColor": "#10D1F0",
+        "actionColor": "#FF8F05CC"
       }
     },
     "fonts": {

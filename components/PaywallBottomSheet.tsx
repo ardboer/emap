@@ -6,6 +6,7 @@ import { getCenteredContentStyle } from "@/constants/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { analyticsService } from "@/services/analytics";
 import React from "react";
 import {
@@ -42,7 +43,7 @@ export function PaywallBottomSheet({
   onAuthSuccess,
 }: PaywallBottomSheetProps) {
   const colorScheme = useColorScheme();
-  const { colors, paywall } = useBrandConfig();
+  const { colors, paywall, fonts } = useBrandConfig();
   const { login, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const translateY = React.useRef(new Animated.Value(SHEET_HEIGHT)).current;
@@ -170,7 +171,9 @@ export function PaywallBottomSheet({
     Colors[colorScheme ?? "light"].background;
   const textColor = themeColors?.text || Colors[colorScheme ?? "light"].text;
   const primaryColor = themeColors?.primary || "#007AFF";
-
+  const contentBackButtonText = useThemeColor({}, "contentBackButtonText");
+  const actionColor = useThemeColor({}, "actionColor");
+  const articlePreTeaserTitleText = Colors.light.articlePreTeaserTitleText;
   return (
     <Modal
       visible={visible}
@@ -214,7 +217,10 @@ export function PaywallBottomSheet({
             </View>
 
             {/* Headline */}
-            <ThemedText type="title" style={styles.headline}>
+            <ThemedText
+              type="title"
+              style={[styles.headline, { fontFamily: fonts?.primaryBold }]}
+            >
               {paywallConfig.headline}
             </ThemedText>
 
@@ -237,7 +243,7 @@ export function PaywallBottomSheet({
                       >
                         <IconSymbol
                           name="checkmark"
-                          size={16}
+                          size={12}
                           color={isDark ? "#666" : "#ffffff"}
                           weight="bold"
                         />
@@ -253,41 +259,44 @@ export function PaywallBottomSheet({
 
             {/* CTA Buttons */}
             <View style={styles.buttonContainer}>
-              {/* Primary Button - Subscribe */}
-              <TouchableOpacity
-                style={[
-                  styles.primaryButton,
-                  { backgroundColor: primaryColor },
-                ]}
-                onPress={handlePrimaryButtonPress}
-                activeOpacity={0.8}
-              >
-                <ThemedText
-                  style={[styles.primaryButtonText, { color: "#000" }]}
-                >
-                  {paywallConfig.primaryButtonText}
-                </ThemedText>
-              </TouchableOpacity>
-
               {/* Secondary Button - Sign In */}
               <TouchableOpacity
                 style={[
                   styles.secondaryButton,
                   {
-                    borderColor: primaryColor,
-                    backgroundColor: isDark ? backgroundColor : "transparent",
+                    backgroundColor: contentBackButtonText,
                   },
                 ]}
                 onPress={handleSecondaryButtonPress}
                 activeOpacity={0.8}
               >
                 <ThemedText
-                  style={[styles.secondaryButtonText, { color: primaryColor }]}
+                  style={[
+                    styles.secondaryButtonText,
+                    {
+                      color: articlePreTeaserTitleText,
+                      fontFamily: fonts?.primarySemiBold,
+                    },
+                  ]}
                 >
                   {paywallConfig.secondaryButtonText}
                 </ThemedText>
               </TouchableOpacity>
-
+              {/* Primary Button - Subscribe */}
+              <TouchableOpacity
+                style={[styles.primaryButton, { backgroundColor: actionColor }]}
+                onPress={handlePrimaryButtonPress}
+                activeOpacity={0.8}
+              >
+                <ThemedText
+                  style={[
+                    styles.primaryButtonText,
+                    { color: textColor, fontFamily: fonts?.primarySemiBold },
+                  ]}
+                >
+                  {paywallConfig.primaryButtonText}
+                </ThemedText>
+              </TouchableOpacity>
               {/* Back Button */}
               <TouchableOpacity
                 style={styles.backButton}
@@ -327,8 +336,8 @@ const styles = StyleSheet.create({
     right: 0,
     width: "100%",
     height: SHEET_HEIGHT + (Platform.OS === "android" ? 60 : 0),
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -372,7 +381,7 @@ const styles = StyleSheet.create({
   },
   headline: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "700",
     textAlign: "center",
     marginBottom: 8,
   },
@@ -383,7 +392,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   benefitsList: {
-    marginBottom: 32,
+    marginBottom: 16,
   },
   benefitItem: {
     flexDirection: "row",
@@ -407,7 +416,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -417,10 +426,9 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
   },
   secondaryButtonText: {
     fontSize: 18,
