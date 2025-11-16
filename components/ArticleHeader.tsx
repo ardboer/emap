@@ -38,11 +38,16 @@ export function ArticleHeader({
 }: ArticleHeaderProps) {
   const insets = useSafeAreaInsets();
 
-  const handleBack = () => {
+  const handleBack = async () => {
     if (onBack) {
       onBack();
     } else {
-      router.back();
+      const canGoBack = await router.canGoBack();
+      if (canGoBack) {
+        router.back();
+      } else {
+        router.replace("/(tabs)");
+      }
     }
   };
 

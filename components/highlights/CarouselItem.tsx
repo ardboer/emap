@@ -35,6 +35,8 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
   // Calculate responsive title font size based on screen height
   // Using clamp: min 20px, preferred 3.25% of screen height, max 32px
   const titleFontSize = Math.max(20, Math.min(screenHeight * 0.0325, 32));
+  // Line height should be slightly larger than font size (typically 1.1-1.2x)
+  const titleLineHeight = Math.max(22, Math.min(screenHeight * 0.0358, 35));
 
   // Calculate responsive badge font size based on screen height
   // Using clamp: min 10px, preferred 1.5% of screen height, max 14px
@@ -50,6 +52,7 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
     title: {
       ...staticStyles.title,
       fontSize: titleFontSize,
+      lineHeight: titleLineHeight,
     },
     recommendedBadgeText: {
       ...staticStyles.recommendedBadgeText,

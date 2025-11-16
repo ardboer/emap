@@ -87,11 +87,12 @@
       }
     },
     "fonts": {
-      "primary": "antenna-cond",
-      "secondary": "antenna-cond",
-      "primaryBold": "antenna-cond",
-      "primarySemiBold": "antenna-cond",
-      "primaryMedium": "antenna-cond"
+      "primary": "OpenSans-Regular",
+      "secondary": "Klavika-Regular-Regular",
+      "primaryBold": "OpenSans-Bold",
+      "primarySemiBold": "OpenSans-SemiBold",
+      "primaryMedium": "OpenSans-Medium",
+      "primaryItalic": "OpenSans-Italic"
     }
   },
   "branding": {
