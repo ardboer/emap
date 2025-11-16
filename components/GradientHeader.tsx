@@ -4,7 +4,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface GradientHeaderProps {
@@ -38,7 +38,10 @@ export default function GradientHeader({
       colors={[gradientStart, gradientEnd]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 0.5 }}
-      style={[styles.container, { paddingTop: insets.top }]}
+      style={[
+        styles.container,
+        { paddingTop: insets.top + (Platform.OS === "android" ? 12 : 0) },
+      ]}
     >
       <View style={styles.content}>
         {showBackButton ? (

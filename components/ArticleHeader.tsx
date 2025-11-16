@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import Animated, {
   interpolate,
   SharedValue,
@@ -100,7 +100,7 @@ export function ArticleHeader({
       <Animated.View
         style={[
           styles.backButtonContainer,
-          { marginTop: insets.top },
+          { marginTop: insets.top + (Platform.OS === "android" ? 12 : 0) },
           backButtonAnimatedStyle,
         ]}
       >
@@ -113,7 +113,7 @@ export function ArticleHeader({
       <Animated.View
         style={[
           styles.actionButtonsContainer,
-          { marginTop: insets.top },
+          { marginTop: insets.top + (Platform.OS === "android" ? 12 : 0) },
           backButtonAnimatedStyle,
         ]}
       >
