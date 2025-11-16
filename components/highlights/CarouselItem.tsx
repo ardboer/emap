@@ -32,12 +32,28 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
   const { state: audioState } = useAudio();
   const { brandConfig } = useBrandConfig();
 
+  // Calculate responsive title font size based on screen height
+  // Using clamp: min 20px, preferred 3.25% of screen height, max 32px
+  const titleFontSize = Math.max(20, Math.min(screenHeight * 0.0325, 32));
+
+  // Calculate responsive badge font size based on screen height
+  // Using clamp: min 10px, preferred 1.5% of screen height, max 14px
+  const badgeFontSize = Math.max(10, Math.min(screenHeight * 0.015, 14));
+
   const styles = {
     ...staticStyles,
     carouselItem: {
       width: screenWidth,
       height: screenHeight,
       position: "relative" as const,
+    },
+    title: {
+      ...staticStyles.title,
+      fontSize: titleFontSize,
+    },
+    recommendedBadgeText: {
+      ...staticStyles.recommendedBadgeText,
+      fontSize: badgeFontSize,
     },
   };
 
