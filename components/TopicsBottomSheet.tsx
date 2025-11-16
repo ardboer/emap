@@ -223,14 +223,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 8,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
   },
   closeButton: {
-    padding: 8,
+    padding: 4,
   },
   closeButtonText: {
     fontSize: 24,
