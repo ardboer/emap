@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginRight: 0,
   },
   iconButtonActive: {
     // Background color applied via style prop

@@ -33,6 +33,7 @@ import {
   NativeSyntheticEvent,
   StyleSheet,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { getColors } from "react-native-image-colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -753,24 +754,32 @@ export default function HighlightedScreen() {
   if (loading) {
     return (
       <ThemedView style={styles.container}>
-        <BrandLogo
-          style={[styles.brandLogo, { top: insets.top + 10 }]}
-          width={100}
-          height={35}
-        />
-        <ThemedView style={[styles.topRightIcons, { top: insets.top + 10 }]}>
-          <TouchableOpacity style={styles.iconButton} disabled>
-            <Ionicons
-              name="search"
-              size={24}
-              color={searchIconColor}
-              opacity={0.5}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} disabled>
-            <UserIcon width={24} height={24} opacity={0.5} />
-          </TouchableOpacity>
-        </ThemedView>
+        <View
+          style={{
+            top: insets.top + 10,
+            flexDirection: "row",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            position: "absolute",
+            left: 16,
+            right: 16,
+          }}
+        >
+          <BrandLogo style={[styles.brandLogo]} width={136} height={52} />
+          <ThemedView style={[styles.topRightIcons]}>
+            <TouchableOpacity style={styles.iconButton} disabled>
+              <Ionicons
+                name="search"
+                size={26}
+                color={searchIconColor}
+                opacity={0.5}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} disabled>
+              <UserIcon width={26} height={26} opacity={0.5} />
+            </TouchableOpacity>
+          </ThemedView>
+        </View>
         <SkeletonLoader variant="carousel" />
       </ThemedView>
     );
@@ -800,28 +809,38 @@ export default function HighlightedScreen() {
           showMiniPlayer={audioState.showMiniPlayer}
         />
       )}
-      <BrandLogo
-        style={[styles.brandLogo, { top: insets.top + 16 }]}
-        width={100}
-        height={32}
-      />
+      <View
+        style={{
+          top: insets.top + 10,
+          flexDirection: "row",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          position: "absolute",
+          left: 16,
+          right: 16,
+        }}
+      >
+        <BrandLogo style={[styles.brandLogo]} width={136} height={52} />
 
-      {/* Top Right Icons Container */}
-      <ThemedView style={[styles.topRightIcons, { top: insets.top + 10 }]}>
-        {/* Search Button */}
-        <TouchableOpacity style={styles.iconButton} onPress={handleSearchPress}>
-          <Ionicons name="search" size={24} color={searchIconColor} />
-        </TouchableOpacity>
+        {/* Top Right Icons Container */}
+        <ThemedView style={[styles.topRightIcons]}>
+          {/* Search Button */}
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={handleSearchPress}
+          >
+            <Ionicons name="search" size={26} color={searchIconColor} />
+          </TouchableOpacity>
 
-        {/* User Settings Button */}
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => setSettingsDrawerVisible(true)}
-        >
-          <UserIcon width={24} height={24} />
-        </TouchableOpacity>
-      </ThemedView>
-
+          {/* User Settings Button */}
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setSettingsDrawerVisible(true)}
+          >
+            <UserIcon width={26} height={26} />
+          </TouchableOpacity>
+        </ThemedView>
+      </View>
       <HighlightsFlatList
         articles={articles}
         flatListRef={flatListRef}
@@ -853,8 +872,6 @@ export default function HighlightedScreen() {
 
 const staticStyles = StyleSheet.create({
   brandLogo: {
-    position: "absolute",
-    left: 16,
     zIndex: 10,
     borderRadius: 8,
     padding: 8,
@@ -879,18 +896,15 @@ const staticStyles = StyleSheet.create({
     fontWeight: "600",
   },
   topRightIcons: {
-    position: "absolute",
-    top: 80,
-    right: 16,
     zIndex: 10,
     flexDirection: "row",
-    gap: 8,
+    gap: 16,
     backgroundColor: "transparent",
   },
   iconButton: {
     borderRadius: 20,
-    width: 40,
-    height: 40,
+    width: 26,
+    height: 26,
     justifyContent: "center",
     alignItems: "center",
   },

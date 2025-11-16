@@ -103,10 +103,7 @@ const styles = StyleSheet.create({
   iconsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 16,
     marginTop: 8,
-  },
-  iconButton: {
-    padding: 8,
   },
 });

@@ -1,5 +1,4 @@
 import { FadeInImage } from "@/components/FadeInImage";
-import { RecommendedBadge } from "@/components/highlights/RecommendedBadge";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAudio } from "@/contexts/AudioContext";
@@ -108,10 +107,6 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
             style={styles.topGradient}
             pointerEvents="none"
           />
-          <RecommendedBadge
-            isRecommended={item.isRecommended || false}
-            insets={insets}
-          />
           <LinearGradient
             colors={
               [
@@ -133,12 +128,18 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
                   styles.contentContainerWithMiniPlayer,
               ]}
             >
+              {item.isRecommended && (
+                <View style={styles.recommendedBadge}>
+                  <ThemedText style={styles.recommendedBadgeText}>
+                    RECOMMENDED FOR YOU
+                  </ThemedText>
+                </View>
+              )}
               <ThemedText
                 type="title"
                 style={[
                   styles.title,
                   { fontFamily: brandConfig?.theme.fonts.primaryBold },
-                  { paddingBottom: 16 },
                 ]}
               >
                 {item.title}
@@ -176,10 +177,6 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
             style={styles.topGradient}
             pointerEvents="none"
           />
-          <RecommendedBadge
-            isRecommended={item.isRecommended || false}
-            insets={insets}
-          />
           <LinearGradient
             colors={
               [
@@ -201,6 +198,13 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
                   styles.contentContainerWithMiniPlayer,
               ]}
             >
+              {item.isRecommended && (
+                <View style={styles.recommendedBadge}>
+                  <ThemedText style={styles.recommendedBadgeText}>
+                    RECOMMENDED FOR YOU
+                  </ThemedText>
+                </View>
+              )}
               <ThemedText
                 type="title"
                 style={[
@@ -246,10 +250,6 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
         style={styles.topGradient}
         pointerEvents="none"
       />
-      <RecommendedBadge
-        isRecommended={item.isRecommended || false}
-        insets={insets}
-      />
       <LinearGradient
         colors={
           [
@@ -269,6 +269,13 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
             audioState.showMiniPlayer && styles.contentContainerWithMiniPlayer,
           ]}
         >
+          {item.isRecommended && (
+            <View style={styles.recommendedBadge}>
+              <ThemedText style={styles.recommendedBadgeText}>
+                RECOMMENDED FOR YOU
+              </ThemedText>
+            </View>
+          )}
           <ThemedText
             type="title"
             style={[
@@ -349,10 +356,24 @@ const staticStyles = StyleSheet.create({
   },
   title: {
     color: "#FFFFFF",
-    fontSize: 22,
-    lineHeight: 26,
+    fontSize: 28,
+    lineHeight: 30,
     fontWeight: "bold",
     marginBottom: 16,
+  },
+  recommendedBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#CFF8FF",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginBottom: 32,
+  },
+  recommendedBadgeText: {
+    color: "#00334C",
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
   },
   leadText: {
     color: "#FFFFFF",
