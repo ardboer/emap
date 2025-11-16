@@ -97,7 +97,7 @@ export function ArticleHeader({
         // @ts-ignore - animatedProps typing issue with expo-linear-gradient
         animatedProps={animatedProps}
         locations={[0, 0.33, 1]}
-        style={[styles.gradientOverlay, { height: 50 + insets.top }]}
+        style={[styles.gradientOverlay, { height: 40 + insets.top }]}
         pointerEvents="none"
       />
 

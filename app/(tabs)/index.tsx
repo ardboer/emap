@@ -815,9 +815,8 @@ export default function HighlightedScreen() {
       )}
       <View
         style={{
-          top: insets.top + 10,
+          top: insets.top + 0,
           flexDirection: "row",
-          alignItems: "flex-end",
           justifyContent: "space-between",
           position: "absolute",
           left: 16,
@@ -825,19 +824,19 @@ export default function HighlightedScreen() {
         }}
       >
         <BrandLogo
-          style={[styles.brandLogo]}
+          style={[styles.brandLogo, { marginTop: 8 }]}
           width={136 * 0.8}
           height={52 * 0.8}
         />
 
         {/* Top Right Icons Container */}
-        <ThemedView style={[styles.topRightIcons]}>
+        <ThemedView style={[styles.topRightIcons, { marginTop: 16 }]}>
           {/* Search Button */}
           <TouchableOpacity
             style={styles.iconButton}
             onPress={handleSearchPress}
           >
-            <Ionicons name="search" size={26} color={searchIconColor} />
+            <Ionicons name="search" size={24} color={searchIconColor} />
           </TouchableOpacity>
 
           {/* User Settings Button */}
@@ -845,7 +844,7 @@ export default function HighlightedScreen() {
             style={styles.iconButton}
             onPress={() => setSettingsDrawerVisible(true)}
           >
-            <UserIcon width={26} height={26} />
+            <UserIcon width={24} height={24} />
           </TouchableOpacity>
         </ThemedView>
       </View>
