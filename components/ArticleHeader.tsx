@@ -8,6 +8,7 @@ import Animated, {
   interpolate,
   SharedValue,
   useAnimatedProps,
+  useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BookmarkButton from "./BookmarkButton";
@@ -51,7 +52,7 @@ export function ArticleHeader({
     }
   };
 
-  // Animate gradient colors based on scroll position
+  // iOS: Animate gradient colors based on scroll position
   const animatedProps = useAnimatedProps(() => {
     if (!scrollY) {
       return {
@@ -90,16 +91,42 @@ export function ArticleHeader({
     };
   });
 
+  // Android: Show full background once scrolled past the image
+  const animatedStyle = useAnimatedStyle(() => {
+    if (!scrollY) {
+      return { opacity: 0 };
+    }
+
+    // Show full background once scrolled past the header
+    const opacity = scrollY.value >= headerHeight ? 1 : 0;
+
+    return { opacity };
+  });
+
   return (
     <>
-      {/* Linear Gradient Overlay Background with animated colors */}
-      <AnimatedLinearGradient
-        // @ts-ignore - animatedProps typing issue with expo-linear-gradient
-        animatedProps={animatedProps}
-        locations={[0, 0.33, 1]}
-        style={[styles.gradientOverlay, { height: 40 + insets.top }]}
-        pointerEvents="none"
-      />
+      {/* Linear Gradient Overlay Background - Platform specific implementation */}
+      {Platform.OS === "ios" ? (
+        <AnimatedLinearGradient
+          // @ts-ignore - animatedProps typing issue with expo-linear-gradient
+          animatedProps={animatedProps}
+          locations={[0, 0.33, 1]}
+          style={[styles.gradientOverlay, { height: 40 + insets.top }]}
+          pointerEvents="none"
+        />
+      ) : (
+        <Animated.View
+          style={[
+            styles.gradientOverlay,
+            {
+              height: 50 + insets.top,
+              backgroundColor: "rgba(1, 22, 32, 1)",
+            },
+            animatedStyle,
+          ]}
+          pointerEvents="none"
+        />
+      )}
 
       {/* Back Button */}
       <Animated.View
