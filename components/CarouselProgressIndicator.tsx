@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   progressBarContainer: {
-    height: 3,
+    height: 2,
     borderRadius: 0,
     overflow: "hidden",
     position: "relative",
