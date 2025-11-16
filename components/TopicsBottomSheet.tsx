@@ -148,14 +148,11 @@ export default function TopicsBottomSheet({
         <View style={styles.bottomSheetContainer}>
           <ThemedView style={[styles.bottomSheet, { backgroundColor }]}>
             {/* Header */}
-            <View style={styles.header}>
-              <ThemedText
-                style={[styles.headerTitle, { fontFamily, color: titleColor }]}
-              >
-                All Topics
-              </ThemedText>
+            <View style={[styles.header, { justifyContent: "flex-end" }]}>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Text style={[styles.closeButtonText, { color: titleColor }]}>
+                <Text
+                  style={[styles.closeButtonText, { color: brandPrimaryColor }]}
+                >
                   ✕
                 </Text>
               </TouchableOpacity>
@@ -178,7 +175,6 @@ export default function TopicsBottomSheet({
                 autoCorrect={false}
               />
             </View>
-
             {/* Topics Grid */}
             <FlatList
               data={filteredTopics}
@@ -217,8 +213,8 @@ const styles = StyleSheet.create({
   },
   bottomSheet: {
     flex: 1,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     paddingTop: 16,
     paddingBottom: 0,
   },
@@ -243,7 +239,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     marginHorizontal: 20,
     marginBottom: 16,
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 8,
     paddingHorizontal: 12,
   },

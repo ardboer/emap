@@ -1,28 +1,7 @@
-import { FadeInImage } from "@/components/FadeInImage";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import {
-  Dimensions,
-  Modal,
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  clamp,
-  runOnJS,
-  useAnimatedStyle,
-  useDerivedValue,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
+import ImageView from "react-native-image-viewing";
 import { ThemedText } from "./ThemedText";
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface ImageViewerProps {
   visible: boolean;
@@ -37,194 +16,40 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
   caption,
   onClose,
 }) => {
-  const scale = useSharedValue(1);
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const savedScale = useSharedValue(1);
-  const insets = useSafeAreaInsets();
-  const savedTranslateX = useSharedValue(0);
-  const savedTranslateY = useSharedValue(0);
-
-  const resetTransform = () => {
-    "worklet";
-    scale.value = withSpring(1);
-    translateX.value = withSpring(0);
-    translateY.value = withSpring(0);
-    savedScale.value = 1;
-    savedTranslateX.value = 0;
-    savedTranslateY.value = 0;
-  };
-
-  // Derive max translation bounds to avoid recalculating on every frame
-  // Ensure bounds are always positive, even when scale < 1
-  const maxTranslateX = useDerivedValue(() => {
-    return Math.max(0, (screenWidth * (savedScale.value - 1)) / 2);
-  });
-
-  const maxTranslateY = useDerivedValue(() => {
-    return Math.max(0, (screenHeight * (savedScale.value - 1)) / 2);
-  });
-
-  const pinchGesture = Gesture.Pinch()
-    .onUpdate((event) => {
-      "worklet";
-      const newScale = savedScale.value * event.scale;
-      scale.value = clamp(newScale, 0.5, 4);
-    })
-    .onEnd(() => {
-      "worklet";
-      savedScale.value = scale.value;
-
-      // Auto-reset if zoomed out too much
-      if (scale.value < 1) {
-        resetTransform();
-      }
-    });
-
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      "worklet";
-      // Only allow panning when zoomed in
-      if (savedScale.value > 1) {
-        // Apply damping factor to reduce sensitivity (0.6 = 60% of original movement)
-        const dampingFactor = 0.6;
-        translateX.value = clamp(
-          savedTranslateX.value + event.translationX * dampingFactor,
-          -maxTranslateX.value,
-          maxTranslateX.value
-        );
-        translateY.value = clamp(
-          savedTranslateY.value + event.translationY * dampingFactor,
-          -maxTranslateY.value,
-          maxTranslateY.value
-        );
-      }
-    })
-    .onEnd(() => {
-      "worklet";
-      savedTranslateX.value = translateX.value;
-      savedTranslateY.value = translateY.value;
-    });
-
-  const doubleTapGesture = Gesture.Tap()
-    .numberOfTaps(2)
-    .onEnd(() => {
-      if (scale.value > 1) {
-        runOnJS(resetTransform)();
-      } else {
-        scale.value = withSpring(2);
-        savedScale.value = 2;
-      }
-    });
-
-  const composedGesture = Gesture.Race(
-    doubleTapGesture,
-    Gesture.Simultaneous(pinchGesture, panGesture)
-  );
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-    ],
-  }));
-
-  const handleClose = () => {
-    resetTransform();
-    onClose();
-  };
-
-  if (!visible) return null;
+  const images = [
+    {
+      uri: imageUri,
+    },
+  ];
 
   return (
-    <Modal
+    <ImageView
+      images={images}
+      imageIndex={0}
       visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleClose}
-      statusBarTranslucent
-    >
-      <StatusBar hidden />
-      <View style={styles.container}>
-        <View
-          style={[
-            styles.safeArea,
-            { marginTop: insets.top, marginRight: insets.right },
-          ]}
-        >
-          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-            <Ionicons name="close" size={30} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        <GestureDetector gesture={composedGesture}>
-          <Animated.View style={[styles.imageContainer, animatedStyle]}>
-            <FadeInImage
-              source={{ uri: imageUri }}
-              style={styles.image}
-              contentFit="contain"
-              onError={(e) => console.log("Error loading fullscreen image:", e)}
-            />
-          </Animated.View>
-        </GestureDetector>
-
-        {caption && (
-          <SafeAreaView style={styles.captionContainer}>
-            <View style={styles.captionBackground}>
-              <ThemedText style={styles.caption}>{caption}</ThemedText>
-            </View>
-          </SafeAreaView>
-        )}
-      </View>
-    </Modal>
+      onRequestClose={onClose}
+      FooterComponent={
+        caption
+          ? () => (
+              <View style={styles.captionContainer}>
+                <View style={styles.captionBackground}>
+                  <ThemedText style={styles.caption}>{caption}</ThemedText>
+                </View>
+              </View>
+            )
+          : undefined
+      }
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.95)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  safeArea: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1,
-  },
-  closeButton: {
-    position: "absolute",
-    top: 10,
-    right: 20,
-    padding: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    borderRadius: 25,
-    zIndex: 2,
-  },
-  imageContainer: {
-    width: screenWidth,
-    height: screenHeight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  image: {
-    width: screenWidth,
-    height: screenHeight * 0.8,
-  },
   captionContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1,
+    padding: 16,
   },
   captionBackground: {
     backgroundColor: "rgba(0, 0, 0, 0.7)",
     padding: 16,
-    margin: 16,
     borderRadius: 8,
   },
   caption: {
