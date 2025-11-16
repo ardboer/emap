@@ -81,7 +81,7 @@ export default function BookmarkButton({
 
 const styles = StyleSheet.create({
   bookmarkButton: {
-    padding: 8,
+    padding: 0,
     justifyContent: "center",
     alignItems: "center",
   },

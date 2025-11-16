@@ -1,8 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { Alert, StyleSheet, TouchableOpacity, ViewStyle } from "react-native";
 import Share from "react-native-share";
+import { ShareIcon } from "./icons/ShareIcon";
 
 interface ShareButtonProps {
   title: string;
@@ -85,14 +85,14 @@ export default function ShareButton({
       accessibilityHint="Opens share menu to share this article"
       accessibilityRole="button"
     >
-      <Ionicons name="share-outline" size={iconSize} color={iconColor} />
+      <ShareIcon size={iconSize} color={iconColor} />
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   shareButton: {
-    padding: 8,
+    padding: 0,
     justifyContent: "center",
     alignItems: "center",
   },

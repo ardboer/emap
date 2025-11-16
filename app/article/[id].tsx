@@ -1,11 +1,10 @@
 import { AccessCheckDebugInfo } from "@/components/AccessCheckDebugInfo";
 import { ArticleDetailSkeleton } from "@/components/ArticleDetailSkeleton";
-import BookmarkButton from "@/components/BookmarkButton";
+import { ArticleHeader } from "@/components/ArticleHeader";
 import { DisplayAd } from "@/components/DisplayAd";
 import { FadeInImage } from "@/components/FadeInImage";
 import { PaywallBottomSheet } from "@/components/PaywallBottomSheet";
 import { RichContentRenderer } from "@/components/RichContentRenderer";
-import ShareButton from "@/components/ShareButton";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TrendingArticles from "@/components/TrendingArticles";
@@ -24,7 +23,7 @@ import { formatArticleDetailDate } from "@/services/api/utils/formatters";
 import { displayAdManager } from "@/services/displayAdManager";
 import { trackArticleView } from "@/services/miso";
 import { Article, StructuredContentNode } from "@/types";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -43,10 +42,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const HEADER_HEIGHT = screenHeight * 0.4;
@@ -453,50 +449,96 @@ function ArticleScreenContent() {
   // Show loading state only if we don't have preview data
   if (loading && !hasPreviewData) {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: contentBackground }]}
-      >
+      <View style={styles.container}>
+        {/* Header with consistent navigation */}
+        <View style={[styles.headerContainer, { height: HEADER_HEIGHT }]}>
+          <View
+            style={[
+              styles.headerImage,
+              {
+                backgroundColor:
+                  colorScheme === "dark"
+                    ? "rgba(255, 255, 255, 0.08)"
+                    : "rgba(0, 0, 0, 0.08)",
+              },
+            ]}
+          />
+        </View>
+        <ArticleHeader
+          backButtonAnimatedStyle={backButtonAnimatedStyle}
+          iconColor={styles.colors.contentBackButtonText}
+          scrollY={scrollY}
+          headerHeight={HEADER_HEIGHT}
+        />
         <ThemedView
           style={[styles.centerContent, { backgroundColor: contentBackground }]}
         >
           <ActivityIndicator size="large" />
           <ThemedText style={styles.loadingText}>Loading article...</ThemedText>
         </ThemedView>
-      </SafeAreaView>
+      </View>
     );
   }
 
   // Only show error if we have an error AND no preview data to show
   if (error && !hasPreviewData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        {/* Header with consistent navigation */}
+        <View style={[styles.headerContainer, { height: HEADER_HEIGHT }]}>
+          <View
+            style={[
+              styles.headerImage,
+              {
+                backgroundColor:
+                  colorScheme === "dark"
+                    ? "rgba(255, 255, 255, 0.08)"
+                    : "rgba(0, 0, 0, 0.08)",
+              },
+            ]}
+          />
+        </View>
+        <ArticleHeader
+          backButtonAnimatedStyle={backButtonAnimatedStyle}
+          iconColor={styles.colors.contentBackButtonText}
+          scrollY={scrollY}
+          headerHeight={HEADER_HEIGHT}
+        />
         <ThemedView style={styles.errorContainer}>
           <ThemedText type="title">{error}</ThemedText>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ThemedText style={styles.backButtonText}>Go Back</ThemedText>
-          </TouchableOpacity>
         </ThemedView>
-      </SafeAreaView>
+      </View>
     );
   }
 
   // Show error if article failed to load and we're done loading
   if (!loading && !article && !hasPreviewData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        {/* Header with consistent navigation */}
+        <View style={[styles.headerContainer, { height: HEADER_HEIGHT }]}>
+          <View
+            style={[
+              styles.headerImage,
+              {
+                backgroundColor:
+                  colorScheme === "dark"
+                    ? "rgba(255, 255, 255, 0.08)"
+                    : "rgba(0, 0, 0, 0.08)",
+              },
+            ]}
+          />
+        </View>
+        <ArticleHeader
+          backButtonAnimatedStyle={backButtonAnimatedStyle}
+          iconColor={styles.colors.contentBackButtonText}
+          scrollY={scrollY}
+          headerHeight={HEADER_HEIGHT}
+        />
         <ThemedView style={styles.errorContainer}>
           <ThemedText type="title">Article not found</ThemedText>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ThemedText style={styles.backButtonText}>Go Back</ThemedText>
-          </TouchableOpacity>
         </ThemedView>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -525,64 +567,39 @@ function ArticleScreenContent() {
           )}
         </Animated.View>
 
-        {/* Back Button */}
-        <Animated.View style={[styles.backButtonTop, backButtonAnimatedStyle]}>
-          <TouchableOpacity
-            style={[styles.backButtonContainer, { marginTop: insets.top }]}
-            onPress={() => router.back()}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={10}
-              color={styles.colors.contentBackButtonText}
-            />
-            <Text style={styles.backButtonText}>BACK</Text>
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Action Buttons (Share & Bookmark) */}
-        <Animated.View style={[styles.shareButtonTop, backButtonAnimatedStyle]}>
-          <View
-            style={[styles.shareButtonContainer, { marginTop: insets.top }]}
-          >
-            {article && (
-              <>
-                <BookmarkButton
-                  article={article}
-                  iconColor={styles.colors.contentBackButtonText}
-                  iconSize={24}
-                />
-                <ShareButton
-                  title={article.title}
-                  message={
-                    extractTextFromStructured(article.leadText) ||
-                    article.subtitle ||
-                    ""
-                  }
-                  url={(() => {
-                    // Use article.link from API, or construct fallback URL
-                    const fallbackUrl = brandConfig?.domain
-                      ? `${brandConfig.domain}${
-                          brandConfig.domain.endsWith("/") ? "" : "/"
-                        }article/${id}`
-                      : `article/${id}`;
-                    const shareUrl = article.link || fallbackUrl;
-                    console.log("[ArticleScreen] Share URL:", {
-                      articleLink: article.link,
-                      brandDomain: brandConfig?.domain,
-                      articleId: id,
-                      fallbackUrl,
-                      finalUrl: shareUrl,
-                    });
-                    return shareUrl;
-                  })()}
-                  iconColor={styles.colors.contentBackButtonText}
-                  iconSize={20}
-                />
-              </>
-            )}
-          </View>
-        </Animated.View>
+        {/* Consistent Article Header */}
+        <ArticleHeader
+          article={article}
+          backButtonAnimatedStyle={backButtonAnimatedStyle}
+          iconColor={styles.colors.contentBackButtonText}
+          scrollY={scrollY}
+          headerHeight={HEADER_HEIGHT}
+          shareUrl={(() => {
+            if (!article) return undefined;
+            // Use article.link from API, or construct fallback URL
+            const fallbackUrl = brandConfig?.domain
+              ? `${brandConfig.domain}${
+                  brandConfig.domain.endsWith("/") ? "" : "/"
+                }article/${id}`
+              : `article/${id}`;
+            const shareUrl = article.link || fallbackUrl;
+            console.log("[ArticleScreen] Share URL:", {
+              articleLink: article.link,
+              brandDomain: brandConfig?.domain,
+              articleId: id,
+              fallbackUrl,
+              finalUrl: shareUrl,
+            });
+            return shareUrl;
+          })()}
+          shareMessage={
+            article
+              ? extractTextFromStructured(article.leadText) ||
+                article.subtitle ||
+                ""
+              : ""
+          }
+        />
 
         {/* Access Check Debug Info - Fixed position below header */}
         <View
