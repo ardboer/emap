@@ -126,6 +126,7 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
                 styles.contentContainer,
                 audioState.showMiniPlayer &&
                   styles.contentContainerWithMiniPlayer,
+                { paddingBottom: insets.bottom + 64 },
               ]}
             >
               {item.isRecommended && (

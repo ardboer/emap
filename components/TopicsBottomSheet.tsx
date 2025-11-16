@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 16,
-    paddingBottom: 32,
+    paddingBottom: 0,
   },
   header: {
     flexDirection: "row",

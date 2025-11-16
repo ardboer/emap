@@ -40,7 +40,7 @@ export default function GradientHeader({
       end={{ x: 0, y: 0.5 }}
       style={[
         styles.container,
-        { paddingTop: insets.top + (Platform.OS === "android" ? 12 : 0) },
+        { paddingTop: insets.top + (Platform.OS === "android" ? 12 : 6) },
       ]}
     >
       <View style={styles.content}>
