@@ -765,7 +765,11 @@ export default function HighlightedScreen() {
             right: 16,
           }}
         >
-          <BrandLogo style={[styles.brandLogo]} width={136} height={52} />
+          <BrandLogo
+            style={[styles.brandLogo]}
+            width={136 * 0.8}
+            height={52 * 0.8}
+          />
           <ThemedView style={[styles.topRightIcons]}>
             <TouchableOpacity style={styles.iconButton} disabled>
               <Ionicons
@@ -820,7 +824,11 @@ export default function HighlightedScreen() {
           right: 16,
         }}
       >
-        <BrandLogo style={[styles.brandLogo]} width={136} height={52} />
+        <BrandLogo
+          style={[styles.brandLogo]}
+          width={136 * 0.8}
+          height={52 * 0.8}
+        />
 
         {/* Top Right Icons Container */}
         <ThemedView style={[styles.topRightIcons]}>

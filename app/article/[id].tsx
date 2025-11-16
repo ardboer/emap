@@ -266,7 +266,7 @@ function ArticleScreenContent() {
   /**
    * Handle paywall close - always navigate to home tab
    */
-  const handleClosePaywall = () => {
+  const handleClosePaywall = async () => {
     console.log("ℹ️ User closed paywall, navigating to home");
 
     analyticsService.logEvent("article_paywall_dismissed", {
@@ -276,7 +276,12 @@ function ArticleScreenContent() {
 
     // Always navigate to home tab - works in all scenarios
     // Whether app was running or opened from closed state
-    router.replace("/(tabs)");
+    const canGoBack = await router.canGoBack();
+    if (canGoBack) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
   };
 
   /**

@@ -311,7 +311,7 @@ function RootLayoutContent() {
                     />
                     <Stack.Screen name="+not-found" />
                   </Stack>
-                  <StatusBar style="auto" />
+                  <StatusBar style="light" />
                   {showOnboarding && (
                     <OnboardingContainer
                       onComplete={handleOnboardingComplete}

@@ -356,8 +356,8 @@ const staticStyles = StyleSheet.create({
   },
   title: {
     color: "#FFFFFF",
-    fontSize: 28,
-    lineHeight: 30,
+    fontSize: 26,
+    lineHeight: 28,
     fontWeight: "bold",
     marginBottom: 16,
   },

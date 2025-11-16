@@ -9,7 +9,11 @@
     "scheme": "nt",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "statusBar": {
+      "style": "dark"
+    },
     "ios": {
+      "statusBarStyle": "dark",
       "supportsTablet": true,
       "bundleIdentifier": "metropolis.net.nursingtimes",
       "config": {
