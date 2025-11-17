@@ -34,13 +34,12 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
 
   // Calculate responsive title font size based on screen height
   // Using clamp: min 20px, preferred 3.25% of screen height, max 32px
-  const titleFontSize = Math.max(20, Math.min(screenHeight * 0.0325, 32));
+  const titleFontSize = Math.max(22, Math.min(screenHeight * 0.0325, 26));
   // Line height should be slightly larger than font size (typically 1.1-1.2x)
-  const titleLineHeight = Math.max(22, Math.min(screenHeight * 0.0358, 35));
-
+  const titleLineHeight = Math.max(24, Math.min(screenHeight * 0.0358, 29));
   // Calculate responsive badge font size based on screen height
   // Using clamp: min 10px, preferred 1.5% of screen height, max 14px
-  const badgeFontSize = Math.max(10, Math.min(screenHeight * 0.015, 14));
+  const badgeFontSize = Math.max(10, Math.min(screenHeight * 0.015, 12));
 
   const styles = {
     ...staticStyles,
@@ -287,6 +286,7 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
           style={[
             styles.contentContainer,
             audioState.showMiniPlayer && styles.contentContainerWithMiniPlayer,
+            { paddingBottom: 64 + insets.bottom },
           ]}
         >
           {item.isRecommended && (
@@ -310,7 +310,11 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
               numberOfLines={3}
               style={[
                 styles.leadText,
-                { fontFamily: brandConfig?.theme.fonts.primaryMedium },
+                {
+                  fontFamily: brandConfig?.theme.fonts.primaryMedium,
+                  paddingBottom: 0,
+                  marginBottom: 16,
+                },
               ]}
             >
               {item.leadText}
@@ -369,7 +373,6 @@ const staticStyles = StyleSheet.create({
   contentContainer: {
     paddingTop: 48,
     paddingHorizontal: 16,
-    paddingBottom: 100,
   },
   contentContainerWithMiniPlayer: {
     paddingBottom: 160,
@@ -384,8 +387,8 @@ const staticStyles = StyleSheet.create({
   recommendedBadge: {
     alignSelf: "flex-start",
     backgroundColor: "#CFF8FF",
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 6,
     borderRadius: 16,
     marginBottom: 16,
   },
@@ -397,9 +400,8 @@ const staticStyles = StyleSheet.create({
   },
   leadText: {
     color: "#FFFFFF",
-    fontSize: 18,
-    lineHeight: 25,
+    fontSize: 16,
+    lineHeight: 23,
     fontWeight: "600",
-    marginBottom: 16,
   },
 });

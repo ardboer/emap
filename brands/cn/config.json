@@ -15,75 +15,96 @@
     "colors": {
       "light": {
         "primary": "#FFDD00",
-        "background": "#fff",
-        "text": "#11181C",
-        "icon": "#687076",
-        "tabIconDefault": "#687076",
+        "background": "#FFFFFF",
+        "text": "#1A1A1A",
+        "icon": "#6B6B6B",
+        "tabIconDefault": "#6B6B6B",
         "tabIconSelected": "#FFDD00",
-        "tabBarBackground": "#ffffff",
+        "tabBarBackground": "#FFFFFF",
+
         "progressIndicator": "#FFDD00",
-        "progressIndicatorBackground": "#1a1a1a",
-        "progressIndicatorFill": "#FFDD00",
-        "overlayGradientStart": "#1a1a1a",
-        "overlayGradientEnd": "#1a1a1a",
-        "headerBackground": "#ffffff",
-        "searchIcon": "#FFDD00",
-        "newsHeaderGradientStart": "#808080",
-        "newsHeaderGradientEnd": "#808080",
-        "topicsBackground": "#808080",
+        "progressIndicatorBackground": "#4A3F00",
+        "progressIndicatorFill": "#FFE94D",
+
+        "overlayGradientStart": "#FFF7CC",
+        "overlayGradientEnd": "#FFF1A1",
+
+        "headerBackground": "#FFFFFF",
+        "searchIcon": "#FFF3A6",
+
+        "newsHeaderGradientStart": "#4A3F00",
+        "newsHeaderGradientEnd": "#4A3F00",
+
+        "topicsBackground": "#4A3F00",
         "topicsActiveTab": "#FFFFFF",
-        "topicsActiveText": "#1a1a1a",
-        "topicsInactiveText": "#FFDD00",
+        "topicsActiveText": "#4A3F00",
+        "topicsInactiveText": "#FFE97F",
+
         "contentBackground": "#FFFFFF",
-        "contentTitleText": "#1a1a1a",
-        "contentBodyText": "#11181C",
-        "contentMetaText": "#1a1a1a",
-        "contentBackButtonBg": "#505050",
-        "contentBackButtonText": "#FFDD00",
-        "highlightBoxBg": "#FFF9E6",
-        "highlightBoxText": "#11181C",
-        "highlightBoxBorder": "#FFDD00",
+        "contentTitleText": "#4A3F00",
+        "contentBodyText": "#1A1A1A",
+        "contentMetaText": "#4A3F00",
+
+        "contentBackButtonBg": "#4A3F00",
+        "contentBackButtonText": "#FFE97F",
+
+        "highlightBoxBg": "#FFF7CC",
+        "highlightBoxText": "#1A1A1A",
+        "highlightBoxBorder": "#FFE94D",
+
         "articleListBackground": "#FFFFFF",
-        "articleTeaserTitleText": "#1a1a1a",
-        "linkColor": "#FF0000",
-        "recommendedBadgeBg": "rgba(255, 221, 0, 0.9)",
-        "actionColor": "#FF8F05CC"
+        "articlePreTeaserTitleText": "#4A3F00",
+        "articleTeaserTitleText": "#1A1A1A",
+
+        "linkColor": "#4A3F00",
+        "actionColor": "#FFB700CC"
       },
+
       "dark": {
         "primary": "#FFDD00",
-        "background": "#151718",
-        "text": "#ECEDEE",
-        "icon": "#9BA1A6",
-        "tabIconDefault": "#9BA1A6",
-        "tabIconSelected": "#FFDD00",
-        "tabBarBackground": "#1a1a1a",
+        "background": "#1A1A1A",
+        "text": "#F2F2F2",
+        "icon": "#A0A0A0",
+        "tabIconDefault": "#A0A0A0",
+        "tabIconSelected": "#FFEE73",
+        "tabBarBackground": "#23200A",
+
         "progressIndicator": "#FFDD00",
-        "progressIndicatorBackground": "#1a1a1a",
-        "progressIndicatorFill": "#FFDD00",
-        "overlayGradientStart": "#1a1a1a",
-        "overlayGradientEnd": "#1a1a1a",
+        "progressIndicatorBackground": "#4A3F00",
+        "progressIndicatorFill": "#FFE94D",
+
+        "overlayGradientStart": "#2D2905",
+        "overlayGradientEnd": "#1F1B03",
+
         "headerBackground": "#000000",
-        "searchIcon": "#FFDD00",
-        "newsHeaderGradientStart": "#1a1a1a",
-        "newsHeaderGradientEnd": "#000000",
-        "topicsBackground": "#1a1a1a",
-        "topicsActiveTab": "#000000",
-        "topicsActiveText": "#FFDD00",
-        "topicsInactiveText": "#FFDD00",
-        "contentBackground": "#1a1a1a",
+        "searchIcon": "#FFF3A6",
+
+        "newsHeaderGradientStart": "#4A3F00",
+        "newsHeaderGradientEnd": "#1F1B03",
+
+        "topicsBackground": "#4A3F00",
+        "topicsActiveTab": "#1F1B03",
+        "topicsActiveText": "#FFFFFF",
+        "topicsInactiveText": "#FFE97F",
+
+        "contentBackground": "#1F1B03",
         "contentTitleText": "#FFFFFF",
         "contentBodyText": "#FFFFFF",
-        "contentMetaText": "#FFDD00",
-        "contentBackButtonBg": "#1a1a1a",
-        "contentBackButtonText": "#FFDD00",
-        "highlightBoxBg": "#333333",
+        "contentMetaText": "#FFE577",
+
+        "contentBackButtonBg": "#4A3F00",
+        "contentBackButtonText": "#FFE97F",
+
+        "highlightBoxBg": "#4A3F00",
         "highlightBoxText": "#FFFFFF",
-        "highlightBoxBorder": "#FFDD00",
-        "articleListBackground": "#1a1a1a",
+        "highlightBoxBorder": "#FFE94D",
+
+        "articleListBackground": "#1F1B03",
+        "articlePreTeaserTitleText": "#FFE577",
         "articleTeaserTitleText": "#FFFFFF",
-        "linkColor": "#FF0000",
-        "recommendedBadgeBg": "rgba(255, 221, 0, 0.9)",
-        "actionColor": "#CC7204CC"
+
+        "linkColor": "#FFDD00",
+        "actionColor": "#FFB700CC"
       }
     },
     "fonts": {
