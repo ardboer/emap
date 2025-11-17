@@ -6021,6 +6021,86 @@
             "BROWSABLE",
             "DEFAULT"
           ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/auth/callback"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/auth/callback"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "www.nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/article"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "nursingtimes.net",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },

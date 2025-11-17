@@ -145,7 +145,12 @@ export default function TopicsBottomSheet({
           activeOpacity={1}
           onPress={onClose}
         />
-        <View style={styles.bottomSheetContainer}>
+        <View
+          style={[
+            styles.bottomSheetContainer,
+            { width: "100%", maxWidth: brandConfig?.layout?.maxContentWidth },
+          ]}
+        >
           <ThemedView style={[styles.bottomSheet, { backgroundColor }]}>
             {/* Header */}
             <View style={[styles.header, { justifyContent: "flex-end" }]}>
@@ -203,6 +208,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: "flex-end",
+    alignItems: "center",
   },
   backdrop: {
     flex: 1,
@@ -210,6 +216,7 @@ const styles = StyleSheet.create({
   },
   bottomSheetContainer: {
     height: "80%",
+    flex: 1,
   },
   bottomSheet: {
     flex: 1,

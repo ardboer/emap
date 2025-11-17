@@ -641,8 +641,14 @@ function ArticleScreenContent() {
         {/* Scrollable Content */}
         <Animated.ScrollView
           ref={scrollViewRef}
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          style={[styles.scrollView]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              // justifyContent: "center",
+              alignItems: "center",
+            },
+          ]}
           showsVerticalScrollIndicator={false}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
@@ -653,7 +659,15 @@ function ArticleScreenContent() {
           <View style={styles.headerSpacer} />
 
           {/* Article Content */}
-          <View style={[styles.contentContainer, { paddingBottom: 40 }]}>
+          <View
+            style={[
+              styles.contentContainer,
+              {
+                paddingBottom: 40,
+                maxWidth: brandConfig?.layout?.maxContentWidth,
+              },
+            ]}
+          >
             {/* Show preview data with skeleton while loading */}
             {loading && hasPreviewData && (
               <>
