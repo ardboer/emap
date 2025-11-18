@@ -50,7 +50,7 @@ export default function GradientHeader({
             onPress={onBackPress}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={24} color={searchIconColor} />
+            <Ionicons name="chevron-back" size={24} color={searchIconColor} />
           </TouchableOpacity>
         ) : showLogo ? (
           <BrandLogo
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     // Logo styling handled by BrandLogo component
   },
   backButton: {
-    padding: 8,
+    padding: 0,
   },
   iconsContainer: {
     flexDirection: "row",

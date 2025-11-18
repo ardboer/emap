@@ -30,7 +30,11 @@ export default function WebViewFallback() {
   console.log("🌐 WebView Fallback - URL:", url);
 
   const handleBack = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.push("/");
+    }
   };
 
   const handleSearchPress = () => {
