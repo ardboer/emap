@@ -27,7 +27,6 @@ import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   Text,
   TouchableOpacity,
@@ -499,40 +498,6 @@ function ArticleScreenContent() {
     })
     .runOnJS(true);
 
-  // Show loading state only if we don't have preview data
-  if (loading && !hasPreviewData) {
-    return (
-      <View style={styles.container}>
-        {/* Header with consistent navigation */}
-        <View style={[styles.headerContainer, { height: HEADER_HEIGHT }]}>
-          <View
-            style={[
-              styles.headerImage,
-              {
-                backgroundColor:
-                  colorScheme === "dark"
-                    ? "rgba(255, 255, 255, 0.08)"
-                    : "rgba(0, 0, 0, 0.08)",
-              },
-            ]}
-          />
-        </View>
-        <ArticleHeader
-          backButtonAnimatedStyle={backButtonAnimatedStyle}
-          iconColor={styles.colors.contentBackButtonText}
-          scrollY={scrollY}
-          headerHeight={HEADER_HEIGHT}
-        />
-        <ThemedView
-          style={[styles.centerContent, { backgroundColor: contentBackground }]}
-        >
-          <ActivityIndicator size="large" />
-          <ThemedText style={styles.loadingText}>Loading article...</ThemedText>
-        </ThemedView>
-      </View>
-    );
-  }
-
   // Only show error if we have an error AND no preview data to show
   if (error && !hasPreviewData) {
     return (
@@ -717,7 +682,7 @@ function ArticleScreenContent() {
             ]}
           >
             {/* Show preview data with skeleton while loading */}
-            {loading && hasPreviewData && (
+            {loading && (
               <>
                 {/* Preview metadata */}
                 <View style={styles.metaContainer}>
@@ -751,10 +716,10 @@ function ArticleScreenContent() {
                 </Text>
 
                 {/* Skeleton for rest of content */}
+
                 <ArticleDetailSkeleton />
               </>
             )}
-
             {/* Show full article content when loaded */}
             {!loading && article && (
               <>

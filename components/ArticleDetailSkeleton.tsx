@@ -47,7 +47,7 @@ export function ArticleDetailSkeleton() {
       : "rgba(255, 255, 255, 0.12)";
 
   return (
-    <View style={styles.container}>
+    <View style={{ ...styles.container, width: screenWidth - 32 }}>
       {/* Subtitle skeleton (optional, 1 line) */}
       <View
         style={[
