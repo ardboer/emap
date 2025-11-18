@@ -74,6 +74,7 @@ function ArticleScreenContent() {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [resolvedArticleId, setResolvedArticleId] = useState<string>("");
 
   // Check if we have preview data to show immediately
   const hasPreviewData = !!previewTitle;
@@ -85,7 +86,7 @@ function ArticleScreenContent() {
   const insets = useSafeAreaInsets();
   const contentBackground = useThemeColor({}, "contentBackground");
 
-  // Access control for paywall
+  // Access control for paywall - use resolved article ID, not the slug
   const {
     isAllowed,
     shouldShowPaywall,
@@ -93,7 +94,7 @@ function ArticleScreenContent() {
     isChecking: isCheckingAccess,
     error: accessError,
     response: accessResponse,
-  } = useArticleAccess(id || "");
+  } = useArticleAccess(resolvedArticleId);
   const [paywallVisible, setPaywallVisible] = useState(false);
   const [showAuthorBio, setShowAuthorBio] = useState(false);
 
@@ -165,6 +166,8 @@ function ArticleScreenContent() {
             const result = await getPostBySlug(id);
             articleId = result.id.toString();
             console.log("🔗 ✅ Resolved slug to article ID:", articleId);
+            // Set the resolved article ID for access check
+            setResolvedArticleId(articleId);
           } catch (slugError) {
             console.error("❌ Failed to resolve slug:", slugError);
             // If slug resolution fails and we have a fallback URL, redirect to webview
@@ -178,6 +181,9 @@ function ArticleScreenContent() {
             }
             throw new Error("Failed to resolve article slug");
           }
+        } else {
+          // If it's already a numeric ID, set it immediately
+          setResolvedArticleId(articleId);
         }
 
         console.log("📰 Loading article with ID:", articleId);
