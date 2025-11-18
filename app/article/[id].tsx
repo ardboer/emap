@@ -703,17 +703,19 @@ function ArticleScreenContent() {
                 </View>
 
                 {/* Preview title */}
-                <Text
-                  style={[
-                    styles.title,
-                    {
-                      color: Colors[colorScheme].contentTitleText,
-                      fontFamily: brandConfig?.theme.fonts.primaryBold,
-                    },
-                  ]}
-                >
-                  {displayTitle}
-                </Text>
+                {displayTitle && (
+                  <Text
+                    style={[
+                      styles.title,
+                      {
+                        color: Colors[colorScheme].contentTitleText,
+                        fontFamily: brandConfig?.theme.fonts.primaryBold,
+                      },
+                    ]}
+                  >
+                    {displayTitle}
+                  </Text>
+                )}
 
                 {/* Skeleton for rest of content */}
 
