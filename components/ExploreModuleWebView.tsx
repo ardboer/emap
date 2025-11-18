@@ -56,7 +56,7 @@ export const ExploreModuleWebView: React.FC<ExploreModuleWebViewProps> = ({
 
   // Construct URL with parameters
   // Format: {baseUrl}/explore-module/?hash={hash}&post_id={articleId}&user_id={userId}
-  const url = `${baseUrl}/explore-module/?hash=${hash}&post_id=${articleId}${
+  const url = `${baseUrl}/mobile-app-explore-questions/?hash=${hash}&post_id=${articleId}${
     userId ? `&user_id=${userId}` : ""
   }`;
 

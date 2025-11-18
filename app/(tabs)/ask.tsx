@@ -65,7 +65,7 @@ export default function AskScreen() {
   const webViewUrl = useMemo(() => {
     if (!brandConfig) return null;
 
-    let url = `${brandConfig.apiConfig.baseUrl}/mobile-app-ai-search/?hash=${brandConfig.apiConfig.hash}`;
+    let url = `${brandConfig.apiConfig.baseUrl}/mobile-app-ask-search/?hash=${brandConfig.apiConfig.hash}`;
 
     // Add user_id if available
     if (userId) {

@@ -1,12 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { brandManager } from "@/config/BrandManager";
-import { getPostBySlug } from "@/services/api";
 import { completeAuthentication, parseTokensFromUrl } from "@/services/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Linking, StyleSheet } from "react-native";
+import { Linking, StyleSheet } from "react-native";
 
 /**
  * Catch-all route for deep linking
@@ -17,14 +15,21 @@ export default function DeepLinkHandler() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
+    // Prevent re-running if we've already navigated
+    if (hasNavigated) {
+      return;
+    }
+
     const handleDeepLink = async () => {
       // Get the slug from params - declare outside try block so it's accessible in catch
       const slugArray = params.slug;
 
       if (!slugArray || (Array.isArray(slugArray) && slugArray.length === 0)) {
         console.log("🔗 No slug found, redirecting to home");
+        setHasNavigated(true);
         router.replace("/");
         return;
       }
@@ -32,14 +37,14 @@ export default function DeepLinkHandler() {
       // Join the slug segments
       const slug = Array.isArray(slugArray) ? slugArray.join("/") : slugArray;
 
+      console.log("🔗 ========================================");
+      console.log("🔗 Deep link catch-all route activated");
+      console.log("🔗 Current slug from URL:", slug);
+      console.log("🔗 ========================================");
+
+      const firstSegment = slug.split("/")[0].toLowerCase();
+
       try {
-        console.log("🔗 ========================================");
-        console.log("🔗 Deep link catch-all route activated");
-        console.log("🔗 Current slug from URL:", slug);
-        console.log("🔗 ========================================");
-
-        const firstSegment = slug.split("/")[0].toLowerCase();
-
         // Handle AI search URLs (e.g., ai-search/?q=...&qs=...)
         if (firstSegment === "ai-search") {
           console.log("🔍 AI search URL detected in deep link");
@@ -56,6 +61,7 @@ export default function DeepLinkHandler() {
             if (q || qs) {
               console.log("🔍 AI search params found:", { q, qs });
               console.log("🔍 Navigating to Ask tab with search params");
+              setHasNavigated(true);
               router.replace({
                 pathname: "/(tabs)/ask",
                 params: {
@@ -68,11 +74,13 @@ export default function DeepLinkHandler() {
 
             // No params, just go to Ask tab
             console.log("🔍 No search params, navigating to Ask tab");
+            setHasNavigated(true);
             router.replace("/(tabs)/ask");
             return;
           } catch (error) {
             console.error("❌ Error processing AI search URL:", error);
             // Fallback to Ask tab without params
+            setHasNavigated(true);
             router.replace("/(tabs)/ask");
             return;
           }
@@ -114,6 +122,7 @@ export default function DeepLinkHandler() {
               console.log(
                 "🔗 Auth tokens processed - dismissing auth callback screen"
               );
+              setHasNavigated(true);
               router.dismiss();
               return;
             } else {
@@ -122,6 +131,7 @@ export default function DeepLinkHandler() {
               console.log(
                 "🔗 No tokens found - dismissing auth callback screen"
               );
+              setHasNavigated(true);
               router.dismiss();
               return;
             }
@@ -129,6 +139,7 @@ export default function DeepLinkHandler() {
             console.error("❌ Error processing auth callback:", authError);
             // On error, dismiss to go back
             console.log("🔗 Auth error - dismissing auth callback screen");
+            setHasNavigated(true);
             router.dismiss();
             return;
           }
@@ -153,6 +164,7 @@ export default function DeepLinkHandler() {
           console.log(
             "🔗 Redirecting back to home after opening auth URL in browser"
           );
+          setHasNavigated(true);
           router.replace("/");
           return;
         }
@@ -174,70 +186,46 @@ export default function DeepLinkHandler() {
         if (tabRoutes.includes(firstSegment)) {
           // For tab routes, just redirect to home without trying to resolve
           console.log("🔗 Tab route detected, redirecting to home:", slug);
+          setHasNavigated(true);
           router.replace("/");
           return;
         }
 
-        // Check if this specific slug was recently processed (within last 3 seconds)
-        const deepLinkKey = `deeplink_${slug}`;
-        const lastProcessedTime = await AsyncStorage.getItem(deepLinkKey);
+        // For all other URLs, treat them as potential articles
+        // Navigate directly to article screen with the slug
+        // The article screen will handle slug resolution and fallback to webview
+        console.log(
+          "🔗 Treating as article URL, navigating directly to article screen"
+        );
 
-        console.log("🔗 Checking cache for key:", deepLinkKey);
-        console.log("🔗 Last processed time:", lastProcessedTime);
-
-        if (lastProcessedTime) {
-          const timeSinceProcessed = Date.now() - parseInt(lastProcessedTime);
-          console.log("🔗 Time since processed:", timeSinceProcessed, "ms");
-
-          if (timeSinceProcessed < 3000) {
-            console.log("🔗 Deep link recently processed, redirecting to home");
-            router.replace("/");
-            return;
-          } else {
-            console.log("🔗 Cache expired, processing deep link");
-          }
-        } else {
-          console.log("🔗 No cache found, processing deep link");
-        }
-
-        // Mark as processed with current timestamp
-        await AsyncStorage.setItem(deepLinkKey, Date.now().toString());
-        console.log("🔗 Marked as processed in cache");
-
-        // Resolve slug to article ID
-        console.log("🔗 Calling API to resolve slug:", slug);
-        const { id } = await getPostBySlug(slug);
-
-        if (!id) {
-          throw new Error("No article ID returned");
-        }
-
-        console.log(`🔗 ✅ Successfully resolved slug to article ID: ${id}`);
-        console.log(`🔗 Navigating to: /article/${id}`);
-
-        // Replace the deep link handler screen with the article
-        // This removes the [...slug] screen from the navigation stack
-        router.replace(`/article/${id}`);
-      } catch (error) {
-        console.error("❌ Error resolving deep link:", error);
-        console.log("🔗 Article not found, falling back to WebView");
-
-        // Instead of redirecting to home, open the original URL in a WebView
-        // Reconstruct the full HTTPS URL
+        // Pass the full URL as a fallback parameter for webview
         const brandConfig = brandManager.getCurrentBrand();
         const fullUrl = `https://${brandConfig.domain}/${slug}`;
 
-        console.log("🔗 Opening in WebView:", fullUrl);
+        console.log(`🔗 Navigating to article screen with slug: ${slug}`);
+        console.log(`🔗 Fallback URL: ${fullUrl}`);
 
-        // Navigate to a WebView route with the URL as a parameter
-        // We'll encode the URL to safely pass it as a route parameter
-        const encodedUrl = encodeURIComponent(fullUrl);
-        router.replace(`/webview?url=${encodedUrl}`);
+        // Navigate immediately to article screen with slug and fallback URL
+        // Use replace to remove the [...slug] screen from the stack
+        setHasNavigated(true);
+        router.replace({
+          pathname: `/article/[id]` as any,
+          params: {
+            id: slug,
+            fallbackUrl: fullUrl,
+            isSlug: "true",
+          },
+        });
+      } catch (error) {
+        console.error("❌ Error in deep link handler:", error);
+        // If there's an error in the handler itself, redirect to home
+        setHasNavigated(true);
+        router.replace("/");
       }
     };
 
     handleDeepLink();
-  }, [params.slug, router]);
+  }, [params.slug, router, hasNavigated]);
 
   if (error) {
     return (
@@ -248,13 +236,8 @@ export default function DeepLinkHandler() {
     );
   }
 
-  // Don't render anything - just show a blank screen while resolving
-  // This prevents the "flashing" effect when navigating from WebView links
-  return (
-    <ThemedView style={styles.container}>
-      <ActivityIndicator size="large" color="#00AECA" />
-    </ThemedView>
-  );
+  // Don't render anything - navigation happens immediately
+  return null;
 }
 
 const styles = StyleSheet.create({

@@ -4,5 +4,10 @@
 <dict>
 	<key>aps-environment</key>
 	<string>production</string>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:www.nursingtimes.net</string>
+		<string>applinks:nursingtimes.net</string>
+	</array>
 </dict>
 </plist>

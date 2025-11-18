@@ -1345,6 +1345,76 @@ ${schemesXml}
 };
 
 updateIOSURLSchemes();
+
+// Update iOS entitlements with associated domains
+const updateIOSEntitlements = () => {
+  console.log(`🔐 Updating iOS entitlements with associated domains...`);
+
+  const entitlementsFiles = [
+    {
+      path: path.join(projectRoot, "ios", "emap", "emap.entitlements"),
+      environment: "production",
+    },
+    {
+      path: path.join(projectRoot, "ios", "emap", "emapDebug.entitlements"),
+      environment: "development",
+    },
+  ];
+
+  entitlementsFiles.forEach(({ path: entitlementsPath, environment }) => {
+    if (!fs.existsSync(entitlementsPath)) {
+      console.log(
+        `ℹ️  Entitlements file not found: ${path.basename(entitlementsPath)}`
+      );
+      return;
+    }
+
+    try {
+      let plistContent = fs.readFileSync(entitlementsPath, "utf8");
+
+      // Build associated domains array XML
+      const associatedDomainsXml = domainVariants
+        .map((d) => `\t\t<string>applinks:${d}</string>`)
+        .join("\n");
+
+      const associatedDomainsBlock = `\t<key>com.apple.developer.associated-domains</key>\n\t<array>\n${associatedDomainsXml}\n\t</array>`;
+
+      // Check if associated-domains key already exists
+      if (plistContent.includes("com.apple.developer.associated-domains")) {
+        // Replace existing associated domains
+        const regex =
+          /<key>com\.apple\.developer\.associated-domains<\/key>\s*<array>[\s\S]*?<\/array>/;
+        plistContent = plistContent.replace(regex, associatedDomainsBlock);
+        console.log(
+          `✅ Updated associated domains in ${path.basename(entitlementsPath)}`
+        );
+      } else {
+        // Add associated domains before closing </dict>
+        plistContent = plistContent.replace(
+          /(<\/dict>)/,
+          `${associatedDomainsBlock}\n$1`
+        );
+        console.log(
+          `✅ Added associated domains to ${path.basename(entitlementsPath)}`
+        );
+      }
+
+      fs.writeFileSync(entitlementsPath, plistContent);
+      console.log(
+        `   Domains: ${domainVariants.map((d) => `applinks:${d}`).join(", ")}`
+      );
+    } catch (error) {
+      console.error(
+        `❌ Failed to update ${path.basename(entitlementsPath)}: ${
+          error.message
+        }`
+      );
+    }
+  });
+};
+
+updateIOSEntitlements();
+
 // Update Android URL schemes and App Links in AndroidManifest.xml
 const updateAndroidURLSchemes = () => {
   const manifestPath = path.join(

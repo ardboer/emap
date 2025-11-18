@@ -55,6 +55,8 @@ function ArticleScreenContent() {
     previewImage,
     previewCategory,
     previewDate,
+    fallbackUrl,
+    isSlug,
   } = useLocalSearchParams<{
     id: string;
     source?: string;
@@ -62,6 +64,8 @@ function ArticleScreenContent() {
     previewImage?: string;
     previewCategory?: string;
     previewDate?: string;
+    fallbackUrl?: string;
+    isSlug?: string;
   }>();
   const { user, isAuthenticated, login } = useAuth();
   const colorScheme = useColorScheme() ?? "light";
@@ -146,15 +150,42 @@ function ArticleScreenContent() {
         setLoading(false);
         return;
       }
-      console.log("article id to be retrieved", id);
+
       try {
         setLoading(true);
         setError(null);
 
+        let articleId = id;
+
+        // If this is a slug (not a numeric ID), resolve it first
+        if (isSlug === "true" || isNaN(Number(id))) {
+          console.log("🔗 Resolving slug to article ID:", id);
+          try {
+            const { getPostBySlug } = await import("@/services/api");
+            const result = await getPostBySlug(id);
+            articleId = result.id.toString();
+            console.log("🔗 ✅ Resolved slug to article ID:", articleId);
+          } catch (slugError) {
+            console.error("❌ Failed to resolve slug:", slugError);
+            // If slug resolution fails and we have a fallback URL, redirect to webview
+            if (fallbackUrl) {
+              console.log(
+                "🔗 Redirecting to webview with fallback URL:",
+                fallbackUrl
+              );
+              router.replace(`/webview?url=${encodeURIComponent(fallbackUrl)}`);
+              return;
+            }
+            throw new Error("Failed to resolve article slug");
+          }
+        }
+
+        console.log("📰 Loading article with ID:", articleId);
+
         // Fetch the complete article with content in one API call
         const fetchSingleArticle = (await import("@/services/api"))
           .fetchSingleArticle;
-        const fullArticle = await fetchSingleArticle(id);
+        const fullArticle = await fetchSingleArticle(articleId);
 
         setArticle(fullArticle);
 
@@ -163,14 +194,14 @@ function ArticleScreenContent() {
 
         // Track screen_view with source parameter
         analyticsService.logScreenView("Article Detail", "ArticleScreen", {
-          article_id: id,
+          article_id: articleId,
           article_title: fullArticle.title,
           source: source || "direct",
         });
 
         // Track article_view custom event
         analyticsService.logArticleView(
-          id,
+          articleId,
           fullArticle.title,
           fullArticle.category
         );
@@ -178,14 +209,25 @@ function ArticleScreenContent() {
         // Track article view with Miso
         const anonymousId = await getAnonymousId();
         trackArticleView({
-          articleId: id,
+          articleId: articleId,
           userId: user?.userId,
           isAuthenticated,
           anonymousId,
         });
       } catch (err) {
+        console.error("❌ Error loading article:", err);
+
+        // If we have a fallback URL, redirect to webview
+        if (fallbackUrl) {
+          console.log(
+            "🔗 Article load failed, redirecting to webview:",
+            fallbackUrl
+          );
+          router.replace(`/webview?url=${encodeURIComponent(fallbackUrl)}`);
+          return;
+        }
+
         setError("Failed to load article");
-        console.error("Error loading article:", err);
       } finally {
         setLoading(false);
       }
@@ -197,7 +239,7 @@ function ArticleScreenContent() {
   // Fetch recommended articles for swipe navigation using Miso's user_to_products API
   useEffect(() => {
     const loadRecommendedArticles = async () => {
-      if (!id) {
+      if (!id || !article) {
         console.log("No article ID for fetching recommended articles");
         return;
       }
