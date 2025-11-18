@@ -1,16 +1,11 @@
+import GradientHeader from "@/components/GradientHeader";
+import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBrandConfig } from "@/hooks/useBrandConfig";
-import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Platform,
-  SafeAreaView,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import { ActivityIndicator, Platform, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 
 /**
@@ -26,6 +21,7 @@ export default function WebViewFallback() {
   const { brandConfig } = useBrandConfig();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = useState(false);
 
   // Get the URL from params and decode it
   const encodedUrl = params.url as string;
@@ -33,118 +29,115 @@ export default function WebViewFallback() {
 
   console.log("🌐 WebView Fallback - URL:", url);
 
+  const handleBack = () => {
+    router.back();
+  };
+
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
+
   if (!url) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ThemedView style={styles.container}>
         <ThemedView style={styles.errorContainer}>
           <ThemedText style={styles.errorText}>No URL provided</ThemedText>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => router.replace("/")}
-          >
-            <ThemedText style={styles.buttonText}>Go Home</ThemedText>
-          </TouchableOpacity>
         </ThemedView>
-      </SafeAreaView>
+      </ThemedView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header with back button */}
-      <ThemedView style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#007AFF" />
-        </TouchableOpacity>
-        <ThemedText style={styles.headerTitle} numberOfLines={1}>
-          {brandConfig?.displayName || "Web Content"}
-        </ThemedText>
-        <TouchableOpacity
-          style={styles.homeButton}
-          onPress={() => router.replace("/")}
-        >
-          <Ionicons name="home" size={24} color="#007AFF" />
-        </TouchableOpacity>
-      </ThemedView>
-
-      {/* Loading indicator */}
-      {loading && (
-        <ThemedView style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <ThemedText style={styles.loadingText}>Loading...</ThemedText>
-        </ThemedView>
-      )}
-
-      {/* Error state */}
-      {error && (
-        <ThemedView style={styles.errorContainer}>
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => router.replace("/")}
-          >
-            <ThemedText style={styles.buttonText}>Go Home</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
-      )}
-
-      {/* WebView */}
-      {!error && (
-        <WebView
-          source={{ uri: url }}
-          style={styles.webview}
-          onLoadStart={() => {
-            console.log("🌐 WebView loading started");
-            setLoading(true);
-            setError(null);
-          }}
-          onLoadEnd={() => {
-            console.log("🌐 WebView loading completed");
-            setLoading(false);
-          }}
-          onError={(syntheticEvent) => {
-            const { nativeEvent } = syntheticEvent;
-            console.error("🌐 WebView error:", nativeEvent);
-            setLoading(false);
-            setError(
-              `Failed to load: ${nativeEvent.description || "Unknown error"}`
-            );
-          }}
-          onHttpError={(syntheticEvent) => {
-            const { nativeEvent } = syntheticEvent;
-            console.error("🌐 WebView HTTP error:", nativeEvent);
-            setLoading(false);
-            setError(
-              `HTTP Error ${nativeEvent.statusCode}: ${
-                nativeEvent.description || "Server error"
-              }`
-            );
-          }}
-          startInLoadingState={false}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          allowsInlineMediaPlayback={true}
-          mediaPlaybackRequiresUserAction={false}
-          decelerationRate="normal"
-          allowsBackForwardNavigationGestures={true}
-          bounces={true}
-          showsHorizontalScrollIndicator={false}
-          showsVerticalScrollIndicator={true}
-          scrollEnabled={true}
-          // Android-specific props
-          mixedContentMode={
-            Platform.OS === "android" ? "compatibility" : undefined
-          }
-          thirdPartyCookiesEnabled={
-            Platform.OS === "android" ? true : undefined
-          }
-          sharedCookiesEnabled={Platform.OS === "android" ? true : undefined}
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+      <ThemedView style={styles.container}>
+        <GradientHeader
+          onSearchPress={handleSearchPress}
+          showBackButton={true}
+          onBackPress={handleBack}
+          showUserIcon={true}
+          onUserPress={() => setSettingsDrawerVisible(true)}
         />
-      )}
-    </SafeAreaView>
+
+        {/* Loading indicator */}
+        {loading && (
+          <ThemedView style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <ThemedText style={styles.loadingText}>Loading...</ThemedText>
+          </ThemedView>
+        )}
+
+        {/* Error state */}
+        {error && (
+          <ThemedView style={styles.errorContainer}>
+            <ThemedText style={styles.errorText}>{error}</ThemedText>
+          </ThemedView>
+        )}
+
+        {/* WebView */}
+        {!error && (
+          <WebView
+            source={{ uri: url }}
+            style={styles.webview}
+            onLoadStart={() => {
+              console.log("🌐 WebView loading started");
+              setLoading(true);
+              setError(null);
+            }}
+            onLoadEnd={() => {
+              console.log("🌐 WebView loading completed");
+              setLoading(false);
+            }}
+            onError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.error("🌐 WebView error:", nativeEvent);
+              setLoading(false);
+              setError(
+                `Failed to load: ${nativeEvent.description || "Unknown error"}`
+              );
+            }}
+            onHttpError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.error("🌐 WebView HTTP error:", nativeEvent);
+              setLoading(false);
+              setError(
+                `HTTP Error ${nativeEvent.statusCode}: ${
+                  nativeEvent.description || "Server error"
+                }`
+              );
+            }}
+            startInLoadingState={false}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            allowsInlineMediaPlayback={true}
+            mediaPlaybackRequiresUserAction={false}
+            decelerationRate="normal"
+            allowsBackForwardNavigationGestures={true}
+            bounces={true}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
+            scrollEnabled={true}
+            // Android-specific props
+            mixedContentMode={
+              Platform.OS === "android" ? "compatibility" : undefined
+            }
+            thirdPartyCookiesEnabled={
+              Platform.OS === "android" ? true : undefined
+            }
+            sharedCookiesEnabled={Platform.OS === "android" ? true : undefined}
+          />
+        )}
+
+        <SettingsDrawer
+          visible={settingsDrawerVisible}
+          onClose={() => setSettingsDrawerVisible(false)}
+        />
+      </ThemedView>
+    </>
   );
 }
 
