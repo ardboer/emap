@@ -1,6 +1,7 @@
 import { brandManager } from "@/config/BrandManager";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
+import { Platform } from "react-native";
 import QuickCrypto from "react-native-quick-crypto";
 import { analyticsService } from "./analytics";
 
@@ -642,11 +643,36 @@ export async function checkArticleAccess(
  */
 export async function storeTokens(tokens: AuthTokens): Promise<void> {
   try {
-    await AsyncStorage.multiSet([
-      [STORAGE_KEYS.ACCESS_TOKEN, tokens.access_token],
-      [STORAGE_KEYS.REFRESH_TOKEN, tokens.refresh_token],
-    ]);
-    console.log("✅ Tokens stored successfully");
+    // Store tokens individually to avoid Android multiSet race conditions
+    await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokens.access_token);
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.REFRESH_TOKEN,
+      tokens.refresh_token
+    );
+
+    // Verify storage on Android (AsyncStorage can have delayed persistence)
+    if (Platform.OS === "android") {
+      // Small delay to ensure write completes
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const verifyAccess = await AsyncStorage.getItem(
+        STORAGE_KEYS.ACCESS_TOKEN
+      );
+      const verifyRefresh = await AsyncStorage.getItem(
+        STORAGE_KEYS.REFRESH_TOKEN
+      );
+
+      if (
+        verifyAccess !== tokens.access_token ||
+        verifyRefresh !== tokens.refresh_token
+      ) {
+        console.error("❌ Token storage verification failed on Android");
+        throw new Error("Token storage verification failed");
+      }
+      console.log("✅ Tokens stored and verified successfully (Android)");
+    } else {
+      console.log("✅ Tokens stored successfully");
+    }
   } catch (error) {
     console.error("❌ Error storing tokens:", error);
     throw new Error("Failed to store tokens");
@@ -706,11 +732,21 @@ export async function getStoredTokens(): Promise<AuthTokens | null> {
  */
 export async function storeUserInfo(userInfo: UserInfo): Promise<void> {
   try {
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.USER_INFO,
-      JSON.stringify(userInfo)
-    );
-    console.log("✅ User info stored successfully");
+    const userInfoStr = JSON.stringify(userInfo);
+    await AsyncStorage.setItem(STORAGE_KEYS.USER_INFO, userInfoStr);
+
+    // Verify storage on Android
+    if (Platform.OS === "android") {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const verify = await AsyncStorage.getItem(STORAGE_KEYS.USER_INFO);
+      if (verify !== userInfoStr) {
+        console.error("❌ User info storage verification failed on Android");
+        throw new Error("User info storage verification failed");
+      }
+      console.log("✅ User info stored and verified successfully (Android)");
+    } else {
+      console.log("✅ User info stored successfully");
+    }
   } catch (error) {
     console.error("❌ Error storing user info:", error);
     throw new Error("Failed to store user info");

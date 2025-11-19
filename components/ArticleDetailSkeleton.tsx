@@ -1,3 +1,4 @@
+import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import React, { useEffect, useRef } from "react";
 import { Animated, Dimensions, StyleSheet, View } from "react-native";
@@ -12,7 +13,7 @@ const { width: screenWidth } = Dimensions.get("window");
 export function ArticleDetailSkeleton() {
   const shimmerAnimation = useRef(new Animated.Value(0)).current;
   const backgroundColor = useThemeColor({}, "background");
-
+  const { brandConfig } = useBrandConfig();
   useEffect(() => {
     const shimmer = Animated.loop(
       Animated.sequence([
@@ -47,7 +48,13 @@ export function ArticleDetailSkeleton() {
       : "rgba(255, 255, 255, 0.12)";
 
   return (
-    <View style={{ ...styles.container, width: screenWidth - 32 }}>
+    <View
+      style={{
+        ...styles.container,
+        width: screenWidth - 32,
+        maxWidth: (brandConfig?.layout?.maxContentWidth || 0) - 32,
+      }}
+    >
       {/* Subtitle skeleton (optional, 1 line) */}
       <View
         style={[

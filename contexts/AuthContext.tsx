@@ -249,6 +249,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         matchesNewTokens: verifyTokens?.refresh_token === result.refresh_token,
       });
 
+      // Verify storage succeeded
+      if (
+        !verifyTokens ||
+        verifyTokens.refresh_token !== result.refresh_token
+      ) {
+        console.error("❌ [REFRESH] Token storage verification failed");
+        throw new Error("Failed to store refreshed tokens properly");
+      }
+
       // Update tokens in state
       dispatch({
         type: "SET_TOKENS",
@@ -522,6 +531,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!userInfo) {
           throw new Error("Failed to retrieve user information");
         }
+
+        // Verify tokens were stored correctly (critical for Android)
+        const verifyTokens = await getStoredTokens();
+        if (
+          !verifyTokens ||
+          verifyTokens.refresh_token !== tokens.refresh_token
+        ) {
+          console.error("❌ Token storage verification failed after login");
+          throw new Error(
+            "Failed to store tokens properly - please try logging in again"
+          );
+        }
+        console.log("✅ Token storage verified after login");
 
         // Update state
         dispatch({

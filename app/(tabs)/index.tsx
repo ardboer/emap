@@ -252,11 +252,11 @@ export default function HighlightedScreen() {
       console.log("🎨 Starting color extraction for landscape images...");
       for (const article of fetchedArticles) {
         if (article.isLandscape) {
-          console.log(
-            `🎨 Extracting colors for article ${
-              article.id
-            }: ${article.title.substring(0, 30)}...`
-          );
+          // console.log(
+          //   `🎨 Extracting colors for article ${
+          //     article.id
+          //   }: ${article.title.substring(0, 30)}...`
+          // );
           const extractedColors = await extractImageColors(
             article.imageUrl,
             article.id
@@ -481,14 +481,14 @@ export default function HighlightedScreen() {
 
     // DEBUG: Log scroll events to detect skipping
     if (index !== currentIndex) {
-      console.log("📜 Scroll detected:", {
-        scrollPosition,
-        calculatedIndex: index,
-        currentIndex,
-        skipped: Math.abs(index - currentIndex) > 1,
-        articleAtIndex: articles[index]?.title?.substring(0, 30),
-        isNativeAd: articles[index]?.isNativeAd,
-      });
+      // console.log("📜 Scroll detected:", {
+      //   scrollPosition,
+      //   calculatedIndex: index,
+      //   currentIndex,
+      //   skipped: Math.abs(index - currentIndex) > 1,
+      //   articleAtIndex: articles[index]?.title?.substring(0, 30),
+      //   isNativeAd: articles[index]?.isNativeAd,
+      // });
       setCurrentIndex(index);
 
       // Trigger lazy loading/unloading for native ads
