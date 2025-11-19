@@ -34,6 +34,7 @@
 
         "newsHeaderGradientStart": "#4A3F00",
         "newsHeaderGradientEnd": "#4A3F00",
+        "articleHeaderBackground": "#4A3F00",
 
         "topicsBackground": "#4A3F00",
         "topicsActiveTab": "#FFFFFF",
@@ -81,6 +82,7 @@
 
         "newsHeaderGradientStart": "#4A3F00",
         "newsHeaderGradientEnd": "#1F1B03",
+        "articleHeaderBackground": "#4A3F00",
 
         "topicsBackground": "#4A3F00",
         "topicsActiveTab": "#1F1B03",

@@ -27,6 +27,7 @@ function getBrandColors() {
         searchIcon: "#B3F4FF",
         newsHeaderGradientStart: "#00334C",
         newsHeaderGradientEnd: "#011620",
+        articleHeaderBackground: "#00334C",
         topicsBackground: "#00334C",
         topicsActiveTab: "#FFFFFF",
         topicsActiveText: "#00334C",
@@ -45,6 +46,7 @@ function getBrandColors() {
         searchIcon: "#B3F4FF",
         newsHeaderGradientStart: "#00334C",
         newsHeaderGradientEnd: "#011620",
+        articleHeaderBackground: "#00334C",
         topicsBackground: "#00334C",
         topicsActiveTab: "#FFFFFF",
         topicsActiveText: "#00334C",
@@ -70,6 +72,8 @@ export const Colors = {
       (brandColors.light as any).newsHeaderGradientStart || "#00334C",
     newsHeaderGradientEnd:
       (brandColors.light as any).newsHeaderGradientEnd || "#011620",
+    articleHeaderBackground:
+      (brandColors.light as any).articleHeaderBackground || "#00334C",
     topicsBackground: (brandColors.light as any).topicsBackground || "#00334C",
     topicsActiveTab: (brandColors.light as any).topicsActiveTab || "#011620",
     topicsActiveText: (brandColors.light as any).topicsActiveText || "#011620",
@@ -121,6 +125,8 @@ export const Colors = {
       (brandColors.dark as any).newsHeaderGradientStart || "#00334C",
     newsHeaderGradientEnd:
       (brandColors.dark as any).newsHeaderGradientEnd || "#011620",
+    articleHeaderBackground:
+      (brandColors.dark as any).articleHeaderBackground || "#00334C",
     topicsBackground: (brandColors.dark as any).topicsBackground || "#00334C",
     topicsActiveTab: (brandColors.dark as any).topicsActiveTab || "#011620",
     topicsActiveText: (brandColors.dark as any).topicsActiveText || "#011620",

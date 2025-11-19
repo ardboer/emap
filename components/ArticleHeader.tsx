@@ -1,3 +1,4 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { Article } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,6 +16,18 @@ import BookmarkButton from "./BookmarkButton";
 import ShareButton from "./ShareButton";
 
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+
+// Helper function to convert hex color to RGB values
+const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : { r: 1, g: 22, b: 32 }; // fallback to default dark color
+};
 
 interface ArticleHeaderProps {
   article?: Article | null;
@@ -38,6 +51,8 @@ export function ArticleHeader({
   headerHeight = 300,
 }: ArticleHeaderProps) {
   const insets = useSafeAreaInsets();
+  const headerGradientColor = useThemeColor({}, "articleHeaderBackground");
+  const rgb = hexToRgb(headerGradientColor);
 
   const handleBack = async () => {
     if (onBack) {
@@ -57,9 +72,9 @@ export function ArticleHeader({
     if (!scrollY) {
       return {
         colors: [
-          "rgba(1, 22, 32, 1)",
-          "rgba(1, 22, 32, 1)",
-          "rgba(1, 22, 32, 0)",
+          `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1)`,
+          `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1)`,
+          `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0)`,
         ],
       };
     }
@@ -84,9 +99,9 @@ export function ArticleHeader({
 
     return {
       colors: [
-        `rgba(1, 22, 32, ${opacity1})`,
-        `rgba(1, 22, 32, ${opacity1})`,
-        `rgba(1, 22, 32, ${opacity3})`,
+        `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity1})`,
+        `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity1})`,
+        `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity3})`,
       ],
     };
   });
@@ -120,7 +135,7 @@ export function ArticleHeader({
             styles.gradientOverlay,
             {
               height: 50 + insets.top,
-              backgroundColor: "rgba(1, 22, 32, 1)",
+              backgroundColor: headerGradientColor,
             },
             animatedStyle,
           ]}
