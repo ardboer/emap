@@ -10,7 +10,7 @@ import { analyticsService } from "@/services/analytics";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
-  BottomSheetView,
+  BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import React, { useCallback, useMemo, useRef } from "react";
 import {
@@ -161,8 +161,11 @@ export function PaywallBottomSheet({
       handleIndicatorStyle={{ backgroundColor: "#D1D1D6" }}
       // bottomInset={insets.bottom}
     >
-      <BottomSheetView
-        style={[styles.contentContainer, { paddingBottom: insets.bottom }]}
+      <BottomSheetScrollView
+        contentContainerStyle={[
+          styles.contentContainer,
+          { paddingBottom: insets.bottom },
+        ]}
       >
         {/* Content */}
         <View style={styles.content}>
@@ -268,7 +271,7 @@ export function PaywallBottomSheet({
             </TouchableOpacity>
           </View>
         </View>
-      </BottomSheetView>
+      </BottomSheetScrollView>
     </BottomSheetModal>
   );
 }
