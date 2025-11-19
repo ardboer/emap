@@ -40,9 +40,14 @@ const thumbnailSize = getResponsiveThumbnailSize();
 interface ArticleTeaserProps {
   article: Article;
   onPress?: (article: Article) => void;
+  event?: boolean;
 }
 
-function ArticleTeaser({ article, onPress }: ArticleTeaserProps) {
+function ArticleTeaser({
+  article,
+  onPress,
+  event = false,
+}: ArticleTeaserProps) {
   const colorScheme = useColorScheme() ?? "light";
 
   const handlePress = useCallback(() => {
@@ -80,9 +85,16 @@ function ArticleTeaser({ article, onPress }: ArticleTeaserProps) {
         <FadeInImage
           source={{ uri: article.imageUrl }}
           style={styles.thumbnail}
+          resizeMode={event ? "contain" : "cover"}
+          placeholderColor={event ? "transparent" : ""}
         />
       </ThemedView>
-      <ThemedView style={styles.contentContainer}>
+      <ThemedView
+        style={[
+          styles.contentContainer,
+          { justifyContent: event ? "center" : "flex-start" },
+        ]}
+      >
         <ThemedView style={styles.metaContainer}>
           <ThemedText
             style={[
