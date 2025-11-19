@@ -1,5 +1,11 @@
 import { useMemo } from "react";
-import { StyleSheet, Text, type TextProps } from "react-native";
+import {
+  PixelRatio,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  type TextProps,
+} from "react-native";
 
 import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -19,7 +25,8 @@ export function ThemedText({
 }: ThemedTextProps) {
   const color = useThemeColor({ light: lightColor, dark: darkColor }, "text");
   const { fonts } = useBrandConfig();
-
+  useWindowDimensions();
+  const fontScale = PixelRatio.getFontScale();
   // Memoize font family to prevent re-renders causing font flash
   // Get the brand's primary font, fallback to System if not specified
   const fontFamily = useMemo(() => {
@@ -40,9 +47,17 @@ export function ThemedText({
       type === "link" ? styles.link : undefined,
       style,
     ];
-  }, [color, fontFamily, type, style]);
-
-  return <Text style={textStyle} {...rest} />;
+  }, [color, fontFamily, type, style, fontScale]);
+  console.log("text rerender", fontScale, style?.fontSize);
+  return (
+    <Text
+      style={[textStyle]}
+      {...rest}
+      allowFontScaling={true}
+      key={fontScale.toString()}
+      maxFontSizeMultiplier={1.25}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
