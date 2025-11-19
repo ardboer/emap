@@ -751,7 +751,7 @@ export default function HighlightedScreen() {
     },
   };
 
-  if (loading) {
+  if (loading && articles.length < 1) {
     return (
       <ThemedView style={styles.container}>
         <View
