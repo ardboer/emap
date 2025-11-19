@@ -50,7 +50,7 @@ export function ThemedText({
       : undefined;
 
   const baseFontSize = StyleSheet.flatten(style)?.fontSize ?? 16;
-  const baseLineHeight = StyleSheet.flatten(style)?.lineHeight ?? 16;
+  const baseLineHeight = StyleSheet.flatten(style)?.lineHeight ?? baseFontSize;
   const clampedScale = Math.min(fontScale, 1.5);
   const scaledFontSize = baseFontSize * clampedScale;
   const scaledLineHeight = baseLineHeight * clampedScale;
