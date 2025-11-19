@@ -45,7 +45,7 @@ export function PaywallBottomSheet({
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   // Define snap points
-  const snapPoints = useMemo(() => ["75%"], []);
+  const snapPoints = useMemo(() => [], []);
 
   // Watch for authentication changes
   React.useEffect(() => {
@@ -144,6 +144,7 @@ export function PaywallBottomSheet({
         disappearsOnIndex={-1}
         appearsOnIndex={0}
         opacity={0.6}
+        pressBehavior={"none"}
       />
     ),
     []
@@ -153,7 +154,7 @@ export function PaywallBottomSheet({
     <BottomSheetModal
       ref={bottomSheetModalRef}
       index={0}
-      snapPoints={snapPoints}
+      // snapPoints={snapPoints}
       enablePanDownToClose={false}
       backdropComponent={renderBackdrop}
       enableDismissOnClose={false}
@@ -286,6 +287,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 24,
     ...getCenteredContentStyle(),
+    justifyContent: "center",
   },
   logoContainer: {
     alignItems: "center",
@@ -293,6 +295,7 @@ const styles = StyleSheet.create({
   },
   headline: {
     fontSize: 28,
+    lineHeight: 32,
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 8,
@@ -334,6 +337,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontSize: 18,
+    lineHeight: 22,
     fontWeight: "600",
   },
   secondaryButton: {
@@ -344,6 +348,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     fontSize: 18,
+    lineHeight: 22,
     fontWeight: "600",
   },
   backButton: {
