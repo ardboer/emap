@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import {
-  PixelRatio,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -12,6 +11,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
+  disableFontScaling?: boolean;
   darkColor?: string;
   type?: "default" | "title" | "defaultSemiBold" | "subtitle" | "link";
 };
@@ -21,12 +21,12 @@ export function ThemedText({
   lightColor,
   darkColor,
   type = "default",
+  disableFontScaling = false,
   ...rest
 }: ThemedTextProps) {
   const color = useThemeColor({ light: lightColor, dark: darkColor }, "text");
   const { fonts } = useBrandConfig();
-  useWindowDimensions();
-  const fontScale = PixelRatio.getFontScale();
+  const { fontScale } = useWindowDimensions();
   // Memoize font family to prevent re-renders causing font flash
   // Get the brand's primary font, fallback to System if not specified
   const fontFamily = useMemo(() => {
@@ -36,26 +36,45 @@ export function ThemedText({
   }, [fonts?.primary]);
 
   // Memoize the combined style to prevent unnecessary recalculations
-  const textStyle = useMemo(() => {
-    return [
-      { color },
-      fontFamily ? { fontFamily } : undefined,
-      type === "default" ? styles.default : undefined,
-      type === "title" ? styles.title : undefined,
-      type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
-      type === "subtitle" ? styles.subtitle : undefined,
-      type === "link" ? styles.link : undefined,
-      style,
-    ];
-  }, [color, fontFamily, type, style, fontScale]);
-  console.log("text rerender", fontScale, style?.fontSize);
+  const baseStyle =
+    type === "default"
+      ? styles.default
+      : type === "title"
+      ? styles.title
+      : type === "defaultSemiBold"
+      ? styles.defaultSemiBold
+      : type === "subtitle"
+      ? styles.subtitle
+      : type === "link"
+      ? styles.link
+      : undefined;
+
+  const baseFontSize = StyleSheet.flatten(style)?.fontSize ?? 16;
+  const baseLineHeight = StyleSheet.flatten(style)?.lineHeight ?? 16;
+  const clampedScale = Math.min(fontScale, 1.5);
+  const scaledFontSize = baseFontSize * clampedScale;
+  const scaledLineHeight = baseLineHeight * clampedScale;
+  const textStyle = [
+    { color },
+    fontFamily ? { fontFamily } : undefined,
+    type === "default" ? styles.default : undefined,
+    type === "title" ? styles.title : undefined,
+    type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
+    type === "subtitle" ? styles.subtitle : undefined,
+    type === "link" ? styles.link : undefined,
+    style,
+    {
+      fontSize: disableFontScaling ? baseFontSize : scaledFontSize,
+      lineHeight: disableFontScaling ? baseLineHeight : scaledLineHeight,
+    },
+  ];
+  console.log("text rerender", fontScale, scaledFontSize);
   return (
     <Text
       style={[textStyle]}
       {...rest}
-      allowFontScaling={true}
-      key={fontScale.toString()}
-      maxFontSizeMultiplier={1.25}
+      allowFontScaling={false}
+      key={scaledFontSize.toString()}
     />
   );
 }

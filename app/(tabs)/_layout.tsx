@@ -48,6 +48,7 @@ export default function TabLayout() {
           tabBarInactiveTintColor,
           headerShown: true,
           tabBarButton: HapticTab,
+          tabBarAllowFontScaling: false,
           tabBarStyle: {
             position: "absolute",
             backgroundColor: tabBarBackgroundColor,

@@ -293,6 +293,7 @@ const styles = StyleSheet.create({
   parentRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: -1,
   },
   scrollView: {
     flex: 1,

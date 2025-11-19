@@ -98,6 +98,7 @@ export default function TabBar({
             activeOpacity={0.7}
           >
             <ThemedText
+              disableFontScaling
               style={[
                 styles.tabText,
                 {
