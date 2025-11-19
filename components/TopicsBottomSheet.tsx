@@ -5,12 +5,15 @@ import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useFavoriteTopics } from "@/hooks/useFavoriteTopics";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { MenuItem } from "@/types";
-import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
 import {
-  FlatList,
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetScrollView,
+} from "@gorhom/bottom-sheet";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import {
   ImageBackground,
-  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -18,6 +21,7 @@ import {
   useColorScheme,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface TopicsBottomSheetProps {
   visible: boolean;
@@ -38,6 +42,11 @@ export default function TopicsBottomSheet({
   const { brandConfig } = useBrandConfig();
   const { favoriteTopicIds, toggleFavorite } = useFavoriteTopics();
   const colorScheme = useColorScheme() ?? "light";
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const insets = useSafeAreaInsets();
+
+  // Define snap points
+  const snapPoints = useMemo(() => ["75%"], []);
 
   // Get theme colors
   const backgroundColor = useThemeColor({}, "contentBackground");
@@ -55,22 +64,42 @@ export default function TopicsBottomSheet({
   // Use same color as ArticleTeaser title
   const titleColor = Colors[colorScheme].articleTeaserTitleText;
 
+  // Control bottom sheet visibility
+  React.useEffect(() => {
+    if (visible) {
+      bottomSheetModalRef.current?.present();
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+    }
+  }, [visible]);
+
   // Filter and sort topics: favorites first, then alphabetically
-  const filteredTopics = topics
-    .filter((topic) =>
-      topic.title.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .sort((a, b) => {
-      const aIsFavorite = favoriteTopicIds.includes(a.ID.toString());
-      const bIsFavorite = favoriteTopicIds.includes(b.ID.toString());
+  const filteredTopics = useMemo(() => {
+    return topics
+      .filter((topic) =>
+        topic.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a, b) => {
+        const aIsFavorite = favoriteTopicIds.includes(a.ID.toString());
+        const bIsFavorite = favoriteTopicIds.includes(b.ID.toString());
 
-      // Favorites come first
-      if (aIsFavorite && !bIsFavorite) return -1;
-      if (!aIsFavorite && bIsFavorite) return 1;
+        // Favorites come first
+        if (aIsFavorite && !bIsFavorite) return -1;
+        if (!aIsFavorite && bIsFavorite) return 1;
 
-      // Within same category (both favorite or both not), sort alphabetically
-      return a.title.localeCompare(b.title);
-    });
+        // Within same category (both favorite or both not), sort alphabetically
+        return a.title.localeCompare(b.title);
+      });
+  }, [topics, searchQuery, favoriteTopicIds]);
+
+  // Group topics into rows of 2
+  const topicRows = useMemo(() => {
+    const rows: MenuItem[][] = [];
+    for (let i = 0; i < filteredTopics.length; i += 2) {
+      rows.push(filteredTopics.slice(i, i + 2));
+    }
+    return rows;
+  }, [filteredTopics]);
 
   const handleSelectTopic = (topic: MenuItem) => {
     setSearchQuery(""); // Clear search
@@ -78,12 +107,36 @@ export default function TopicsBottomSheet({
     onClose();
   };
 
-  const renderTopicItem = ({ item }: { item: MenuItem }) => {
+  // Backdrop component
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+        pressBehavior="close"
+      />
+    ),
+    []
+  );
+
+  // Handle sheet changes
+  const handleSheetChanges = useCallback(
+    (index: number) => {
+      if (index === -1) {
+        onClose();
+      }
+    },
+    [onClose]
+  );
+
+  const renderTopicItem = (item: MenuItem) => {
     const isSelected = item.ID.toString() === selectedTopicId;
     const isFavorite = favoriteTopicIds.includes(item.ID.toString());
 
     return (
-      <View style={styles.topicItemContainer}>
+      <View key={item.ID} style={styles.topicItemContainer}>
         <TouchableOpacity
           style={[
             styles.topicItem,
@@ -133,97 +186,66 @@ export default function TopicsBottomSheet({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
+    <BottomSheetModal
+      ref={bottomSheetModalRef}
+      index={0}
+      snapPoints={snapPoints}
+      enablePanDownToClose={true}
+      enableDynamicSizing={false}
+      backdropComponent={renderBackdrop}
+      onChange={handleSheetChanges}
+      backgroundStyle={{ backgroundColor }}
+      handleIndicatorStyle={{ backgroundColor: "#D1D1D6" }}
     >
-      <View style={styles.modalOverlay}>
-        <TouchableOpacity
-          style={styles.backdrop}
-          activeOpacity={1}
-          onPress={onClose}
-        />
-        <View
-          style={[
-            styles.bottomSheetContainer,
-            { width: "100%", maxWidth: brandConfig?.layout?.maxContentWidth },
-          ]}
-        >
-          <ThemedView style={[styles.bottomSheet, { backgroundColor }]}>
-            {/* Header */}
-            <View style={[styles.header, { justifyContent: "flex-end" }]}>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Text
-                  style={[styles.closeButtonText, { color: brandPrimaryColor }]}
-                >
-                  ✕
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Search Bar */}
-            <View
-              style={[
-                styles.searchContainer,
-                { borderColor: brandPrimaryColor },
-              ]}
+      <>
+        {/* Header */}
+        <View style={[styles.header, { justifyContent: "flex-end" }]}>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Text
+              style={[styles.closeButtonText, { color: brandPrimaryColor }]}
             >
-              <TextInput
-                style={[styles.searchInput, { color: titleColor, fontFamily }]}
-                placeholder="Search topics..."
-                placeholderTextColor={borderColor}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-            {/* Topics Grid */}
-            <FlatList
-              data={filteredTopics}
-              renderItem={renderTopicItem}
-              keyExtractor={(item) => item.ID.toString()}
-              numColumns={2}
-              columnWrapperStyle={styles.row}
-              contentContainerStyle={styles.gridContent}
-              showsVerticalScrollIndicator={true}
-              ListEmptyComponent={
-                <ThemedView style={styles.emptyContainer}>
-                  <ThemedText style={styles.emptyText}>
-                    No topics found
-                  </ThemedText>
-                </ThemedView>
-              }
-            />
-          </ThemedView>
+              ✕
+            </Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </Modal>
+
+        {/* Search Bar */}
+        <View
+          style={[styles.searchContainer, { borderColor: brandPrimaryColor }]}
+        >
+          <TextInput
+            style={[styles.searchInput, { color: titleColor, fontFamily }]}
+            placeholder="Search topics..."
+            placeholderTextColor={borderColor}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+
+        {/* Topics Grid */}
+        {topicRows.length > 0 ? (
+          <BottomSheetScrollView contentContainerStyle={[styles.scrollContent]}>
+            {topicRows.map((row, rowIndex) => (
+              <View key={rowIndex} style={styles.row}>
+                {row.map((item) => renderTopicItem(item))}
+              </View>
+            ))}
+          </BottomSheetScrollView>
+        ) : (
+          <ThemedView style={styles.emptyContainer}>
+            <ThemedText style={styles.emptyText}>No topics found</ThemedText>
+          </ThemedView>
+        )}
+      </>
+    </BottomSheetModal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-    alignItems: "center",
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  bottomSheetContainer: {
-    height: "80%",
-    flex: 1,
-  },
-  bottomSheet: {
-    flex: 1,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingTop: 16,
-    paddingBottom: 0,
+  scrollContent: {
+    paddingBottom: 20,
   },
   header: {
     flexDirection: "row",
@@ -231,10 +253,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "700",
+    paddingTop: 8,
   },
   closeButton: {
     padding: 4,
@@ -254,10 +273,11 @@ const styles = StyleSheet.create({
     height: 44,
     fontSize: 16,
   },
-  gridContent: {
+  gridContainer: {
     paddingHorizontal: 16,
   },
   row: {
+    flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 12,
   },

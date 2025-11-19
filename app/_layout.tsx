@@ -1,3 +1,4 @@
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import {
   DarkTheme,
   DefaultTheme,
@@ -267,61 +268,65 @@ function RootLayoutContent() {
             (colorScheme === "dark" ? "#151718" : "#fff"),
         }}
       >
-        <FavoriteTopicsProvider>
-          <AuthProvider>
-            <BookmarkProvider>
-              <AudioProvider>
-                <ThemeProvider
-                  value={
-                    colorScheme === "dark" ? customDarkTheme : customLightTheme
-                  }
-                >
-                  <Stack>
-                    <Stack.Screen
-                      name="(tabs)"
-                      options={{ headerShown: false, title: "" }}
-                    />
-                    <Stack.Screen
-                      name="article/[id]"
-                      options={{ headerShown: false }}
-                    />
-                    <Stack.Screen
-                      name="event/[id]"
-                      options={{ headerShown: false }}
-                    />
-                    <Stack.Screen
-                      name="pdf/[id]"
-                      options={{
-                        headerBackTitle: " ",
-                      }}
-                    />
-                    <Stack.Screen
-                      name="search"
-                      options={{
-                        presentation: "modal",
-                        headerShown: false,
-                      }}
-                    />
-                    <Stack.Screen
-                      name="webview"
-                      options={{
-                        headerShown: false,
-                        title: "Web Content",
-                      }}
-                    />
-                    <Stack.Screen name="+not-found" />
-                  </Stack>
-                  <StatusBar style="light" />
-                  {showOnboarding && (
-                    <OnboardingContainer
-                      onComplete={handleOnboardingComplete}
-                    />
-                  )}
-                </ThemeProvider>
-              </AudioProvider>
-            </BookmarkProvider>
-          </AuthProvider>
-        </FavoriteTopicsProvider>
+        <BottomSheetModalProvider>
+          <FavoriteTopicsProvider>
+            <AuthProvider>
+              <BookmarkProvider>
+                <AudioProvider>
+                  <ThemeProvider
+                    value={
+                      colorScheme === "dark"
+                        ? customDarkTheme
+                        : customLightTheme
+                    }
+                  >
+                    <Stack>
+                      <Stack.Screen
+                        name="(tabs)"
+                        options={{ headerShown: false, title: "" }}
+                      />
+                      <Stack.Screen
+                        name="article/[id]"
+                        options={{ headerShown: false }}
+                      />
+                      <Stack.Screen
+                        name="event/[id]"
+                        options={{ headerShown: false }}
+                      />
+                      <Stack.Screen
+                        name="pdf/[id]"
+                        options={{
+                          headerBackTitle: " ",
+                        }}
+                      />
+                      <Stack.Screen
+                        name="search"
+                        options={{
+                          presentation: "modal",
+                          headerShown: false,
+                        }}
+                      />
+                      <Stack.Screen
+                        name="webview"
+                        options={{
+                          headerShown: false,
+                          title: "Web Content",
+                        }}
+                      />
+                      <Stack.Screen name="+not-found" />
+                    </Stack>
+                    <StatusBar style="light" />
+                    {showOnboarding && (
+                      <OnboardingContainer
+                        onComplete={handleOnboardingComplete}
+                      />
+                    )}
+                  </ThemeProvider>
+                </AudioProvider>
+              </BookmarkProvider>
+            </AuthProvider>
+          </FavoriteTopicsProvider>
+        </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>
   );

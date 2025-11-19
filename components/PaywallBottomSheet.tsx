@@ -7,25 +7,21 @@ import { useBrandConfig } from "@/hooks/useBrandConfig";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { analyticsService } from "@/services/analytics";
-import React from "react";
 import {
-  Animated,
-  Dimensions,
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import React, { useCallback, useMemo, useRef } from "react";
+import {
   Linking,
-  Modal,
   Platform,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const SHEET_HEIGHT = 600;
 
 interface PaywallBottomSheetProps {
   visible: boolean;
@@ -46,12 +42,12 @@ export function PaywallBottomSheet({
   const { colors, paywall, fonts } = useBrandConfig();
   const { login, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
-  const translateY = React.useRef(new Animated.Value(SHEET_HEIGHT)).current;
-  const backdropOpacity = React.useRef(new Animated.Value(0)).current;
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-  // Watch for authentication changes but DON'T call onClose()
-  // The paywall will hide automatically via the visible prop when shouldShowPaywall becomes false
-  // The useArticleAccess hook already watches isAuthenticated and triggers access recheck
+  // Define snap points
+  const snapPoints = useMemo(() => ["75%"], []);
+
+  // Watch for authentication changes
   React.useEffect(() => {
     if (isAuthenticated && visible) {
       console.log(
@@ -60,18 +56,25 @@ export function PaywallBottomSheet({
     }
   }, [isAuthenticated, visible]);
 
-  // Log safe area insets for debugging
+  // Control bottom sheet visibility
   React.useEffect(() => {
-    console.log("[PaywallBottomSheet] Platform:", Platform.OS);
-    console.log("[PaywallBottomSheet] Safe Area Insets:", {
-      top: insets.top,
-      bottom: insets.bottom,
-      left: insets.left,
-      right: insets.right,
-    });
-    console.log("[PaywallBottomSheet] Screen Height:", SCREEN_HEIGHT);
-    console.log("[PaywallBottomSheet] Sheet Height:", SHEET_HEIGHT);
-  }, [insets]);
+    if (visible) {
+      bottomSheetModalRef.current?.present();
+
+      // Log paywall shown event
+      analyticsService.logEvent("paywall_shown", {
+        headline: paywallConfig.headline,
+        has_benefits: !!(
+          paywallConfig.benefits && paywallConfig.benefits.length > 0
+        ),
+        benefits_count: paywallConfig.benefits?.length || 0,
+        has_primary_url: !!paywallConfig.primaryButtonUrl,
+        has_secondary_url: !!paywallConfig.secondaryButtonUrl,
+      });
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+    }
+  }, [visible]);
 
   // Get paywall configuration from brand config with fallbacks
   const paywallConfig = paywall || {
@@ -118,50 +121,6 @@ export function PaywallBottomSheet({
     login();
   }, [paywallConfig, login]);
 
-  React.useEffect(() => {
-    if (visible) {
-      // Log paywall shown event
-      analyticsService.logEvent("paywall_shown", {
-        headline: paywallConfig.headline,
-        has_benefits: !!(
-          paywallConfig.benefits && paywallConfig.benefits.length > 0
-        ),
-        benefits_count: paywallConfig.benefits?.length || 0,
-        has_primary_url: !!paywallConfig.primaryButtonUrl,
-        has_secondary_url: !!paywallConfig.secondaryButtonUrl,
-      });
-
-      // Animate sheet up with spring animation
-      Animated.parallel([
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-          tension: 65,
-          friction: 11,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: 0.5,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Animate sheet down
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: SHEET_HEIGHT,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: 0,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [visible, paywallConfig]);
-
   const isDark = colorScheme === "dark";
   const themeColors = colors?.[colorScheme ?? "light"];
   // Use contentBackground for consistency with article detail view
@@ -176,199 +135,147 @@ export function PaywallBottomSheet({
 
   const actionColor = useThemeColor({}, "actionColor");
   const articlePreTeaserTitleText = Colors.light.articlePreTeaserTitleText;
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      onRequestClose={onClose}
-    >
-      {/* Backdrop */}
-      <Animated.View
-        style={[
-          styles.backdrop,
-          {
-            opacity: backdropOpacity,
-          },
-        ]}
-      >
-        <View style={styles.backdropTouchable} />
-      </Animated.View>
 
-      {/* Bottom Sheet */}
-      <Animated.View
-        style={[
-          styles.sheet,
-          {
-            backgroundColor,
-            transform: [{ translateY }],
-          },
-        ]}
+  // Backdrop component - non-dismissible
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+      />
+    ),
+    []
+  );
+
+  return (
+    <BottomSheetModal
+      ref={bottomSheetModalRef}
+      index={0}
+      snapPoints={snapPoints}
+      enablePanDownToClose={false}
+      backdropComponent={renderBackdrop}
+      enableDismissOnClose={false}
+      backgroundStyle={{ backgroundColor }}
+      handleIndicatorStyle={{ backgroundColor: "#D1D1D6" }}
+      // bottomInset={insets.bottom}
+    >
+      <BottomSheetView
+        style={[styles.contentContainer, { paddingBottom: insets.bottom }]}
       >
-        <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-          {/* Handle Bar */}
-          <View style={styles.handleContainer}>
-            <View style={styles.handle} />
+        {/* Content */}
+        <View style={styles.content}>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <BrandLogo width={140} height={50} variant="header" />
           </View>
 
-          {/* Content */}
-          <View style={styles.content}>
-            {/* Logo */}
-            <View style={styles.logoContainer}>
-              <BrandLogo width={140} height={50} variant="header" />
+          {/* Headline */}
+          <ThemedText
+            type="title"
+            style={[styles.headline, { fontFamily: fonts?.primaryBold }]}
+          >
+            {paywallConfig.headline}
+          </ThemedText>
+
+          {/* Subheadline */}
+          <ThemedText style={styles.subheadline}>
+            {paywallConfig.subheadline}
+          </ThemedText>
+
+          {/* Benefits List - Only show if benefits are configured */}
+          {paywallConfig.benefits && paywallConfig.benefits.length > 0 && (
+            <View style={styles.benefitsList}>
+              {paywallConfig.benefits.map((benefit: string, index: number) => (
+                <View key={index} style={styles.benefitItem}>
+                  <View style={styles.checkmarkContainer}>
+                    <Svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill={progressIndicator}
+                    >
+                      <Path
+                        d="M9.75 0C7.82164 0 5.93657 0.571828 4.33319 1.64317C2.72982 2.71451 1.48013 4.23726 0.742179 6.01884C0.00422452 7.80042 -0.188858 9.76082 0.187348 11.6521C0.563554 13.5434 1.49215 15.2807 2.85571 16.6443C4.21928 18.0079 5.95656 18.9365 7.84787 19.3127C9.73919 19.6889 11.6996 19.4958 13.4812 18.7578C15.2627 18.0199 16.7855 16.7702 17.8568 15.1668C18.9282 13.5634 19.5 11.6784 19.5 9.75C19.4973 7.16498 18.4692 4.68661 16.6413 2.85872C14.8134 1.03084 12.335 0.00272983 9.75 0ZM14.0306 8.03063L8.78063 13.2806C8.71097 13.3504 8.62826 13.4057 8.53721 13.4434C8.44616 13.4812 8.34857 13.5006 8.25 13.5006C8.15144 13.5006 8.05385 13.4812 7.9628 13.4434C7.87175 13.4057 7.78903 13.3504 7.71938 13.2806L5.46938 11.0306C5.32865 10.8899 5.24959 10.699 5.24959 10.5C5.24959 10.301 5.32865 10.1101 5.46938 9.96937C5.61011 9.82864 5.80098 9.74958 6 9.74958C6.19903 9.74958 6.3899 9.82864 6.53063 9.96937L8.25 11.6897L12.9694 6.96937C13.0391 6.89969 13.1218 6.84442 13.2128 6.8067C13.3039 6.76899 13.4015 6.74958 13.5 6.74958C13.5986 6.74958 13.6961 6.76899 13.7872 6.8067C13.8782 6.84442 13.9609 6.89969 14.0306 6.96937C14.1003 7.03906 14.1556 7.12178 14.1933 7.21283C14.231 7.30387 14.2504 7.40145 14.2504 7.5C14.2504 7.59855 14.231 7.69613 14.1933 7.78717C14.1556 7.87822 14.1003 7.96094 14.0306 8.03063Z"
+                        fill={progressIndicator}
+                      />
+                    </Svg>
+                  </View>
+                  <ThemedText style={styles.benefitText}>{benefit}</ThemedText>
+                </View>
+              ))}
             </View>
+          )}
 
-            {/* Headline */}
-            <ThemedText
-              type="title"
-              style={[styles.headline, { fontFamily: fonts?.primaryBold }]}
+          {/* CTA Buttons */}
+          <View style={styles.buttonContainer}>
+            {/* Secondary Button - Sign In */}
+            <TouchableOpacity
+              style={[
+                styles.secondaryButton,
+                {
+                  backgroundColor: contentBackButtonText,
+                },
+              ]}
+              onPress={handleSecondaryButtonPress}
+              activeOpacity={0.8}
             >
-              {paywallConfig.headline}
-            </ThemedText>
-
-            {/* Subheadline */}
-            <ThemedText style={styles.subheadline}>
-              {paywallConfig.subheadline}
-            </ThemedText>
-
-            {/* Benefits List - Only show if benefits are configured */}
-            {paywallConfig.benefits && paywallConfig.benefits.length > 0 && (
-              <View style={styles.benefitsList}>
-                {paywallConfig.benefits.map(
-                  (benefit: string, index: number) => (
-                    <View key={index} style={styles.benefitItem}>
-                      <View style={styles.checkmarkContainer}>
-                        <Svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                          fill={progressIndicator}
-                        >
-                          <Path
-                            d="M9.75 0C7.82164 0 5.93657 0.571828 4.33319 1.64317C2.72982 2.71451 1.48013 4.23726 0.742179 6.01884C0.00422452 7.80042 -0.188858 9.76082 0.187348 11.6521C0.563554 13.5434 1.49215 15.2807 2.85571 16.6443C4.21928 18.0079 5.95656 18.9365 7.84787 19.3127C9.73919 19.6889 11.6996 19.4958 13.4812 18.7578C15.2627 18.0199 16.7855 16.7702 17.8568 15.1668C18.9282 13.5634 19.5 11.6784 19.5 9.75C19.4973 7.16498 18.4692 4.68661 16.6413 2.85872C14.8134 1.03084 12.335 0.00272983 9.75 0ZM14.0306 8.03063L8.78063 13.2806C8.71097 13.3504 8.62826 13.4057 8.53721 13.4434C8.44616 13.4812 8.34857 13.5006 8.25 13.5006C8.15144 13.5006 8.05385 13.4812 7.9628 13.4434C7.87175 13.4057 7.78903 13.3504 7.71938 13.2806L5.46938 11.0306C5.32865 10.8899 5.24959 10.699 5.24959 10.5C5.24959 10.301 5.32865 10.1101 5.46938 9.96937C5.61011 9.82864 5.80098 9.74958 6 9.74958C6.19903 9.74958 6.3899 9.82864 6.53063 9.96937L8.25 11.6897L12.9694 6.96937C13.0391 6.89969 13.1218 6.84442 13.2128 6.8067C13.3039 6.76899 13.4015 6.74958 13.5 6.74958C13.5986 6.74958 13.6961 6.76899 13.7872 6.8067C13.8782 6.84442 13.9609 6.89969 14.0306 6.96937C14.1003 7.03906 14.1556 7.12178 14.1933 7.21283C14.231 7.30387 14.2504 7.40145 14.2504 7.5C14.2504 7.59855 14.231 7.69613 14.1933 7.78717C14.1556 7.87822 14.1003 7.96094 14.0306 8.03063Z"
-                            fill={progressIndicator}
-                          />
-                        </Svg>
-                      </View>
-                      <ThemedText style={styles.benefitText}>
-                        {benefit}
-                      </ThemedText>
-                    </View>
-                  )
-                )}
-              </View>
-            )}
-
-            {/* CTA Buttons */}
-            <View style={styles.buttonContainer}>
-              {/* Secondary Button - Sign In */}
-              <TouchableOpacity
+              <ThemedText
                 style={[
-                  styles.secondaryButton,
+                  styles.secondaryButtonText,
                   {
-                    backgroundColor: contentBackButtonText,
+                    color: articlePreTeaserTitleText,
+                    fontFamily: fonts?.primarySemiBold,
                   },
                 ]}
-                onPress={handleSecondaryButtonPress}
-                activeOpacity={0.8}
               >
-                <ThemedText
-                  style={[
-                    styles.secondaryButtonText,
-                    {
-                      color: articlePreTeaserTitleText,
-                      fontFamily: fonts?.primarySemiBold,
-                    },
-                  ]}
-                >
-                  {paywallConfig.secondaryButtonText}
-                </ThemedText>
-              </TouchableOpacity>
-              {/* Primary Button - Subscribe */}
-              <TouchableOpacity
-                style={[styles.primaryButton, { backgroundColor: actionColor }]}
-                onPress={handlePrimaryButtonPress}
-                activeOpacity={0.8}
+                {paywallConfig.secondaryButtonText}
+              </ThemedText>
+            </TouchableOpacity>
+            {/* Primary Button - Subscribe */}
+            <TouchableOpacity
+              style={[styles.primaryButton, { backgroundColor: actionColor }]}
+              onPress={handlePrimaryButtonPress}
+              activeOpacity={0.8}
+            >
+              <ThemedText
+                style={[
+                  styles.primaryButtonText,
+                  { color: textColor, fontFamily: fonts?.primarySemiBold },
+                ]}
               >
-                <ThemedText
-                  style={[
-                    styles.primaryButtonText,
-                    { color: textColor, fontFamily: fonts?.primarySemiBold },
-                  ]}
-                >
-                  {paywallConfig.primaryButtonText}
-                </ThemedText>
-              </TouchableOpacity>
-              {/* Back Button */}
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={onClose}
-                activeOpacity={0.8}
+                {paywallConfig.primaryButtonText}
+              </ThemedText>
+            </TouchableOpacity>
+            {/* Back Button */}
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => {
+                onClose();
+              }}
+              activeOpacity={0.8}
+            >
+              <ThemedText
+                style={[
+                  styles.backButtonText,
+                  { color: textColor },
+                  Platform.OS === "android" && styles.backButtonTextAndroid,
+                ]}
               >
-                <ThemedText
-                  style={[
-                    styles.backButtonText,
-                    { color: textColor },
-                    Platform.OS === "android" && styles.backButtonTextAndroid,
-                  ]}
-                >
-                  Go Back
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
+                Go Back
+              </ThemedText>
+            </TouchableOpacity>
           </View>
-        </SafeAreaView>
-      </Animated.View>
-    </Modal>
+        </View>
+      </BottomSheetView>
+    </BottomSheetModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "black",
-  },
-  backdropTouchable: {
+  contentContainer: {
     flex: 1,
-  },
-  sheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    width: "100%",
-    height: SHEET_HEIGHT + (Platform.OS === "android" ? 60 : 0),
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -4,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  handleContainer: {
-    alignItems: "center",
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#D1D1D6",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 16,
-    right: 20,
-    zIndex: 10,
-    padding: 8,
   },
   content: {
     flex: 1,
