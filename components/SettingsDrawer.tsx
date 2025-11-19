@@ -13,6 +13,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const DRAWER_WIDTH = SCREEN_WIDTH * 1;
@@ -25,6 +26,7 @@ interface SettingsDrawerProps {
 export function SettingsDrawer({ visible, onClose }: SettingsDrawerProps) {
   const colorScheme = useColorScheme();
   const { colors } = useBrandConfig();
+  const insets = useSafeAreaInsets();
   const translateX = React.useRef(new Animated.Value(DRAWER_WIDTH)).current;
   const backdropOpacity = React.useRef(new Animated.Value(0)).current;
 
@@ -102,14 +104,17 @@ export function SettingsDrawer({ visible, onClose }: SettingsDrawerProps) {
         ]}
       >
         {/* Header */}
-        <ThemedView transparant style={styles.header}>
+        <ThemedView
+          transparant
+          style={[styles.header, { paddingTop: insets.top }]}
+        >
           <ThemedText type="title" style={styles.headerTitle}>
             Settings
           </ThemedText>
           <TouchableOpacity
             style={styles.closeButton}
             onPress={onClose}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
           >
             <IconSymbol name="xmark" size={24} color={textColor} />
           </TouchableOpacity>
@@ -151,14 +156,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "rgba(0,0,0,0.1)",
   },
   headerTitle: {
     fontSize: 24,
+    lineHeight: 28,
     fontWeight: "bold",
   },
   closeButton: {
