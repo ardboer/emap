@@ -724,7 +724,7 @@ function ArticleScreenContent() {
             )}
             {/* Show full article content when loaded */}
             {!loading && article && (
-              <>
+              <View>
                 {/* Author and Date Row */}
                 <View style={styles.metaContainer}>
                   {/* Author Info - Left Side */}
@@ -891,11 +891,10 @@ function ArticleScreenContent() {
 
                 {/* Trending Articles Section */}
                 <TrendingArticles />
-              </>
+              </View>
             )}
           </View>
         </Animated.ScrollView>
-
         <PaywallBottomSheet
           visible={paywallVisible}
           onClose={handleClosePaywall}
