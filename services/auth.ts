@@ -191,7 +191,7 @@ export async function generateLoginUrl(
     const payload = {
       redirect_uri: redirectUri,
       nonce,
-      iat: issuedAt,
+      iat: issuedAt - 600,
       exp: expiresAt,
     };
 

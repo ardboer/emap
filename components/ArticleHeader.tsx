@@ -152,7 +152,7 @@ export function ArticleHeader({
         ]}
       >
         <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="chevron-back" size={32} color={iconColor} />
+          <Ionicons name="chevron-back" size={28} color={iconColor} />
         </TouchableOpacity>
       </Animated.View>
 
@@ -170,14 +170,14 @@ export function ArticleHeader({
               <BookmarkButton
                 article={article}
                 iconColor={iconColor}
-                iconSize={32}
+                iconSize={28}
               />
               <ShareButton
                 title={article.title}
                 message={shareMessage || article.subtitle || ""}
                 url={shareUrl || `article/${article.id}`}
                 iconColor={iconColor}
-                iconSize={32}
+                iconSize={28}
               />
             </>
           )}
@@ -197,13 +197,13 @@ const styles = StyleSheet.create({
   },
   backButtonContainer: {
     position: "absolute",
-    top: 0,
+    top: 4,
     left: 16,
     zIndex: 200,
   },
   actionButtonsContainer: {
     position: "absolute",
-    top: 0,
+    top: 4,
     right: 16,
     zIndex: 200,
   },
